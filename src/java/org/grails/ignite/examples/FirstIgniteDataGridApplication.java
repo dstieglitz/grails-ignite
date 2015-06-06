@@ -21,7 +21,7 @@ public class FirstIgniteDataGridApplication extends AbstractIgniteApplication im
     }
 
     private void putAndGet() {
-        this.cache = ignite.getOrCreateCache("myCacheName");
+        this.cache = ignite.getOrCreateCache("testCache");
 
         // Store keys in cache (values will end up on different cache nodes).
         for (int i = 0; i < 10; i++)

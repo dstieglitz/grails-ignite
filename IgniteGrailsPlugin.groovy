@@ -1,3 +1,6 @@
+import org.apache.ignite.cache.CacheAtomicityMode
+import org.apache.ignite.cache.CacheMode
+
 class IgniteGrailsPlugin {
     // the plugin version
     def version = "0.1"
@@ -48,10 +51,16 @@ A plugin for the Apache Ignite data grid framework.
 
         igniteCfg(org.apache.ignite.configuration.IgniteConfiguration) {
             gridName = "grid"
-            peerClassLoadingEnabled = false
+            peerClassLoadingEnabled = true
 
             marshaller = { org.apache.ignite.marshaller.optimized.OptimizedMarshaller marshaller ->
                 requireSerializable = false
+            }
+
+            cacheConfiguration = { org.apache.ignite.configuration.CacheConfiguration cacheConfiguration ->
+                name = "testCache"
+                cacheMode = CacheMode.PARTITIONED
+                atomicityMode = CacheAtomicityMode.TRANSACTIONAL
             }
 
             includeEventTypes = [org.apache.ignite.events.EventType.EVT_TASK_STARTED,

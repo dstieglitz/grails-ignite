@@ -1,4 +1,5 @@
 import org.apache.ignite.lang.IgniteCallable
+import org.grails.ignite.examples.ExecutorServiceApplication
 import org.grails.ignite.examples.FirstIgniteComputeApplication
 import org.grails.ignite.examples.FirstIgniteDataGridApplication
 
@@ -11,6 +12,7 @@ class IgniteBootStrap {
         // run the examples to test configuration
         new FirstIgniteComputeApplication(ignite).run();
         new FirstIgniteDataGridApplication(ignite).run();
+        new ExecutorServiceApplication(ignite).run();
     }
 
     def destroy = {

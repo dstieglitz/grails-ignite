@@ -36,6 +36,11 @@ class DistributedSchedulerService implements SchedulerService {
         return getServiceProxy().isSchedulerRunning();
     }
 
+    @Override
+    boolean isScheduled(String id) {
+        return getServiceProxy().isScheduled(id)
+    }
+
     private SchedulerService getServiceProxy() {
         return grid.services().serviceProxy("distributedSchedulerService", SchedulerService.class, false)
     }

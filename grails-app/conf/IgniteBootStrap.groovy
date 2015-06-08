@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 
 class IgniteBootStrap {
     def grailsApplication
-    def distributedSchedulerService
+//    def distributedSchedulerService
 
     def init = { servletContext ->
         def ignite = grailsApplication.mainContext.getBean('grid')

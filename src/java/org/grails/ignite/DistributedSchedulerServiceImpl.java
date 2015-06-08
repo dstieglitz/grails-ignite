@@ -34,8 +34,9 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     private DistributedScheduledThreadPoolExecutor executor;
 
-    public ScheduledFuture scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
-        ScheduleData scheduleData = new ScheduleData();
+    public ScheduledFuture scheduleAtFixedRate(NamedRunnable command, long initialDelay, long period, TimeUnit unit) {
+        // FIXME concurrent commands will be removed by set semantics, need to re-name with unique ID here
+        ScheduleData scheduleData = new ScheduleData(command.getName());
         scheduleData.setCommand(command);
         scheduleData.setInitialDelay(initialDelay);
         scheduleData.setPeriod(period);
@@ -45,8 +46,9 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         return executor.scheduleAtFixedRate(command, initialDelay, period, unit);
     }
 
-    public ScheduledFuture scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
-        ScheduleData scheduleData = new ScheduleData();
+    public ScheduledFuture scheduleWithFixedDelay(NamedRunnable command, long initialDelay, long delay, TimeUnit unit) {
+        // FIXME concurrent commands will be removed by set semantics, need to re-name with unique ID here
+        ScheduleData scheduleData = new ScheduleData(command.getName());
         scheduleData.setCommand(command);
         scheduleData.setInitialDelay(initialDelay);
         scheduleData.setDelay(delay);

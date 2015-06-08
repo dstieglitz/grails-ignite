@@ -21,4 +21,6 @@ public interface SchedulerService {
 
     public boolean isSchedulerRunning();
 
+    public boolean isScheduled(String id);
+
 }

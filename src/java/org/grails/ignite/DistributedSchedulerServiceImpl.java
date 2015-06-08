@@ -14,9 +14,12 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * An implementation of a simple distributed scheduled executor service that mimics the interface of the
+ * <p>An implementation of a simple distributed scheduled executor service that mimics the interface of the
  * ScheduledThreadPoolExector (at least some of the methods), but executes the actual jobs on the grid instead
- * of in a local ThreadPool.
+ * of in a local ThreadPool.</p>
+ * <p>Each job has a ScheduleData record saved to the cluster in a REDUNDANT cluster-wide data structure. If the node
+ * hosting this scheduler service goes down, another node can pick up the service and re-schedule the jobs for
+ * execution.</p>
  *
  * @author Dan Stieglitz
  */
@@ -51,6 +54,20 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         schedule.add(scheduleData);
         log.info("added " + scheduleData + "to schedule");
         return executor.scheduleWithFixedDelay(command, initialDelay, delay, unit);
+    }
+
+    /**
+     * Query the state of the scheduled jobs to determine if a job with the supplied ID is scheduled.
+     * @param id
+     * @return true if a ScheduleData record exists for the job
+     */
+    @Override
+    public boolean isScheduled(String id) {
+        for (ScheduleData scheduleDatum : schedule) {
+            if (scheduleDatum.toString().equals(id)) return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -96,7 +113,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     }
 
     private class ScheduleData {
-        private UUID uuid;
+        private String id;
         private Runnable command;
         private long initialDelay = -1;
         private long period = -1;
@@ -104,7 +121,11 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         private TimeUnit timeUnit;
 
         public ScheduleData() {
-            this.uuid = UUID.randomUUID();
+            this.id = UUID.randomUUID().toString();
+        }
+
+        public ScheduleData(String id) {
+            this.id = id;
         }
 
         private TimeUnit getTimeUnit() {
@@ -148,7 +169,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         }
 
         public String toString() {
-            return uuid.toString();
+            return id;
         }
 
         @Override
@@ -159,7 +180,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
         @Override
         public int hashCode() {
-            return uuid.hashCode();
+            return id.hashCode();
         }
 
     }

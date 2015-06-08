@@ -1,12 +1,8 @@
-import org.apache.ignite.cache.CacheAtomicityMode
-import org.apache.ignite.cache.CacheMode
-import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.ignite.configuration.IgniteConfiguration
-import org.apache.ignite.logger.log4j.Log4JLogger
-import org.apache.ignite.marshaller.jdk.JdkMarshaller
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
+import org.apache.ignite.services.ServiceConfiguration
 import org.apache.ignite.spi.deployment.local.LocalDeploymentSpi
-import org.grails.ignite.GroovyOptimizedMarshallerDecorator
+import org.grails.ignite.DistributedSchedulerServiceImpl
 
 class IgniteGrailsPlugin {
     // the plugin version
@@ -38,13 +34,13 @@ A plugin for the Apache Ignite data grid framework.
 //    def organization = [ name: "My Company", url: "http://www.my-company.com/" ]
 
     // Any additional developers beyond the author specified above.
-    def developers = [ [ name: "Dan Stieglitz", email: "dstieglitz@stainlesscode.com" ]]
+    def developers = [[name: "Dan Stieglitz", email: "dstieglitz@stainlesscode.com"]]
 
     // Location of the plugin's issue tracker.
-    def issueManagement = [ system: "GITHUB", url: "https://github.com/dstieglitz/grails-ignite/issues" ]
+    def issueManagement = [system: "GITHUB", url: "https://github.com/dstieglitz/grails-ignite/issues"]
 
     // Online location of the plugin's browseable source code.
-    def scm = [ url: "https://github.com/dstieglitz/grails-ignite" ]
+    def scm = [url: "https://github.com/dstieglitz/grails-ignite"]
 
     def doWithWebDescriptor = { xml ->
         // TODO Implement additions to web.xml (optional), this event occurs before
@@ -68,21 +64,21 @@ A plugin for the Apache Ignite data grid framework.
                     requireSerializable = false
                 }
 
-    //            marshaller = { JdkMarshaller marshaller ->
-    ////                requireSerializable = false
-    //            }
+                //            marshaller = { JdkMarshaller marshaller ->
+                ////                requireSerializable = false
+                //            }
 
-    //            marshaller = { GroovyOptimizedMarshallerDecorator dec ->
-    //                underlyingMarshaller = { OptimizedMarshaller mar ->
-    //                    requireSerializable = false
-    //                }
-    //            }
+                //            marshaller = { GroovyOptimizedMarshallerDecorator dec ->
+                //                underlyingMarshaller = { OptimizedMarshaller mar ->
+                //                    requireSerializable = false
+                //                }
+                //            }
 
-    //            cacheConfiguration = { CacheConfiguration cacheConfiguration ->
-    //                name = "jobSchedules"
-    //                cacheMode = CacheMode.REPLICATED
-    //                atomicityMode = CacheAtomicityMode.ATOMIC
-    //            }
+                //            cacheConfiguration = { CacheConfiguration cacheConfiguration ->
+                //                name = "jobSchedules"
+                //                cacheMode = CacheMode.REPLICATED
+                //                atomicityMode = CacheAtomicityMode.ATOMIC
+                //            }
 
                 includeEventTypes = [org.apache.ignite.events.EventType.EVT_TASK_STARTED,
                         org.apache.ignite.events.EventType.EVT_TASK_FINISHED,
@@ -94,15 +90,22 @@ A plugin for the Apache Ignite data grid framework.
                         org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_READ,
                         org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_READ]
 
-    //            discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
-    //                ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder tcpDiscoveryMulticastIpFinder ->
-    //                    addresses = ['127.0.0.1:47500..47509']
-    //                }
-    //            }
+                //            discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
+                //                ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder tcpDiscoveryMulticastIpFinder ->
+                //                    addresses = ['127.0.0.1:47500..47509']
+                //                }
+                //            }
 
                 deploymentSpi = { LocalDeploymentSpi impl ->
 
                 }
+
+//                serviceConfiguration = [{ ServiceConfiguration serviceConfiguration ->
+//                    name = "distributedSchedulerService"
+//                    maxPerNodeCount = 1
+//                    totalCount = 1
+//                    service = { DistributedSchedulerServiceImpl impl -> }
+//                }]
 
                 //gridLogger = ref('gridLogger')
             }
@@ -118,7 +121,7 @@ A plugin for the Apache Ignite data grid framework.
     }
 
     def doWithApplicationContext = { ctx ->
-        // TODO Implement post initialization spring config (optional)
+       ctx.getBean('grid').services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
     }
 
     def onChange = { event ->

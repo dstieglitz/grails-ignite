@@ -4,12 +4,12 @@ import org.grails.ignite.HelloWorldGroovyTask
 import java.util.concurrent.TimeUnit
 
 class IgniteBootStrap {
-    def grailsApplication
+//    def grailsApplication
 //    def distributedSchedulerService
 
     def init = { servletContext ->
-        def ignite = grailsApplication.mainContext.getBean('grid')
-        ignite.services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
+        //def ignite = grailsApplication.mainContext.getBean('grid')
+        //ignite.services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
 
         // run the examples to test configuration
 //        new FirstIgniteComputeApplication(ignite).run();

@@ -1,11 +1,7 @@
 package org.grails.ignite;
 
 /**
- * Created with IntelliJ IDEA.
- * User: dstieglitz
- * Date: 6/8/15
- * Time: 3:38 PM
- * To change this template use File | Settings | File Templates.
+ * Implementations of this interface introduce a name to identify Runnables for a scheduling system.
  */
 public interface NamedRunnable extends Runnable {
 

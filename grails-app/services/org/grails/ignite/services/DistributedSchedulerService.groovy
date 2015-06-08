@@ -1,5 +1,6 @@
 package org.grails.ignite.services
 
+import org.grails.ignite.NamedRunnable
 import org.grails.ignite.SchedulerService
 
 import java.util.concurrent.ScheduledFuture
@@ -11,12 +12,12 @@ class DistributedSchedulerService implements SchedulerService {
 
     def grid
 
-    public ScheduledFuture scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
+    public ScheduledFuture scheduleAtFixedRate(NamedRunnable command, long initialDelay, long period, TimeUnit unit) {
         log.debug "scheduleAtFixedRate ${command}, ${initialDelay}, ${period}, ${unit}"
         return getServiceProxy().scheduleAtFixedRate(command, initialDelay, period, unit)
     }
 
-    public ScheduledFuture scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
+    public ScheduledFuture scheduleWithFixedDelay(NamedRunnable command, long initialDelay, long delay, TimeUnit unit) {
         log.debug "scheduleWithFixedDelay ${command}, ${initialDelay}, ${delay}, ${unit}"
         return getServiceProxy().scheduleWithFixedDelay(command, initialDelay, delay, unit)
     }

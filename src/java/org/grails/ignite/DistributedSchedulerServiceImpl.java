@@ -20,6 +20,9 @@ import java.util.concurrent.TimeUnit;
  * <p>Each job has a ScheduleData record saved to the cluster in a REDUNDANT cluster-wide data structure. If the node
  * hosting this scheduler service goes down, another node can pick up the service and re-schedule the jobs for
  * execution.</p>
+ * <p>The schedule uses a Set<ScheduleData> object under the hood, so it's important to pay attention to naming
+ * since two ScheduleData objects with the same name are considered to be the same object (to prevent over-scheduling
+ * of the same task).</p>
  *
  * @author Dan Stieglitz
  */
@@ -107,14 +110,14 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         for (ScheduleData datum : schedule) {
             log.debug("found existing schedule data " + datum);
             if (datum.getPeriod() > 0) {
-                scheduleAtFixedRate(datum.command, datum.initialDelay, datum.period, datum.timeUnit);
+                scheduleAtFixedRate(datum, datum.initialDelay, datum.period, datum.timeUnit);
             } else if (datum.getDelay() > 0) {
-                scheduleWithFixedDelay(datum.command, datum.initialDelay, datum.delay, datum.timeUnit);
+                scheduleWithFixedDelay(datum, datum.initialDelay, datum.delay, datum.timeUnit);
             }
         }
     }
 
-    private class ScheduleData {
+    private class ScheduleData implements NamedRunnable {
         private String id;
         private Runnable command;
         private long initialDelay = -1;
@@ -172,6 +175,14 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
         public String toString() {
             return id;
+        }
+
+        public String getName() {
+            return id;
+        }
+
+        public void run() {
+            command.run();
         }
 
         @Override

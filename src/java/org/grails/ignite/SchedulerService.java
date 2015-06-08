@@ -15,4 +15,10 @@ public interface SchedulerService {
 
     public ScheduledFuture scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit);
 
+    public void stopScheduler();
+
+    public void startScheduler();
+
+    public boolean isSchedulerRunning();
+
 }

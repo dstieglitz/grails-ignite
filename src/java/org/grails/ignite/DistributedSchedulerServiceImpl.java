@@ -54,6 +54,21 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     }
 
     @Override
+    public void stopScheduler() {
+        executor.setRunning(false);
+    }
+
+    @Override
+    public void startScheduler() {
+        executor.setRunning(true);
+    }
+
+    @Override
+    public boolean isSchedulerRunning() {
+        return executor.isRunning();
+    }
+
+    @Override
     public void cancel(ServiceContext serviceContext) {
         log.info("service " + this + "cancelled!");
     }

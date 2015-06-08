@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
     private Ignite ignite;
+    private boolean running = true;
 
     public DistributedScheduledThreadPoolExecutor(Ignite ignite, int corePoolSize) {
         super(corePoolSize);
@@ -40,6 +41,14 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
         return new IgniteDistributedRunnable(command);
     }
 
+    public void setRunning(boolean trueOrFalse) {
+        this.running = trueOrFalse;
+    }
+
+    public boolean isRunning() {
+        return this.running;
+    }
+
     private class IgniteDistributedRunnable implements Runnable {
         private Runnable theRunnable;
 
@@ -51,7 +60,9 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
         @Override
         public void run() {
             try {
-                ignite.executorService().submit(theRunnable);
+                if (running) {
+                    ignite.executorService().submit(theRunnable);
+                }
             } catch (Exception e) {
                 // LOG IT HERE!!!
                 System.err.println("error in executing: " + theRunnable + ". It will no longer be run!");

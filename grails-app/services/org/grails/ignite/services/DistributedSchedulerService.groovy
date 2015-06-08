@@ -17,10 +17,26 @@ class DistributedSchedulerService implements SchedulerService {
     }
 
     public ScheduledFuture scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
+        log.debug "scheduleWithFixedDelay ${command}, ${initialDelay}, ${delay}, ${unit}"
         return getServiceProxy().scheduleWithFixedDelay(command, initialDelay, delay, unit)
     }
 
-    def getServiceProxy() {
+    @Override
+    void stopScheduler() {
+        getServiceProxy().stopScheduler();
+    }
+
+    @Override
+    void startScheduler() {
+        getServiceProxy().startScheduler();
+    }
+
+    @Override
+    boolean isSchedulerRunning() {
+        return getServiceProxy().isSchedulerRunning();
+    }
+
+    private SchedulerService getServiceProxy() {
         return grid.services().serviceProxy("distributedSchedulerService", SchedulerService.class, false)
     }
 }

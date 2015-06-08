@@ -53,58 +53,63 @@ A plugin for the Apache Ignite data grid framework.
     def doWithSpring = {
         // TODO Implement runtime spring config (optional)
 
-        // FIXME Caused by ClassNotFoundException: org.apache.ignite.IgniteLogger
-        //gridLogger(Log4JLogger)
+        /*
+         * Only configure Ignite if the configuration value ignite.enabled=true is defined
+         */
+        if (!(application.config.ignite.enabled instanceof ConfigObject) && application.config.ignite.enabled.equals(true)) {
+            // FIXME Caused by ClassNotFoundException: org.apache.ignite.IgniteLogger
+            //gridLogger(Log4JLogger)
 
-        igniteCfg(IgniteConfiguration) {
-            gridName = "grid"
-            peerClassLoadingEnabled = true
+            igniteCfg(IgniteConfiguration) {
+                gridName = "grid"
+                peerClassLoadingEnabled = true
 
-            marshaller = { OptimizedMarshaller marshaller ->
-                requireSerializable = false
+                marshaller = { OptimizedMarshaller marshaller ->
+                    requireSerializable = false
+                }
+
+    //            marshaller = { JdkMarshaller marshaller ->
+    ////                requireSerializable = false
+    //            }
+
+    //            marshaller = { GroovyOptimizedMarshallerDecorator dec ->
+    //                underlyingMarshaller = { OptimizedMarshaller mar ->
+    //                    requireSerializable = false
+    //                }
+    //            }
+
+    //            cacheConfiguration = { CacheConfiguration cacheConfiguration ->
+    //                name = "jobSchedules"
+    //                cacheMode = CacheMode.REPLICATED
+    //                atomicityMode = CacheAtomicityMode.ATOMIC
+    //            }
+
+                includeEventTypes = [org.apache.ignite.events.EventType.EVT_TASK_STARTED,
+                        org.apache.ignite.events.EventType.EVT_TASK_FINISHED,
+                        org.apache.ignite.events.EventType.EVT_TASK_FAILED,
+                        org.apache.ignite.events.EventType.EVT_TASK_TIMEDOUT,
+                        org.apache.ignite.events.EventType.EVT_TASK_SESSION_ATTR_SET,
+                        org.apache.ignite.events.EventType.EVT_TASK_REDUCED,
+                        org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_PUT,
+                        org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_READ,
+                        org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_READ]
+
+    //            discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
+    //                ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder tcpDiscoveryMulticastIpFinder ->
+    //                    addresses = ['127.0.0.1:47500..47509']
+    //                }
+    //            }
+
+                deploymentSpi = { LocalDeploymentSpi impl ->
+
+                }
+
+                //gridLogger = ref('gridLogger')
             }
 
-//            marshaller = { JdkMarshaller marshaller ->
-////                requireSerializable = false
-//            }
-
-//            marshaller = { GroovyOptimizedMarshallerDecorator dec ->
-//                underlyingMarshaller = { OptimizedMarshaller mar ->
-//                    requireSerializable = false
-//                }
-//            }
-
-//            cacheConfiguration = { CacheConfiguration cacheConfiguration ->
-//                name = "jobSchedules"
-//                cacheMode = CacheMode.REPLICATED
-//                atomicityMode = CacheAtomicityMode.ATOMIC
-//            }
-
-            includeEventTypes = [org.apache.ignite.events.EventType.EVT_TASK_STARTED,
-                    org.apache.ignite.events.EventType.EVT_TASK_FINISHED,
-                    org.apache.ignite.events.EventType.EVT_TASK_FAILED,
-                    org.apache.ignite.events.EventType.EVT_TASK_TIMEDOUT,
-                    org.apache.ignite.events.EventType.EVT_TASK_SESSION_ATTR_SET,
-                    org.apache.ignite.events.EventType.EVT_TASK_REDUCED,
-                    org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_PUT,
-                    org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_READ,
-                    org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_READ]
-
-//            discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
-//                ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder tcpDiscoveryMulticastIpFinder ->
-//                    addresses = ['127.0.0.1:47500..47509']
-//                }
-//            }
-
-            deploymentSpi = { LocalDeploymentSpi impl ->
-
+            grid(org.apache.ignite.IgniteSpringBean) {
+                configuration = ref('igniteCfg')
             }
-
-            //gridLogger = ref('gridLogger')
-        }
-
-        grid(org.apache.ignite.IgniteSpringBean) {
-            configuration = ref('igniteCfg')
         }
     }
 

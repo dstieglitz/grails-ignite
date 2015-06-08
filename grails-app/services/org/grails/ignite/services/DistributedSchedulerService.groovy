@@ -1,23 +1,26 @@
 package org.grails.ignite.services
 
+import org.grails.ignite.SchedulerService
+
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
-class DistributedSchedulerService {
+class DistributedSchedulerService implements SchedulerService {
 
     static transactional = false
 
     def grid
 
-    def scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
+    public ScheduledFuture scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
         log.debug "scheduleAtFixedRate ${command}, ${initialDelay}, ${period}, ${unit}"
         return getServiceProxy().scheduleAtFixedRate(command, initialDelay, period, unit)
     }
 
-    def scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
+    public ScheduledFuture scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
         return getServiceProxy().scheduleWithFixedDelay(command, initialDelay, delay, unit)
     }
 
     def getServiceProxy() {
-        return grid.services().serviceProxy("distributedSchedulerService", org.grails.ignite.DistributedSchedulerService.class, false)
+        return grid.services().serviceProxy("distributedSchedulerService", SchedulerService.class, false)
     }
 }

@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Dan Stieglitz
  */
-public class DistributedSchedulerServiceImpl implements Service, org.grails.ignite.DistributedSchedulerService {
+public class DistributedSchedulerServiceImpl implements Service, SchedulerService {
 
     private static final Logger log = Logger.getLogger(DistributedSchedulerServiceImpl.class.getName());
 

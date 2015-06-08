@@ -5,6 +5,7 @@ import org.apache.ignite.configuration.IgniteConfiguration
 import org.apache.ignite.logger.log4j.Log4JLogger
 import org.apache.ignite.marshaller.jdk.JdkMarshaller
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
+import org.apache.ignite.spi.deployment.local.LocalDeploymentSpi
 import org.grails.ignite.GroovyOptimizedMarshallerDecorator
 
 class IgniteGrailsPlugin {
@@ -57,7 +58,7 @@ A plugin for the Apache Ignite data grid framework.
 
         igniteCfg(IgniteConfiguration) {
             gridName = "grid"
-            peerClassLoadingEnabled = false
+            peerClassLoadingEnabled = true
 
             marshaller = { OptimizedMarshaller marshaller ->
                 requireSerializable = false
@@ -94,6 +95,10 @@ A plugin for the Apache Ignite data grid framework.
 //                    addresses = ['127.0.0.1:47500..47509']
 //                }
 //            }
+
+            deploymentSpi = { LocalDeploymentSpi impl ->
+
+            }
 
             //gridLogger = ref('gridLogger')
         }

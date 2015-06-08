@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Dan Stieglitz
  */
-public interface DistributedSchedulerService {
+public interface SchedulerService {
 
     public ScheduledFuture scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit);
 

@@ -7,11 +7,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * Created with IntelliJ IDEA.
- * User: dstieglitz
- * Date: 6/6/15
- * Time: 2:41 PM
- * To change this template use File | Settings | File Templates.
+ * Example grid compute class taken from the Ignite wiki.
+ *
+ * @author Dan Stieglitz
  */
 public class FirstIgniteComputeApplication extends AbstractIgniteApplication implements Runnable {
     public FirstIgniteComputeApplication(Ignite ignite) {

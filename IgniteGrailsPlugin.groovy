@@ -1,9 +1,15 @@
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
+import org.apache.ignite.configuration.CacheConfiguration
+import org.apache.ignite.configuration.IgniteConfiguration
+import org.apache.ignite.logger.log4j.Log4JLogger
+import org.apache.ignite.marshaller.jdk.JdkMarshaller
+import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
+import org.grails.ignite.GroovyOptimizedMarshallerDecorator
 
 class IgniteGrailsPlugin {
     // the plugin version
-    def version = "0.1"
+    def version = "0.1-SNAPSHOT"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.3 > *"
     // resources that are excluded from plugin packaging
@@ -47,21 +53,31 @@ A plugin for the Apache Ignite data grid framework.
         // TODO Implement runtime spring config (optional)
 
         // FIXME Caused by ClassNotFoundException: org.apache.ignite.IgniteLogger
-//        gridLogger(org.apache.ignite.logger.log4j.Log4JLogger)
+        //gridLogger(Log4JLogger)
 
-        igniteCfg(org.apache.ignite.configuration.IgniteConfiguration) {
+        igniteCfg(IgniteConfiguration) {
             gridName = "grid"
-            peerClassLoadingEnabled = true
+            peerClassLoadingEnabled = false
 
-            marshaller = { org.apache.ignite.marshaller.optimized.OptimizedMarshaller marshaller ->
+            marshaller = { OptimizedMarshaller marshaller ->
                 requireSerializable = false
             }
 
-            cacheConfiguration = { org.apache.ignite.configuration.CacheConfiguration cacheConfiguration ->
-                name = "testCache"
-                cacheMode = CacheMode.PARTITIONED
-                atomicityMode = CacheAtomicityMode.TRANSACTIONAL
-            }
+//            marshaller = { JdkMarshaller marshaller ->
+////                requireSerializable = false
+//            }
+
+//            marshaller = { GroovyOptimizedMarshallerDecorator dec ->
+//                underlyingMarshaller = { OptimizedMarshaller mar ->
+//                    requireSerializable = false
+//                }
+//            }
+
+//            cacheConfiguration = { CacheConfiguration cacheConfiguration ->
+//                name = "jobSchedules"
+//                cacheMode = CacheMode.REPLICATED
+//                atomicityMode = CacheAtomicityMode.ATOMIC
+//            }
 
             includeEventTypes = [org.apache.ignite.events.EventType.EVT_TASK_STARTED,
                     org.apache.ignite.events.EventType.EVT_TASK_FINISHED,
@@ -73,22 +89,14 @@ A plugin for the Apache Ignite data grid framework.
                     org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_READ,
                     org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_READ]
 
-            discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
-                ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder tcpDiscoveryMulticastIpFinder ->
-                    addresses = ['127.0.0.1:47500..47509']
-                }
-            }
-        }
+//            discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
+//                ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder tcpDiscoveryMulticastIpFinder ->
+//                    addresses = ['127.0.0.1:47500..47509']
+//                }
+//            }
 
-//        <property name="gridLogger">
-//        <bean class="org.apache.ignite.logger.jcl.IgniteJclLogger">
-//        <constructor-arg type="org.apache.commons.logging.Log">
-//        <bean class="org.apache.commons.logging.impl.Log4JLogger">
-//        <constructor-arg type="java.lang.String" value="config/ignite-log4j2.xml"/>
-//        </bean>
-//          </constructor-arg>
-//        </bean>
-//  </property>
+            //gridLogger = ref('gridLogger')
+        }
 
         grid(org.apache.ignite.IgniteSpringBean) {
             configuration = ref('igniteCfg')

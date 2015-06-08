@@ -10,6 +10,7 @@ grails.project.fork = [
     test: [maxMemory: 768, minMemory: 64, debug: false, maxPerm: 256, daemon:true],
     // configure settings for the run-app JVM
     run: [maxMemory: 768, minMemory: 64, debug: false, maxPerm: 256, forkReserve:false],
+    //run: false,
     // configure settings for the run-war JVM
     war: [maxMemory: 768, minMemory: 64, debug: false, maxPerm: 256, forkReserve:false],
     // configure settings for the Console UI JVM
@@ -48,6 +49,9 @@ grails.project.dependency.resolution = {
             excludes 'hibernate-core'
         }
         compile 'org.apache.ignite:ignite-log4j:1.1.0-incubating'
+        compile 'org.bouncycastle:bcprov-jdk15on:1.52'
+        compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.0'
+        compile 'com.cedarsoftware:groovy-io:1.1.1'
     }
 
     plugins {

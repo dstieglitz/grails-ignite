@@ -7,11 +7,9 @@ import org.apache.ignite.transactions.Transaction;
 import java.util.concurrent.locks.Lock;
 
 /**
- * Created with IntelliJ IDEA.
- * User: dstieglitz
- * Date: 6/6/15
- * Time: 2:46 PM
- * To change this template use File | Settings | File Templates.
+ * Example data grid class taken from the Ignite wiki.
+ *
+ * @author Dan Stieglitz
  */
 public class FirstIgniteDataGridApplication extends AbstractIgniteApplication implements Runnable {
     IgniteCache<Integer, String> cache;

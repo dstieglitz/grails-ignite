@@ -10,6 +10,23 @@ The plugin provides a configured instance of the Ingite grid as a bean called "g
 
 	def grid
 
+
+#Configuration
+
+You can configure Ignite from the Config.groovy file (with limited configuration support for now):
+
+```
+ignite {
+    enabled=true
+    gridName="myGrid"
+    peerClassLoadingEnabled=false
+    discoverySpi {
+        networkTimeout = 5000
+        addresses = ["${myIP}:47500..47509"]
+    }
+}
+```
+	
 #Scheduled, Distributed Tasks
 
 This plugin provides an Ignite service called `DistributedSchedulerService` that provides a partial implementation of the `ScheduledThreadPoolExectutor` interface but allows you to run the submitted jobs on the Ignite grid. 

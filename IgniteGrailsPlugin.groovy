@@ -49,6 +49,24 @@ A plugin for the Apache Ignite data grid framework.
     def doWithSpring = {
         // TODO Implement runtime spring config (optional)
 
+        def peerClassLoadingEnabledInConfig = (!(application.config.ignite.peerClassLoadingEnabled instanceof ConfigObject)
+                && application.config.ignite.ignite.peerClassLoadingEnabled.equals(true))
+
+        def configuredGridName = "grid"
+        if (!(application.config.ignite.gridName instanceof ConfigObject)) {
+            configuredGridName = application.config.ignite.gridName
+        }
+
+        def configuredNetworkTimeout = 3000
+        if (!(application.config.ignite.discoverySpi.networkTimeout instanceof ConfigObject)) {
+            configuredNetworkTimeout = application.config.ignite.discoverySpi.networkTimeout
+        }
+
+        def configuredAddresses = []
+        if (!(application.config.ignite.discoverySpi.addresses instanceof ConfigObject)) {
+            configuredAddresses = application.config.ignite.discoverySpi.addresses
+        }
+
         /*
          * Only configure Ignite if the configuration value ignite.enabled=true is defined
          */
@@ -57,8 +75,8 @@ A plugin for the Apache Ignite data grid framework.
             //gridLogger(Log4JLogger)
 
             igniteCfg(IgniteConfiguration) {
-                gridName = "grid"
-                peerClassLoadingEnabled = true
+                gridName = configuredGridName
+                peerClassLoadingEnabled = peerClassLoadingEnabledInConfig
 
                 marshaller = { OptimizedMarshaller marshaller ->
                     requireSerializable = false
@@ -90,15 +108,16 @@ A plugin for the Apache Ignite data grid framework.
                         org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_READ,
                         org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_READ]
 
-                //            discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
-                //                ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder tcpDiscoveryMulticastIpFinder ->
-                //                    addresses = ['127.0.0.1:47500..47509']
-                //                }
-                //            }
-
-                deploymentSpi = { LocalDeploymentSpi impl ->
-
+                discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
+                    networkTimeout = configuredNetworkTimeout
+                    ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder tcpDiscoveryMulticastIpFinder ->
+                        addresses = configuredAddresses
+                    }
                 }
+
+//                deploymentSpi = { LocalDeploymentSpi impl ->
+//
+//                }
 
 //                serviceConfiguration = [{ ServiceConfiguration serviceConfiguration ->
 //                    name = "distributedSchedulerService"
@@ -110,7 +129,9 @@ A plugin for the Apache Ignite data grid framework.
                 //gridLogger = ref('gridLogger')
             }
 
-            grid(org.apache.ignite.IgniteSpringBean) {
+            grid(org.apache.ignite.IgniteSpringBean) { bean ->
+                bean.lazyInit = true
+                bean.dependsOn = ['persistenceInterceptor']
                 configuration = ref('igniteCfg')
             }
         }

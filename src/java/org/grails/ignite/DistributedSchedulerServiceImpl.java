@@ -57,7 +57,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         scheduleData.setDelay(delay);
         scheduleData.setTimeUnit(unit);
         schedule.add(scheduleData);
-        log.info("added " + scheduleData + "to schedule");
+        log.info("added " + scheduleData + " to schedule");
         return executor.scheduleWithFixedDelay(command, initialDelay, delay, unit);
     }
 

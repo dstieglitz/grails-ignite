@@ -37,6 +37,14 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     private DistributedScheduledThreadPoolExecutor executor;
 
+    public DistributedSchedulerServiceImpl() {
+        this.ignite = ignite;
+    }
+
+    public DistributedSchedulerServiceImpl(Ignite ignite) {
+        this.ignite = ignite;
+    }
+
     public ScheduledFuture scheduleAtFixedRate(NamedRunnable command, long initialDelay, long period, TimeUnit unit) {
         // FIXME concurrent commands will be removed by set semantics, need to re-name with unique ID here
         ScheduleData scheduleData = new ScheduleData(command.getName());
@@ -115,6 +123,10 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                 scheduleWithFixedDelay(datum, datum.initialDelay, datum.delay, datum.timeUnit);
             }
         }
+    }
+
+    public void setIgnite(Ignite ignite) {
+        this.ignite = ignite;
     }
 
     private class ScheduleData implements NamedRunnable {

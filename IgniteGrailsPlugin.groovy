@@ -1,6 +1,7 @@
+import org.apache.ignite.IgniteCheckedException
+import org.apache.ignite.Ignition
 import org.apache.ignite.configuration.IgniteConfiguration
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
-import org.apache.ignite.spi.deployment.local.LocalDeploymentSpi
 import org.grails.ignite.DistributedSchedulerServiceImpl
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
@@ -115,7 +116,7 @@ A plugin for the Apache Ignite data grid framework.
                     }
                 }
 
-//                deploymentSpi = { LocalDeploymentSpi impl ->
+//                deploymentSpi = { LowcalDeploymentSpi impl ->
 //
 //                }
 
@@ -129,7 +130,7 @@ A plugin for the Apache Ignite data grid framework.
                 //gridLogger = ref('gridLogger')
             }
 
-            grid(org.apache.ignite.IgniteSpringBean) { bean ->
+            grid(org.grails.ignite.DeferredStartIgniteSpringBean) { bean ->
                 bean.lazyInit = true
                 bean.dependsOn = ['persistenceInterceptor']
                 configuration = ref('igniteCfg')
@@ -142,11 +143,36 @@ A plugin for the Apache Ignite data grid framework.
     }
 
     def doWithApplicationContext = { ctx ->
+        System.setProperty("IGNITE_QUIET", "false");
+        //
+        // FIXME need to start grid LAST, can't configure with spring this way. Maybe wrap in a delayed start
+        // bean or something
+        //
+//        def configuredAddresses = []
+//        if (!(application.config.ignite.discoverySpi.addresses instanceof ConfigObject)) {
+//            configuredAddresses = application.config.ignite.discoverySpi.addresses
+//        }
+//
+//        IgniteConfiguration config = new IgniteConfiguration();
+//        config.setMarshaller(new OptimizedMarshaller(false));
+//        def discoverySpi = new org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi();
+//        discoverySpi.setNetworkTimeout(5000);
+//        def ipFinder = new org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder();
+//        ipFinder.setAddresses(configuredAddresses)
+//        discoverySpi.setIpFinder(ipFinder)
+//        def grid = Ignition.start(config);
+
         try {
-            ctx.getBean('grid').services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
+            def grid = ctx.getBean('grid')
+            grid.start()
+            grid.services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
         } catch (NoSuchBeanDefinitionException e) {
             log.warn e.message
+        } catch (IgniteCheckedException e) {
+            log.error e.message, e
         }
+
+//        ctx.getBean('distributedSchedulerService').grid = grid
     }
 
     def onChange = { event ->

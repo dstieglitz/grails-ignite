@@ -1,8 +1,8 @@
 import org.apache.ignite.configuration.IgniteConfiguration
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
-import org.apache.ignite.services.ServiceConfiguration
 import org.apache.ignite.spi.deployment.local.LocalDeploymentSpi
 import org.grails.ignite.DistributedSchedulerServiceImpl
+import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 class IgniteGrailsPlugin {
     // the plugin version
@@ -121,7 +121,11 @@ A plugin for the Apache Ignite data grid framework.
     }
 
     def doWithApplicationContext = { ctx ->
-       ctx.getBean('grid').services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
+        try {
+            ctx.getBean('grid').services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
+        } catch (NoSuchBeanDefinitionException e) {
+            log.warn e.message
+        }
     }
 
     def onChange = { event ->

@@ -1,10 +1,11 @@
 package org.grails.ignite;
 
+import org.apache.ignite.IgniteException;
+
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- *
  * Interface for a distributed scheduler service.
  *
  * @author Dan Stieglitz

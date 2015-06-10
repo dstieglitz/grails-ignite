@@ -4,6 +4,7 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteException;
 import org.apache.ignite.IgniteSet;
 import org.apache.ignite.Ignition;
+import org.apache.ignite.compute.ComputeExecutionRejectedException;
 import org.apache.ignite.configuration.CollectionConfiguration;
 import org.apache.ignite.lang.IgniteRunnable;
 import org.apache.ignite.resources.IgniteInstanceResource;
@@ -13,11 +14,12 @@ import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.UUID;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.ignite.cache.CacheAtomicityMode.TRANSACTIONAL;
-import static org.apache.ignite.cache.CacheMode.PARTITIONED;
+import static org.apache.ignite.cache.CacheAtomicityMode.ATOMIC;
+import static org.apache.ignite.cache.CacheMode.REPLICATED;
 
 /**
  * <p>An implementation of a simple distributed scheduled executor service that mimics the interface of the
@@ -50,16 +52,17 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     }
 
     private static IgniteSet initializeSet(Ignite ignite) throws IgniteException {
-        log.info("initializing set: " + JOB_SCHEDULE_DATA_SET_NAME);
+        log.info("initializing distributed dataset: " + JOB_SCHEDULE_DATA_SET_NAME);
         CollectionConfiguration setCfg = new CollectionConfiguration();
-        setCfg.setAtomicityMode(TRANSACTIONAL);
-        setCfg.setCacheMode(PARTITIONED);
+        setCfg.setAtomicityMode(ATOMIC);
+        setCfg.setCacheMode(REPLICATED);
         IgniteSet<ScheduleData> set = ignite.set(JOB_SCHEDULE_DATA_SET_NAME, setCfg);
         return set;
     }
 
+    // FIXME concurrent commands will be removed by set semantics, need to re-name with unique ID here
     public ScheduledFuture scheduleAtFixedRate(NamedRunnable command, long initialDelay, long period, TimeUnit unit) {
-        // FIXME concurrent commands will be removed by set semantics, need to re-name with unique ID here
+        log.debug("scheduleAtFixedRate '" + command + "'," + initialDelay + "," + period + "," + unit);
         ScheduleData scheduleData = new ScheduleData(command.getName());
         scheduleData.setCommand(command);
         scheduleData.setInitialDelay(initialDelay);
@@ -67,11 +70,14 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         scheduleData.setTimeUnit(unit);
         ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduleData));
         log.info("added " + scheduleData + " to schedule");
+        log.debug("scheduleData: " + schedule);
         return executor.scheduleAtFixedRate(command, initialDelay, period, unit);
+
     }
 
+    // FIXME concurrent commands will be removed by set semantics, need to re-name with unique ID here
     public ScheduledFuture scheduleWithFixedDelay(NamedRunnable command, long initialDelay, long delay, TimeUnit unit) {
-        // FIXME concurrent commands will be removed by set semantics, need to re-name with unique ID here
+        log.debug("scheduleWithFixedDelay '" + command + "'," + initialDelay + "," + delay + "," + unit);
         ScheduleData scheduleData = new ScheduleData(command.getName());
         scheduleData.setCommand(command);
         scheduleData.setInitialDelay(initialDelay);
@@ -79,6 +85,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         scheduleData.setTimeUnit(unit);
         ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduleData));
         log.info("added " + scheduleData + " to schedule");
+        log.debug("scheduleData: " + schedule);
         return executor.scheduleWithFixedDelay(command, initialDelay, delay, unit);
     }
 
@@ -121,11 +128,11 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     public void init(ServiceContext serviceContext) throws Exception {
         this.executor = new DistributedScheduledThreadPoolExecutor(ignite, 1);
         schedule = initializeSet(ignite);
+        log.info("service " + this + " initialized");
     }
 
     @Override
     public void execute(ServiceContext serviceContext) throws Exception {
-        log.info("service " + this + " executed");
         log.debug("schedule.size()=" + this.schedule.size());
         for (ScheduleData datum : schedule) {
             log.debug("found existing schedule data " + datum);
@@ -135,6 +142,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                 scheduleWithFixedDelay(datum, datum.initialDelay, datum.delay, datum.timeUnit);
             }
         }
+        log.debug("exiting service " + this + " execute");
     }
 
     public void setIgnite(Ignite ignite) {

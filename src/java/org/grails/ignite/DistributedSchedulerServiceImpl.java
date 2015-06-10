@@ -1,17 +1,23 @@
 package org.grails.ignite;
 
 import org.apache.ignite.Ignite;
+import org.apache.ignite.IgniteException;
 import org.apache.ignite.IgniteSet;
-import org.apache.ignite.cache.CacheMode;
+import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.CollectionConfiguration;
+import org.apache.ignite.lang.IgniteRunnable;
 import org.apache.ignite.resources.IgniteInstanceResource;
 import org.apache.ignite.services.Service;
 import org.apache.ignite.services.ServiceContext;
 import org.apache.log4j.Logger;
 
+import java.io.Serializable;
 import java.util.UUID;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import static org.apache.ignite.cache.CacheAtomicityMode.TRANSACTIONAL;
+import static org.apache.ignite.cache.CacheMode.PARTITIONED;
 
 /**
  * <p>An implementation of a simple distributed scheduled executor service that mimics the interface of the
@@ -29,12 +35,10 @@ import java.util.concurrent.TimeUnit;
 public class DistributedSchedulerServiceImpl implements Service, SchedulerService {
 
     private static final Logger log = Logger.getLogger(DistributedSchedulerServiceImpl.class.getName());
-
+    private static final String JOB_SCHEDULE_DATA_SET_NAME = "jobSchedules";
+    private static IgniteSet<ScheduleData> schedule;
     @IgniteInstanceResource
     private Ignite ignite;
-
-    private IgniteSet<ScheduleData> schedule;
-
     private DistributedScheduledThreadPoolExecutor executor;
 
     public DistributedSchedulerServiceImpl() {
@@ -45,6 +49,15 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         this.ignite = ignite;
     }
 
+    private static IgniteSet initializeSet(Ignite ignite) throws IgniteException {
+        log.info("initializing set: " + JOB_SCHEDULE_DATA_SET_NAME);
+        CollectionConfiguration setCfg = new CollectionConfiguration();
+        setCfg.setAtomicityMode(TRANSACTIONAL);
+        setCfg.setCacheMode(PARTITIONED);
+        IgniteSet<ScheduleData> set = ignite.set(JOB_SCHEDULE_DATA_SET_NAME, setCfg);
+        return set;
+    }
+
     public ScheduledFuture scheduleAtFixedRate(NamedRunnable command, long initialDelay, long period, TimeUnit unit) {
         // FIXME concurrent commands will be removed by set semantics, need to re-name with unique ID here
         ScheduleData scheduleData = new ScheduleData(command.getName());
@@ -52,8 +65,8 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         scheduleData.setInitialDelay(initialDelay);
         scheduleData.setPeriod(period);
         scheduleData.setTimeUnit(unit);
-        schedule.add(scheduleData);
-        log.info("added " + scheduleData + "to schedule");
+        ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduleData));
+        log.info("added " + scheduleData + " to schedule");
         return executor.scheduleAtFixedRate(command, initialDelay, period, unit);
     }
 
@@ -64,13 +77,14 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         scheduleData.setInitialDelay(initialDelay);
         scheduleData.setDelay(delay);
         scheduleData.setTimeUnit(unit);
-        schedule.add(scheduleData);
+        ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduleData));
         log.info("added " + scheduleData + " to schedule");
         return executor.scheduleWithFixedDelay(command, initialDelay, delay, unit);
     }
 
     /**
      * Query the state of the scheduled jobs to determine if a job with the supplied ID is scheduled.
+     *
      * @param id
      * @return true if a ScheduleData record exists for the job
      */
@@ -106,14 +120,12 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     @Override
     public void init(ServiceContext serviceContext) throws Exception {
         this.executor = new DistributedScheduledThreadPoolExecutor(ignite, 1);
-        CollectionConfiguration config = new CollectionConfiguration();
-        config.setCacheMode(CacheMode.REPLICATED);
-        this.schedule = ignite.set("jobSchedules", config);
+        schedule = initializeSet(ignite);
     }
 
     @Override
     public void execute(ServiceContext serviceContext) throws Exception {
-        log.info("service "+this+" executed");
+        log.info("service " + this + " executed");
         log.debug("schedule.size()=" + this.schedule.size());
         for (ScheduleData datum : schedule) {
             log.debug("found existing schedule data " + datum);
@@ -129,7 +141,38 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         this.ignite = ignite;
     }
 
-    private class ScheduleData implements NamedRunnable {
+    /**
+     * Closure to populate the set.
+     */
+    private static class SetClosure implements IgniteRunnable {
+        /**
+         * Set name.
+         */
+        private final String setName;
+        private final ScheduleData scheduleData;
+        private final String gridName;
+
+        /**
+         * @param setName Set name.
+         * @param data    The data to add.
+         */
+        SetClosure(String gridName, String setName, ScheduleData data) {
+            this.setName = setName;
+            this.scheduleData = data;
+            this.gridName = gridName;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void run() {
+            IgniteSet<ScheduleData> set = Ignition.ignite(gridName).set(setName, null);
+            set.add(scheduleData);
+        }
+    }
+
+    private class ScheduleData implements NamedRunnable, Serializable {
         private String id;
         private Runnable command;
         private long initialDelay = -1;
@@ -200,7 +243,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         @Override
         public boolean equals(Object obj) {
             if (!(obj instanceof ScheduleData)) return false;
-            return ((ScheduleData)obj).toString().equals(this.toString());
+            return ((ScheduleData) obj).toString().equals(this.toString());
         }
 
         @Override

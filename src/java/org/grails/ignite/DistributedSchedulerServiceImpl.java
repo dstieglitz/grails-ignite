@@ -4,7 +4,6 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteException;
 import org.apache.ignite.IgniteSet;
 import org.apache.ignite.Ignition;
-import org.apache.ignite.compute.ComputeExecutionRejectedException;
 import org.apache.ignite.configuration.CollectionConfiguration;
 import org.apache.ignite.lang.IgniteRunnable;
 import org.apache.ignite.resources.IgniteInstanceResource;
@@ -12,24 +11,23 @@ import org.apache.ignite.services.Service;
 import org.apache.ignite.services.ServiceContext;
 import org.apache.log4j.Logger;
 
-import java.io.Serializable;
-import java.util.UUID;
-import java.util.concurrent.RejectedExecutionException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
-import static org.apache.ignite.cache.CacheAtomicityMode.ATOMIC;
+import static org.apache.ignite.cache.CacheAtomicityMode.TRANSACTIONAL;
 import static org.apache.ignite.cache.CacheMode.REPLICATED;
 
 /**
  * <p>An implementation of a simple distributed scheduled executor service that mimics the interface of the
  * ScheduledThreadPoolExector (at least some of the methods), but executes the actual jobs on the grid instead
  * of in a local ThreadPool.</p>
- * <p>Each job has a ScheduleData record saved to the cluster in a REDUNDANT cluster-wide data structure. If the node
+ * <p>Each job has a ScheduledRunnable record saved to the cluster in a REDUNDANT cluster-wide data structure. If the node
  * hosting this scheduler service goes down, another node can pick up the service and re-schedule the jobs for
  * execution.</p>
- * <p>The schedule uses a Set<ScheduleData> object under the hood, so it's important to pay attention to naming
- * since two ScheduleData objects with the same name are considered to be the same object (to prevent over-scheduling
+ * <p>The schedule uses a Set<ScheduledRunnable> object under the hood, so it's important to pay attention to naming
+ * since two ScheduledRunnable objects with the same name are considered to be the same object (to prevent over-scheduling
  * of the same task).</p>
  *
  * @author Dan Stieglitz
@@ -38,13 +36,16 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     private static final Logger log = Logger.getLogger(DistributedSchedulerServiceImpl.class.getName());
     private static final String JOB_SCHEDULE_DATA_SET_NAME = "jobSchedules";
-    private static IgniteSet<ScheduleData> schedule;
+    private static IgniteSet<ScheduledRunnable> schedule;
     @IgniteInstanceResource
     private Ignite ignite;
     private DistributedScheduledThreadPoolExecutor executor;
 
+    // to allow cancellation
+    private Map<String, ScheduledFuture> nameFutureMap = new HashMap<String, ScheduledFuture>();
+
     public DistributedSchedulerServiceImpl() {
-        this.ignite = ignite;
+        // default constructor
     }
 
     public DistributedSchedulerServiceImpl(Ignite ignite) {
@@ -54,54 +55,129 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     private static IgniteSet initializeSet(Ignite ignite) throws IgniteException {
         log.info("initializing distributed dataset: " + JOB_SCHEDULE_DATA_SET_NAME);
         CollectionConfiguration setCfg = new CollectionConfiguration();
-        setCfg.setAtomicityMode(ATOMIC);
+        setCfg.setAtomicityMode(TRANSACTIONAL);
         setCfg.setCacheMode(REPLICATED);
-        IgniteSet<ScheduleData> set = ignite.set(JOB_SCHEDULE_DATA_SET_NAME, setCfg);
+        IgniteSet<ScheduledRunnable> set = ignite.set(JOB_SCHEDULE_DATA_SET_NAME, setCfg);
         return set;
     }
 
-    // FIXME concurrent commands will be removed by set semantics, need to re-name with unique ID here
-    public ScheduledFuture scheduleAtFixedRate(NamedRunnable command, long initialDelay, long period, TimeUnit unit) {
-        log.debug("scheduleAtFixedRate '" + command + "'," + initialDelay + "," + period + "," + unit);
-        ScheduleData scheduleData = new ScheduleData(command.getName());
-        scheduleData.setCommand(command);
-        scheduleData.setInitialDelay(initialDelay);
-        scheduleData.setPeriod(period);
-        scheduleData.setTimeUnit(unit);
-        ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduleData));
-        log.info("added " + scheduleData + " to schedule");
-        log.debug("scheduleData: " + schedule);
-        return executor.scheduleAtFixedRate(command, initialDelay, period, unit);
+    @Override
+    public ScheduledFuture scheduleAtFixedRate(ScheduledRunnable scheduledRunnable) {
+        log.debug("scheduleAtFixedRate '" + scheduledRunnable + "',"
+                + scheduledRunnable.getInitialDelay() + ","
+                + scheduledRunnable.getPeriod() + ","
+                + scheduledRunnable.getTimeUnit());
 
+        ScheduledFuture future = executor.scheduleAtFixedRate(scheduledRunnable,
+                scheduledRunnable.getInitialDelay(),
+                scheduledRunnable.getPeriod(),
+                scheduledRunnable.getTimeUnit());
+
+        log.debug("schedule returned " + future);
+//        scheduledRunnable.setScheduledFuture(future);
+
+        ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
+
+        log.info("added " + scheduledRunnable + " to schedule");
+        log.debug("scheduledRunnable: " + schedule);
+
+        nameFutureMap.put(scheduledRunnable.getName(), future);
+
+        return future;
     }
 
-    // FIXME concurrent commands will be removed by set semantics, need to re-name with unique ID here
-    public ScheduledFuture scheduleWithFixedDelay(NamedRunnable command, long initialDelay, long delay, TimeUnit unit) {
-        log.debug("scheduleWithFixedDelay '" + command + "'," + initialDelay + "," + delay + "," + unit);
-        ScheduleData scheduleData = new ScheduleData(command.getName());
-        scheduleData.setCommand(command);
-        scheduleData.setInitialDelay(initialDelay);
-        scheduleData.setDelay(delay);
-        scheduleData.setTimeUnit(unit);
-        ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduleData));
-        log.info("added " + scheduleData + " to schedule");
-        log.debug("scheduleData: " + schedule);
-        return executor.scheduleWithFixedDelay(command, initialDelay, delay, unit);
+    @Override
+    public ScheduledFuture scheduleWithFixedDelay(ScheduledRunnable scheduledRunnable) {
+        log.debug("scheduleWithFixedDelay '" + scheduledRunnable + "',"
+                + scheduledRunnable.getInitialDelay() + ","
+                + scheduledRunnable.getDelay() + ","
+                + scheduledRunnable.getTimeUnit());
+
+        ScheduledFuture future = executor.scheduleWithFixedDelay(scheduledRunnable.getUnderlyingRunnable(),
+                scheduledRunnable.getInitialDelay(),
+                scheduledRunnable.getDelay(),
+                scheduledRunnable.getTimeUnit());
+
+        log.debug("schedule returned " + future);
+//        scheduledRunnable.setScheduledFuture(future);
+
+        ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
+
+        log.info("added " + scheduledRunnable + " to schedule");
+        log.debug("scheduledRunnable: " + schedule);
+
+        nameFutureMap.put(scheduledRunnable.getName(), future);
+
+        return future;
+    }
+
+    @Override
+    public ScheduledFuture schedule(ScheduledRunnable scheduledRunnable) {
+        log.debug("schedule '" + scheduledRunnable + "'," + scheduledRunnable.getDelay() + "," + scheduledRunnable.getTimeUnit());
+
+        ScheduledFuture future = executor.schedule(scheduledRunnable,
+                scheduledRunnable.getDelay(),
+                scheduledRunnable.getTimeUnit());
+
+        log.debug("schedule returned " + future);
+//        scheduledRunnable.setScheduledFuture(future);
+
+        ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
+        log.info("added " + scheduledRunnable + " to schedule");
+        log.debug("scheduledRunnable: " + schedule);
+
+        nameFutureMap.put(scheduledRunnable.getName(), future);
+
+        return future;
     }
 
     /**
      * Query the state of the scheduled jobs to determine if a job with the supplied ID is scheduled.
      *
      * @param id
-     * @return true if a ScheduleData record exists for the job
+     * @return true if a ScheduledRunnable record exists for the job
      */
     @Override
     public boolean isScheduled(String id) {
-        for (ScheduleData scheduleDatum : schedule) {
+        for (ScheduledRunnable scheduleDatum : schedule) {
             if (scheduleDatum.toString().equals(id)) return true;
         }
 
         return false;
+    }
+
+    private ScheduledRunnable findScheduleDataByName(String name) {
+        for (ScheduledRunnable scheduleDatum : schedule) {
+            if (scheduleDatum.toString().equals(name)) return scheduleDatum;
+        }
+
+        return null;
+    }
+
+    @Override
+    public boolean cancel(String name, boolean mayInterruptIfRunning) {
+        Future future = nameFutureMap.get(name);
+        if (future == null) {
+            return true; // if not found, it's cancelled
+        } else {
+//            Future future = data.getFuture();
+            log.debug("cancelling via Future " + future);
+
+            // getFuture() will return a ScheduledFutureTask
+            boolean cancelled = executor.cancel((Runnable) future, true);
+
+            log.debug("cancel returned " + cancelled);
+            boolean removed = false;
+            if (cancelled) {
+                removed = schedule.remove(findScheduleDataByName(name));
+                log.debug("remove returned " + removed);
+                if (removed) {
+                    nameFutureMap.remove(name);
+                }
+            }
+
+            return cancelled && removed;
+        }
     }
 
     @Override
@@ -134,12 +210,12 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     @Override
     public void execute(ServiceContext serviceContext) throws Exception {
         log.debug("schedule.size()=" + this.schedule.size());
-        for (ScheduleData datum : schedule) {
+        for (ScheduledRunnable datum : schedule) {
             log.debug("found existing schedule data " + datum);
             if (datum.getPeriod() > 0) {
-                scheduleAtFixedRate(datum, datum.initialDelay, datum.period, datum.timeUnit);
+                scheduleAtFixedRate(datum);
             } else if (datum.getDelay() > 0) {
-                scheduleWithFixedDelay(datum, datum.initialDelay, datum.delay, datum.timeUnit);
+                scheduleWithFixedDelay(datum);
             }
         }
         log.debug("exiting service " + this + " execute");
@@ -157,16 +233,16 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
          * Set name.
          */
         private final String setName;
-        private final ScheduleData scheduleData;
+        private final ScheduledRunnable scheduledRunnable;
         private final String gridName;
 
         /**
          * @param setName Set name.
          * @param data    The data to add.
          */
-        SetClosure(String gridName, String setName, ScheduleData data) {
+        SetClosure(String gridName, String setName, ScheduledRunnable data) {
             this.setName = setName;
-            this.scheduleData = data;
+            this.scheduledRunnable = data;
             this.gridName = gridName;
         }
 
@@ -175,89 +251,8 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
          */
         @Override
         public void run() {
-            IgniteSet<ScheduleData> set = Ignition.ignite(gridName).set(setName, null);
-            set.add(scheduleData);
+            IgniteSet<ScheduledRunnable> set = Ignition.ignite(gridName).set(setName, null);
+            set.add(scheduledRunnable);
         }
-    }
-
-    private class ScheduleData implements NamedRunnable, Serializable {
-        private String id;
-        private Runnable command;
-        private long initialDelay = -1;
-        private long period = -1;
-        private long delay = -1;
-        private TimeUnit timeUnit;
-
-        public ScheduleData() {
-            this.id = UUID.randomUUID().toString();
-        }
-
-        public ScheduleData(String id) {
-            this.id = id;
-        }
-
-        private TimeUnit getTimeUnit() {
-            return timeUnit;
-        }
-
-        private void setTimeUnit(TimeUnit timeUnit) {
-            this.timeUnit = timeUnit;
-        }
-
-        private Runnable getCommand() {
-            return command;
-        }
-
-        private void setCommand(Runnable command) {
-            this.command = command;
-        }
-
-        private long getInitialDelay() {
-            return initialDelay;
-        }
-
-        private void setInitialDelay(long initialDelay) {
-            this.initialDelay = initialDelay;
-        }
-
-        private long getPeriod() {
-            return period;
-        }
-
-        private void setPeriod(long period) {
-            this.period = period;
-        }
-
-        private long getDelay() {
-            return delay;
-        }
-
-        private void setDelay(long delay) {
-            this.delay = delay;
-        }
-
-        public String toString() {
-            return id;
-        }
-
-        public String getName() {
-            return id;
-        }
-
-        public void run() {
-            command.run();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (!(obj instanceof ScheduleData)) return false;
-            return ((ScheduleData) obj).toString().equals(this.toString());
-        }
-
-        @Override
-        public int hashCode() {
-            return id.hashCode();
-        }
-
     }
 }

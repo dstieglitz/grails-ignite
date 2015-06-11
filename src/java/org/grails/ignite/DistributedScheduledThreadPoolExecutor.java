@@ -1,8 +1,10 @@
 package org.grails.ignite;
 
 import org.apache.ignite.Ignite;
+import org.apache.ignite.resources.IgniteInstanceResource;
+import org.apache.log4j.Logger;
 
-import java.util.concurrent.ExecutorService;
+import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -15,12 +17,17 @@ import java.util.concurrent.TimeUnit;
  * @author dstieglitz
  * @author srasul
  * @see http://code.nomad-labs.com/2011/12/09/mother-fk-the-scheduledexecutorservice/
- *
  */
 public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
+    private static final Logger log = Logger.getLogger(DistributedScheduledThreadPoolExecutor.class.getName());
+    @IgniteInstanceResource
     private Ignite ignite;
     private boolean running = true;
+
+    public DistributedScheduledThreadPoolExecutor(int corePoolSize) {
+        super(corePoolSize);
+    }
 
     public DistributedScheduledThreadPoolExecutor(Ignite ignite, int corePoolSize) {
         super(corePoolSize);
@@ -37,35 +44,51 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
         return super.scheduleWithFixedDelay(wrapRunnable(command), initialDelay, delay, unit);
     }
 
-    private Runnable wrapRunnable(Runnable command) {
-        return new IgniteDistributedRunnable(command);
+    public boolean cancel(Runnable runnable, boolean mayInterruptIfRunning) {
+        log.debug("cancel "+runnable+","+mayInterruptIfRunning);
+
+        if (mayInterruptIfRunning) {
+            // FIXME interrupt the Runnable?
+            log.warn("mayInterruptIfRunning is currently ignored");
+        }
+
+        // these are ScheduledFutureTasks
+        for (Runnable r : getQueue()) {
+            log.debug("found queued runnable: "+r);
+        }
+
+        return super.remove(runnable);
     }
 
-    public void setRunning(boolean trueOrFalse) {
-        this.running = trueOrFalse;
+    private Runnable wrapRunnable(Runnable command) {
+        return new IgniteDistributedRunnable((ScheduledRunnable) command);
     }
 
     public boolean isRunning() {
         return this.running;
     }
 
-    private class IgniteDistributedRunnable implements Runnable {
-        private Runnable theRunnable;
+    public void setRunning(boolean trueOrFalse) {
+        this.running = trueOrFalse;
+    }
 
-        public IgniteDistributedRunnable(Runnable theRunnable) {
+    private class IgniteDistributedRunnable implements Runnable {
+        private ScheduledRunnable scheduledRunnable;
+
+        public IgniteDistributedRunnable(ScheduledRunnable scheduledRunnable) {
             super();
-            this.theRunnable = theRunnable;
+            this.scheduledRunnable = scheduledRunnable;
         }
 
         @Override
         public void run() {
             try {
                 if (running) {
-                    ignite.executorService().submit(theRunnable);
+                    ignite.executorService().submit(scheduledRunnable);
                 }
             } catch (Exception e) {
                 // LOG IT HERE!!!
-                System.err.println("error in executing: " + theRunnable + ". It will no longer be run!");
+                System.err.println("error in executing: " + scheduledRunnable + ". It will no longer be run!");
                 e.printStackTrace();
 
                 // and re throw it so that the Executor also gets this error so that it can do what it would

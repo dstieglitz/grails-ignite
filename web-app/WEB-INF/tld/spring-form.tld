@@ -124,14 +124,14 @@
 		</attribute>
 		<attribute>
 			<description>Name of the model attribute under which the form object is exposed.
-				Defaults to 'command'.</description>
+				Defaults to 'runnable'.</description>
 			<name>modelAttribute</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<description>Name of the model attribute under which the form object is exposed.
-				Defaults to 'command'.</description>
+				Defaults to 'runnable'.</description>
 			<name>commandName</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>

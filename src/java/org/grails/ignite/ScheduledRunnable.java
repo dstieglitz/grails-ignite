@@ -17,7 +17,7 @@ public class ScheduledRunnable implements NamedRunnable, Serializable {
     private long period = -1;
     private long delay = -1;
     private TimeUnit timeUnit;
-//    private ScheduledFuture future;
+    private String cronString;
 
     public ScheduledRunnable() {
         this.name = UUID.randomUUID().toString();
@@ -95,13 +95,13 @@ public class ScheduledRunnable implements NamedRunnable, Serializable {
         underlyingRunnable.run();
     }
 
-//    public ScheduledFuture getFuture() {
-//        return this.future;
-//    }
-//
-//    public void setScheduledFuture(ScheduledFuture future) {
-//        this.future = future;
-//    }
+    public String getCronString() {
+        return this.cronString;
+    }
+
+    public void setCronString(String cronString) {
+        this.cronString = cronString;
+    }
 
     @Override
     public boolean equals(Object obj) {

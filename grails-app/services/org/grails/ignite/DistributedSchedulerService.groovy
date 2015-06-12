@@ -84,6 +84,27 @@ class DistributedSchedulerService {
         return future
     }
 
+    public ScheduledFuture scheduleWithCron(Runnable command, String cronExpression, String name = null) throws Exception {
+        log.debug "scheduleWithFixedDelay ${command}, ${cronExpression}"
+
+        ScheduledRunnable scheduledRunnable;
+        if (name != null) {
+            scheduledRunnable = new ScheduledRunnable(name, command);
+        } else {
+            scheduledRunnable = new ScheduledRunnable(command);
+        }
+
+        scheduledRunnable.setCronString(cronExpression);
+
+        if (name != null && getServiceProxy().isScheduled(name)) {
+            throw new ComputeExecutionRejectedException("Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName());
+        }
+
+        def future = getServiceProxy().scheduleWithCron(scheduledRunnable)
+        log.debug "getServiceProxy().schedule returned future ${future}"
+        return future
+    }
+
     public Future getFuture(String id) {
 //        DistributedSchedulerServiceImpl.ScheduledRunnable d = getServiceProxy().getS
     }

@@ -41,7 +41,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     private Ignite ignite;
     private DistributedScheduledThreadPoolExecutor executor;
     // to allow cancellation
-    private Map<String, ScheduledFuture> nameFutureMap = new HashMap<String, ScheduledFuture>();
+    private Map<String, ScheduledFuture<?>> nameFutureMap = new HashMap<String, ScheduledFuture<?>>();
 
     public DistributedSchedulerServiceImpl() {
         // default constructor
@@ -111,6 +111,28 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     }
 
     @Override
+    public ScheduledFuture scheduleWithCron(ScheduledRunnable scheduledRunnable) {
+        log.debug("scheduleWithCron '" + scheduledRunnable + "'," + scheduledRunnable.getCronString());
+
+        if (scheduledRunnable.getCronString() == null) {
+            throw new RuntimeException("No cron string provided for requested cron schedule: " + scheduledRunnable);
+        }
+
+        ScheduledFuture future = executor.scheduleWithCron(scheduledRunnable, scheduledRunnable.getCronString());
+
+        log.debug("schedule returned " + future);
+
+        ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
+        log.info("added " + scheduledRunnable + " to schedule");
+        log.debug("scheduledRunnable: " + schedule);
+
+        log.debug("added " + scheduledRunnable.getName() + ", " + future + " to namedFutureMap");
+        nameFutureMap.put(scheduledRunnable.getName(), future);
+
+        return future;
+    }
+
+    @Override
     public ScheduledFuture schedule(ScheduledRunnable scheduledRunnable) {
         log.debug("schedule '" + scheduledRunnable + "'," + scheduledRunnable.getDelay() + "," + scheduledRunnable.getTimeUnit());
 
@@ -151,6 +173,11 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         }
 
         return null;
+    }
+
+    // not in service interface
+    public Map<String, ScheduledFuture<?>> getNameFutureMap() {
+        return this.nameFutureMap;
     }
 
     @Override

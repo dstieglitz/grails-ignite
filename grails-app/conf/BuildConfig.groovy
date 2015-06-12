@@ -52,6 +52,7 @@ grails.project.dependency.resolution = {
         compile 'org.bouncycastle:bcprov-jdk15on:1.52'
         compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.0'
         compile 'com.cedarsoftware:groovy-io:1.1.1'
+        compile 'it.sauronsoftware.cron4j:cron4j:2.2.5'
     }
 
     plugins {

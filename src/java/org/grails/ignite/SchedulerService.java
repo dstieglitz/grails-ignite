@@ -18,6 +18,8 @@ public interface SchedulerService {
 
     public ScheduledFuture scheduleWithFixedDelay(ScheduledRunnable command);
 
+    public ScheduledFuture scheduleWithCron(ScheduledRunnable command);
+
     public ScheduledFuture schedule(ScheduledRunnable command);
 
     public void stopScheduler();

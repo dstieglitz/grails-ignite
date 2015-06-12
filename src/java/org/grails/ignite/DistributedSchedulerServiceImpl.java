@@ -40,7 +40,6 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     @IgniteInstanceResource
     private Ignite ignite;
     private DistributedScheduledThreadPoolExecutor executor;
-
     // to allow cancellation
     private Map<String, ScheduledFuture> nameFutureMap = new HashMap<String, ScheduledFuture>();
 
@@ -74,13 +73,13 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                 scheduledRunnable.getTimeUnit());
 
         log.debug("schedule returned " + future);
-//        scheduledRunnable.setScheduledFuture(future);
 
         ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
 
         log.info("added " + scheduledRunnable + " to schedule");
         log.debug("scheduledRunnable: " + schedule);
 
+        log.debug("added " + scheduledRunnable.getName() + ", " + future + " to namedFutureMap");
         nameFutureMap.put(scheduledRunnable.getName(), future);
 
         return future;
@@ -99,13 +98,13 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                 scheduledRunnable.getTimeUnit());
 
         log.debug("schedule returned " + future);
-//        scheduledRunnable.setScheduledFuture(future);
 
         ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
 
         log.info("added " + scheduledRunnable + " to schedule");
         log.debug("scheduledRunnable: " + schedule);
 
+        log.debug("added " + scheduledRunnable.getName() + ", " + future + " to namedFutureMap");
         nameFutureMap.put(scheduledRunnable.getName(), future);
 
         return future;
@@ -120,12 +119,12 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                 scheduledRunnable.getTimeUnit());
 
         log.debug("schedule returned " + future);
-//        scheduledRunnable.setScheduledFuture(future);
 
         ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
         log.info("added " + scheduledRunnable + " to schedule");
         log.debug("scheduledRunnable: " + schedule);
 
+        log.debug("added " + scheduledRunnable.getName() + ", " + future + " to namedFutureMap");
         nameFutureMap.put(scheduledRunnable.getName(), future);
 
         return future;
@@ -156,8 +155,10 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     @Override
     public boolean cancel(String name, boolean mayInterruptIfRunning) {
+        log.debug("cancel '" + name + "', " + mayInterruptIfRunning);
         Future future = nameFutureMap.get(name);
         if (future == null) {
+            log.warn("tried to cancel, but no Future found for '" + name + "'");
             return true; // if not found, it's cancelled
         } else {
 //            Future future = data.getFuture();

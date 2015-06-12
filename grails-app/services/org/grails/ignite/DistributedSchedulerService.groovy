@@ -1,4 +1,4 @@
-package org.grails.ignite.services
+package org.grails.ignite
 
 import org.apache.ignite.compute.ComputeExecutionRejectedException
 import org.grails.ignite.ScheduledRunnable
@@ -89,6 +89,7 @@ class DistributedSchedulerService {
     }
 
     boolean cancel(String name, boolean interrupt) {
+        log.debug "cancel '${name}', ${interrupt}"
         return getServiceProxy().cancel(name, interrupt);
     }
 

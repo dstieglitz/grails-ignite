@@ -7,7 +7,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 class IgniteGrailsPlugin {
     // the plugin version
-    def version = "0.1-SNAPSHOT"
+    def version = "0.1"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.3 > *"
     // resources that are excluded from plugin packaging

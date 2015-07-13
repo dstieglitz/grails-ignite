@@ -17,6 +17,8 @@ grails.project.fork = [
     console: [maxMemory: 768, minMemory: 64, debug: false, maxPerm: 256]
 ]
 
+def igniteVer = '1.2.0-incubating'
+
 grails.project.dependency.resolver = "maven" // or ivy
 grails.project.dependency.resolution = {
     // inherit Grails' default dependencies
@@ -40,15 +42,17 @@ grails.project.dependency.resolution = {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
         // runtime 'mysql:mysql-connector-java:5.1.27'
         compile "com.h2database:h2:1.3.175"
-        compile 'org.apache.ignite:ignite-core:1.2.0-incubating'
-        compile ('org.apache.ignite:ignite-spring:1.2.0-incubating') {
+        compile "org.apache.ignite:ignite-core:${igniteVer}"
+        compile ("org.apache.ignite:ignite-spring:${igniteVer}") {
             excludes 'spring-core', 'spring-aop', 'spring-beans', 'spring-context', 'spring-expression', 'spring-tx'
         }
-        compile 'org.apache.ignite:ignite-indexing:1.2.0-incubating'
-        compile('org.apache.ignite:ignite-hibernate:1.2.0-incubating') {
+        compile "org.apache.ignite:ignite-indexing:${igniteVer}"
+        compile("org.apache.ignite:ignite-hibernate:${igniteVer}") {
             excludes 'hibernate-core'
         }
-        compile 'org.apache.ignite:ignite-log4j:1.1.0-incubating'
+        compile "org.apache.ignite:ignite-web:${igniteVer}"
+        compile "org.apache.ignite:ignite-log4j:${igniteVer}"
+
         compile 'org.bouncycastle:bcprov-jdk15on:1.52'
         compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.0'
         compile 'com.cedarsoftware:groovy-io:1.1.1'

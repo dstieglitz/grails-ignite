@@ -1,5 +1,7 @@
 import org.apache.ignite.IgniteCheckedException
-import org.apache.ignite.Ignition
+import org.apache.ignite.cache.CacheMode
+import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
+import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.ignite.configuration.IgniteConfiguration
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
 import org.grails.ignite.DistributedSchedulerServiceImpl
@@ -43,15 +45,58 @@ A plugin for the Apache Ignite data grid framework.
     // Online location of the plugin's browseable source code.
     def scm = [url: "https://github.com/dstieglitz/grails-ignite"]
 
+    static def IGNITE_WEB_SESSION_CACHE_NAME = 'session-cache'
+
     def doWithWebDescriptor = { xml ->
-        // TODO Implement additions to web.xml (optional), this event occurs before
+        def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
+                && application.config.ignite.webSessionClusteringEnabled.equals(true))
+
+        if (webSessionClusteringEnabled) {
+            def listenerNode = xml.'listener'
+            listenerNode[listenerNode.size() - 1] + {
+                listener {
+                    'listener-class'('org.apache.ignite.startup.servlet.ServletContextListenerStartup')
+                }
+            }
+
+            println listenerNode.list()
+
+            def contextParam = xml.'context-param'
+            contextParam[contextParam.size() - 1] + {
+                'filter' {
+                    'filter-name'('IgniteWebSessionsFilter')
+                    'filter-class'('org.apache.ignite.cache.websession.WebSessionFilter')
+                }
+            }
+
+            println contextParam.list()
+
+            def filterMappingNode = xml.'filter-mapping'
+            filterMappingNode[filterMappingNode.size() - 1] + {
+                'filter-mapping' {
+                    'filter-name'('IgniteWebSessionsFilter')
+                    'url-pattern'('/*')
+                }
+            }
+
+            println filterMappingNode.list()
+
+            contextParam[contextParam.size() - 1] + {
+                'context-param' {
+                    'param-name'('IgniteWebSessionsCacheName')
+                    'param-value'(IGNITE_WEB_SESSION_CACHE_NAME)
+                }
+            }
+
+            println contextParam.list()
+        }
     }
 
     def doWithSpring = {
         // TODO Implement runtime spring config (optional)
 
         def peerClassLoadingEnabledInConfig = (!(application.config.ignite.peerClassLoadingEnabled instanceof ConfigObject)
-                && application.config.ignite.ignite.peerClassLoadingEnabled.equals(true))
+                && application.config.ignite.peerClassLoadingEnabled.equals(true))
 
         def configuredGridName = "grid"
         if (!(application.config.ignite.gridName instanceof ConfigObject)) {
@@ -93,11 +138,14 @@ A plugin for the Apache Ignite data grid framework.
                 //                }
                 //            }
 
-                //            cacheConfiguration = { CacheConfiguration cacheConfiguration ->
-                //                name = "jobSchedules"
-                //                cacheMode = CacheMode.REPLICATED
-                //                atomicityMode = CacheAtomicityMode.ATOMIC
-                //            }
+                cacheConfiguration = { CacheConfiguration cacheConfiguration ->
+                    name = IGNITE_WEB_SESSION_CACHE_NAME
+                    cacheMode = CacheMode.PARTITIONED
+                    backups = 1
+                    evictionPolicy = { LruEvictionPolicy lruEvictionPolicy ->
+                        maxSize = 10000
+                    }
+                }
 
                 includeEventTypes = [org.apache.ignite.events.EventType.EVT_TASK_STARTED,
                         org.apache.ignite.events.EventType.EVT_TASK_FINISHED,

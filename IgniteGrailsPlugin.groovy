@@ -59,8 +59,6 @@ A plugin for the Apache Ignite data grid framework.
                 }
             }
 
-            println listenerNode.list()
-
             def contextParam = xml.'context-param'
             contextParam[contextParam.size() - 1] + {
                 'filter' {
@@ -69,8 +67,6 @@ A plugin for the Apache Ignite data grid framework.
                 }
             }
 
-            println contextParam.list()
-
             def filterMappingNode = xml.'filter-mapping'
             filterMappingNode[filterMappingNode.size() - 1] + {
                 'filter-mapping' {
@@ -78,17 +74,12 @@ A plugin for the Apache Ignite data grid framework.
                     'url-pattern'('/*')
                 }
             }
-
-            println filterMappingNode.list()
-
             contextParam[contextParam.size() - 1] + {
                 'context-param' {
                     'param-name'('IgniteWebSessionsCacheName')
                     'param-value'(IGNITE_WEB_SESSION_CACHE_NAME)
                 }
             }
-
-            println contextParam.list()
         }
     }
 

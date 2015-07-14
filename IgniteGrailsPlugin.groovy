@@ -4,6 +4,7 @@ import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
 import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.ignite.configuration.IgniteConfiguration
+import org.apache.ignite.logger.log4j.Log4JLogger
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
 import org.grails.ignite.DistributedSchedulerServiceImpl
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
@@ -125,7 +126,7 @@ A plugin for the Apache Ignite data grid framework.
          * Only configure Ignite if the configuration value ignite.enabled=true is defined
          */
         if (!(application.config.ignite.enabled instanceof ConfigObject) && application.config.ignite.enabled.equals(true)) {
-            // FIXME Caused by ClassNotFoundException: org.apache.ignite.IgniteLogger
+            // FIXME https://github.com/dstieglitz/grails-ignite/issues/1
             //gridLogger(Log4JLogger)
 
             igniteCfg(IgniteConfiguration) {
@@ -220,6 +221,8 @@ A plugin for the Apache Ignite data grid framework.
 
         try {
             def grid = ctx.getBean('grid')
+            // FIXME https://github.com/dstieglitz/grails-ignite/issues/1
+//            grid.configuration().setGridLogger(new Log4JLogger())
             grid.start()
             grid.services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
         } catch (NoSuchBeanDefinitionException e) {

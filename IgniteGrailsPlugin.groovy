@@ -52,7 +52,7 @@ A plugin for the Apache Ignite data grid framework.
     static def DEFAULT_GRID_NAME = 'grid'
 
     def getWebXmlFilterOrder() {
-        [IgniteWebSessionsFilter: FilterManager.CHAR_ENCODING_POSITION - 50]
+        [IgniteWebSessionsFilter: FilterManager.CHAR_ENCODING_POSITION + 100]
     }
 
     def doWithWebDescriptor = { xml ->
@@ -65,12 +65,12 @@ A plugin for the Apache Ignite data grid framework.
         }
 
         if (webSessionClusteringEnabled) {
-            def listenerNode = xml.'listener'
-            listenerNode[listenerNode.size() - 1] + {
-                listener {
-                    'listener-class'('org.apache.ignite.startup.servlet.ServletContextListenerStartup')
-                }
-            }
+//            def listenerNode = xml.'listener'
+//            listenerNode[listenerNode.size() - 1] + {
+//                listener {
+//                    'listener-class'('org.apache.ignite.startup.servlet.ServletContextListenerStartup')
+//                }
+//            }
 
             def contextParam = xml.'context-param'
             contextParam[contextParam.size() - 1] + {
@@ -223,6 +223,7 @@ A plugin for the Apache Ignite data grid framework.
             def grid = ctx.getBean('grid')
             // FIXME https://github.com/dstieglitz/grails-ignite/issues/1
 //            grid.configuration().setGridLogger(new Log4JLogger())
+            log.info "Starting Ignite grid..."
             grid.start()
             grid.services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
         } catch (NoSuchBeanDefinitionException e) {

@@ -1,14 +1,14 @@
-import groovy.xml.StreamingMarkupBuilder
+import grails.plugin.webxml.FilterManager
 import org.apache.ignite.IgniteCheckedException
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
 import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.ignite.configuration.IgniteConfiguration
-import org.apache.ignite.logger.log4j.Log4JLogger
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
+import org.apache.log4j.Logger
 import org.grails.ignite.DistributedSchedulerServiceImpl
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
-import grails.plugin.webxml.FilterManager
 
 class IgniteGrailsPlugin {
     // the plugin version
@@ -48,8 +48,12 @@ A plugin for the Apache Ignite data grid framework.
     // Online location of the plugin's browseable source code.
     def scm = [url: "https://github.com/dstieglitz/grails-ignite"]
 
+    def loadAfter = ['logging']
+
     static def IGNITE_WEB_SESSION_CACHE_NAME = 'session-cache'
     static def DEFAULT_GRID_NAME = 'grid'
+
+//    def LOG = LoggerFactory.getLogger('grails.plugin.ignite.IgniteGrailsPlugin')
 
     def getWebXmlFilterOrder() {
         [IgniteWebSessionsFilter: FilterManager.CHAR_ENCODING_POSITION + 100]
@@ -63,6 +67,9 @@ A plugin for the Apache Ignite data grid framework.
         if (!(application.config.ignite.gridName instanceof ConfigObject)) {
             configuredGridName = application.config.ignite.gridName
         }
+
+        // FIXME no log.(anything) output from here
+        println "Web session clustering enabled in config? ${webSessionClusteringEnabled}"
 
         if (webSessionClusteringEnabled) {
 //            def listenerNode = xml.'listener'
@@ -102,10 +109,11 @@ A plugin for the Apache Ignite data grid framework.
     }
 
     def doWithSpring = {
-        // TODO Implement runtime spring config (optional)
-
         def peerClassLoadingEnabledInConfig = (!(application.config.ignite.peerClassLoadingEnabled instanceof ConfigObject)
                 && application.config.ignite.peerClassLoadingEnabled.equals(true))
+
+        def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
+                && application.config.ignite.webSessionClusteringEnabled.equals(true))
 
         def configuredGridName = DEFAULT_GRID_NAME
         if (!(application.config.ignite.gridName instanceof ConfigObject)) {
@@ -147,12 +155,14 @@ A plugin for the Apache Ignite data grid framework.
                 //                }
                 //            }
 
-                cacheConfiguration = { CacheConfiguration cacheConfiguration ->
-                    name = IGNITE_WEB_SESSION_CACHE_NAME
-                    cacheMode = CacheMode.PARTITIONED
-                    backups = 1
-                    evictionPolicy = { LruEvictionPolicy lruEvictionPolicy ->
-                        maxSize = 10000
+                if (webSessionClusteringEnabled) {
+                    cacheConfiguration = { CacheConfiguration cacheConfiguration ->
+                        name = IGNITE_WEB_SESSION_CACHE_NAME
+                        cacheMode = CacheMode.PARTITIONED
+                        backups = 1
+                        evictionPolicy = { LruEvictionPolicy lruEvictionPolicy ->
+                            maxSize = 10000
+                        }
                     }
                 }
 

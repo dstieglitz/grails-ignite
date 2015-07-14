@@ -4,20 +4,13 @@ import org.grails.ignite.HelloWorldGroovyTask
 import java.util.concurrent.TimeUnit
 
 class IgniteBootStrap {
-//    def grailsApplication
-//    def distributedSchedulerService
+    def grailsApplication
 
     def init = { servletContext ->
-        //def ignite = grailsApplication.mainContext.getBean('grid')
-        //ignite.services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
+        def webSessionClusteringEnabled = (!(grailsApplication.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
+                && grailsApplication.config.ignite.webSessionClusteringEnabled.equals(true))
 
-        // run the examples to test configuration
-//        new FirstIgniteComputeApplication(ignite).run();
-//        new FirstIgniteDataGridApplication(ignite).run();
-//        new ExecutorServiceApplication(ignite).run();
-
-        // example: schedule a task at fixed rate
-       //distributedSchedulerService.scheduleAtFixedRate(new HelloWorldGroovyTask(), 0, 1000, TimeUnit.MILLISECONDS);
+        log.info "webSessionClustering enabled in config? ${webSessionClusteringEnabled}"
     }
 
     def destroy = {

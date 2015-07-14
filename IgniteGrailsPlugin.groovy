@@ -20,7 +20,6 @@ class IgniteGrailsPlugin {
             "grails-app/views/error.gsp"
     ]
 
-    // TODO Fill in these fields
     def title = "Grails Ignite Plugin" // Headline display name of the plugin
     def author = "Dan Stieglitz"
     def authorEmail = "dstieglitz@stainlesscode.com"

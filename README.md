@@ -1,8 +1,17 @@
 #Grails Ignite Plugin
 
-A plugin that provides *very* basic Grails integration with the Apache Ignite compute grid framework.
+A plugin that provides basic Grails integration with the Apache Ignite compute grid framework.
 
-This plugin configures a simple Ignite grid by default called "grid" and also provides a simple distributed scheduled task executor.
+#Supported Features
+
+* Grid creation via Spring DSL and injection into Grails artifacts
+* Web session clustering (http://apacheignite.readme.io/docs/web-session-clustering)
+* Distributed task management using a `DistributedSchedulerService`
+
+#Under Development
+
+* Clustered Hibernate L2 Caching
+
 
 #Grid Bean
 
@@ -19,6 +28,7 @@ You can configure Ignite from the Config.groovy file (with limited configuration
 ignite {
     enabled=true
     gridName="myGrid"
+    webSessionClusteringEnabled=true
     peerClassLoadingEnabled=false
     discoverySpi {
         networkTimeout = 5000
@@ -36,7 +46,9 @@ The methods `scheduleAtFixedRate` and `scheduleWithFixedDelay` are currently imp
 A Grails service of the same name ("`DistributedSchedulerService`") is also provided to facilitiate easy injection into other Grails applications.
 
 ##Example
-	       distributedSchedulerService.scheduleAtFixedRate(new HelloWorldGroovyTask(), 0, 1000, TimeUnit.MILLISECONDS);
+```
+distributedSchedulerService.scheduleAtFixedRate(new HelloWorldGroovyTask(), 0, 1000, TimeUnit.MILLISECONDS);
+```
 	       
 This example shows how to schedule the supplied task to execute once per second on the entire grid, regardless of the grid topology. The execution will be evenly load-balanced across all grid nodes. If any grid nodes go down the rebalancing will result in the same execution rate (once per second in this example).
 	       

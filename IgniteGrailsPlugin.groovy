@@ -7,6 +7,7 @@ import org.apache.ignite.configuration.IgniteConfiguration
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
 import org.grails.ignite.DistributedSchedulerServiceImpl
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
+import grails.plugin.webxml.FilterManager
 
 class IgniteGrailsPlugin {
     // the plugin version
@@ -48,6 +49,10 @@ A plugin for the Apache Ignite data grid framework.
 
     static def IGNITE_WEB_SESSION_CACHE_NAME = 'session-cache'
     static def DEFAULT_GRID_NAME = 'grid'
+
+    def getWebXmlFilterOrder() {
+        [IgniteWebSessionsFilter: FilterManager.CHAR_ENCODING_POSITION - 50]
+    }
 
     def doWithWebDescriptor = { xml ->
         def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)

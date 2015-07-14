@@ -78,6 +78,7 @@ A plugin for the Apache Ignite data grid framework.
 //                }
 //            }
 
+            println "Configuring WebSessionFilter for grid ${configuredGridName}"
             def contextParam = xml.'context-param'
             contextParam[contextParam.size() - 1] + {
                 'filter' {
@@ -118,6 +119,8 @@ A plugin for the Apache Ignite data grid framework.
         if (!(application.config.ignite.gridName instanceof ConfigObject)) {
             configuredGridName = application.config.ignite.gridName
         }
+
+        println "configured grid ${configuredGridName}"
 
         def configuredNetworkTimeout = 3000
         if (!(application.config.ignite.discoverySpi.networkTimeout instanceof ConfigObject)) {

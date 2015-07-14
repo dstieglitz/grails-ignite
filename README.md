@@ -28,7 +28,13 @@ You can configure Ignite from the Config.groovy file (with limited configuration
 ignite {
     enabled=true
     gridName="myGrid"
+    
+    /*
+     * This setting must be enabled on the machine that builds the WAR file for the target environment,
+     * since it will determine if the correct filters are incorporated into the web.xml file
+     */
     webSessionClusteringEnabled=true
+    
     peerClassLoadingEnabled=false
     discoverySpi {
         networkTimeout = 5000

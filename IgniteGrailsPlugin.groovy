@@ -1,3 +1,4 @@
+import groovy.xml.StreamingMarkupBuilder
 import org.apache.ignite.IgniteCheckedException
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
@@ -46,10 +47,16 @@ A plugin for the Apache Ignite data grid framework.
     def scm = [url: "https://github.com/dstieglitz/grails-ignite"]
 
     static def IGNITE_WEB_SESSION_CACHE_NAME = 'session-cache'
+    static def DEFAULT_GRID_NAME = 'grid'
 
     def doWithWebDescriptor = { xml ->
         def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
                 && application.config.ignite.webSessionClusteringEnabled.equals(true))
+
+        def configuredGridName = DEFAULT_GRID_NAME
+        if (!(application.config.ignite.gridName instanceof ConfigObject)) {
+            configuredGridName = application.config.ignite.gridName
+        }
 
         if (webSessionClusteringEnabled) {
             def listenerNode = xml.'listener'
@@ -64,6 +71,10 @@ A plugin for the Apache Ignite data grid framework.
                 'filter' {
                     'filter-name'('IgniteWebSessionsFilter')
                     'filter-class'('org.apache.ignite.cache.websession.WebSessionFilter')
+                    'init-param' {
+                        'param-name'('IgniteWebSessionsGridName')
+                        'param-value'(configuredGridName)
+                    }
                 }
             }
 
@@ -74,6 +85,7 @@ A plugin for the Apache Ignite data grid framework.
                     'url-pattern'('/*')
                 }
             }
+
             contextParam[contextParam.size() - 1] + {
                 'context-param' {
                     'param-name'('IgniteWebSessionsCacheName')
@@ -89,7 +101,7 @@ A plugin for the Apache Ignite data grid framework.
         def peerClassLoadingEnabledInConfig = (!(application.config.ignite.peerClassLoadingEnabled instanceof ConfigObject)
                 && application.config.ignite.peerClassLoadingEnabled.equals(true))
 
-        def configuredGridName = "grid"
+        def configuredGridName = DEFAULT_GRID_NAME
         if (!(application.config.ignite.gridName instanceof ConfigObject)) {
             configuredGridName = application.config.ignite.gridName
         }

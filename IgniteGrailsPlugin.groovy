@@ -1,13 +1,13 @@
 import grails.plugin.webxml.FilterManager
 import org.apache.ignite.IgniteCheckedException
+import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
+import org.apache.ignite.cache.CacheWriteSynchronizationMode
 import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
 import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.ignite.configuration.IgniteConfiguration
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
-import org.apache.log4j.Logger
 import org.grails.ignite.DistributedSchedulerServiceImpl
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 class IgniteGrailsPlugin {
@@ -49,6 +49,8 @@ A plugin for the Apache Ignite data grid framework.
 
     def loadAfter = ['logging']
 
+    def loadBefore = ['hibernate4']
+
     static def IGNITE_WEB_SESSION_CACHE_NAME = 'session-cache'
     static def DEFAULT_GRID_NAME = 'grid'
 
@@ -78,7 +80,6 @@ A plugin for the Apache Ignite data grid framework.
 //                }
 //            }
 
-            println "Configuring WebSessionFilter for grid ${configuredGridName}"
             def contextParam = xml.'context-param'
             contextParam[contextParam.size() - 1] + {
                 'filter' {
@@ -120,8 +121,6 @@ A plugin for the Apache Ignite data grid framework.
             configuredGridName = application.config.ignite.gridName
         }
 
-        println "configured grid ${configuredGridName}"
-
         def configuredNetworkTimeout = 3000
         if (!(application.config.ignite.discoverySpi.networkTimeout instanceof ConfigObject)) {
             configuredNetworkTimeout = application.config.ignite.discoverySpi.networkTimeout
@@ -132,12 +131,43 @@ A plugin for the Apache Ignite data grid framework.
             configuredAddresses = application.config.ignite.discoverySpi.addresses
         }
 
+        // Hibernate L2 cache parent configurations
+
+        atomicCache(CacheConfiguration) {
+            cacheMode = CacheMode.PARTITIONED
+            atomicityMode = CacheAtomicityMode.ATOMIC
+            writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
+        }
+
+        transactionalCache(CacheConfiguration) {
+            cacheMode = CacheMode.PARTITIONED
+            atomicityMode = CacheAtomicityMode.TRANSACTIONAL
+            writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
+        }
+
         /*
          * Only configure Ignite if the configuration value ignite.enabled=true is defined
          */
         if (!(application.config.ignite.enabled instanceof ConfigObject) && application.config.ignite.enabled.equals(true)) {
             // FIXME https://github.com/dstieglitz/grails-ignite/issues/1
             //gridLogger(Log4JLogger)
+
+            // Hibernate L2 cache parent configurations
+            application.domainClasses.each { clazz ->
+                println clazz.name
+                println clazz.fullName
+                "${clazz.fullName}" { bean ->
+                    // FIXME need to be able to configure transactional cache
+                    bean.parent = ref('atomicCache')
+                }
+
+                // FIXME now do associations
+            }
+
+            // Hibernate query cache
+            'org.hibernate.cache.internal.StandardQueryCache' { bean ->
+                bean.parent = ref('atomicCache')
+            }
 
             igniteCfg(IgniteConfiguration) {
                 gridName = configuredGridName

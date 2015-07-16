@@ -131,24 +131,27 @@ A plugin for the Apache Ignite data grid framework.
             configuredAddresses = application.config.ignite.discoverySpi.addresses
         }
 
-        // Hibernate L2 cache parent configurations
-
-        atomicCache(CacheConfiguration) {
-            cacheMode = CacheMode.PARTITIONED
-            atomicityMode = CacheAtomicityMode.ATOMIC
-            writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
-        }
-
-        transactionalCache(CacheConfiguration) {
-            cacheMode = CacheMode.PARTITIONED
-            atomicityMode = CacheAtomicityMode.TRANSACTIONAL
-            writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
-        }
+        def igniteEnabled = (!(application.config.ignite.enabled instanceof ConfigObject)
+                && application.config.ignite.enabled.equals(true))
 
         /*
          * Only configure Ignite if the configuration value ignite.enabled=true is defined
          */
-        if (!(application.config.ignite.enabled instanceof ConfigObject) && application.config.ignite.enabled.equals(true)) {
+        if (igniteEnabled) {
+            // Hibernate L2 cache parent configurations
+
+            atomicCache(CacheConfiguration) {
+                cacheMode = CacheMode.PARTITIONED
+                atomicityMode = CacheAtomicityMode.ATOMIC
+                writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
+            }
+
+            transactionalCache(CacheConfiguration) {
+                cacheMode = CacheMode.PARTITIONED
+                atomicityMode = CacheAtomicityMode.TRANSACTIONAL
+                writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
+            }
+
             // FIXME https://github.com/dstieglitz/grails-ignite/issues/1
             //gridLogger(Log4JLogger)
 
@@ -242,11 +245,15 @@ A plugin for the Apache Ignite data grid framework.
     }
 
     def doWithApplicationContext = { ctx ->
-        System.setProperty("IGNITE_QUIET", "false");
-        //
-        // FIXME need to start grid LAST, can't configure with spring this way. Maybe wrap in a delayed start
-        // bean or something
-        //
+        def igniteEnabled = (!(application.config.ignite.enabled instanceof ConfigObject)
+                && application.config.ignite.enabled.equals(true))
+
+        if (igniteEnabled) {
+            System.setProperty("IGNITE_QUIET", "false");
+            //
+            // FIXME need to start grid LAST, can't configure with spring this way. Maybe wrap in a delayed start
+            // bean or something
+            //
 //        def configuredAddresses = []
 //        if (!(application.config.ignite.discoverySpi.addresses instanceof ConfigObject)) {
 //            configuredAddresses = application.config.ignite.discoverySpi.addresses
@@ -261,20 +268,21 @@ A plugin for the Apache Ignite data grid framework.
 //        discoverySpi.setIpFinder(ipFinder)
 //        def grid = Ignition.start(config);
 
-        try {
-            def grid = ctx.getBean('grid')
-            // FIXME https://github.com/dstieglitz/grails-ignite/issues/1
+            try {
+                def grid = ctx.getBean('grid')
+                // FIXME https://github.com/dstieglitz/grails-ignite/issues/1
 //            grid.configuration().setGridLogger(new Log4JLogger())
-            log.info "Starting Ignite grid..."
-            grid.start()
-            grid.services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
-        } catch (NoSuchBeanDefinitionException e) {
-            log.warn e.message
-        } catch (IgniteCheckedException e) {
-            log.error e.message, e
-        }
+                log.info "Starting Ignite grid..."
+                grid.start()
+                grid.services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
+            } catch (NoSuchBeanDefinitionException e) {
+                log.warn e.message
+            } catch (IgniteCheckedException e) {
+                log.error e.message, e
+            }
 
 //        ctx.getBean('distributedSchedulerService').grid = grid
+        }
     }
 
     def onChange = { event ->

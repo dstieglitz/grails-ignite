@@ -8,6 +8,7 @@ import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.ignite.configuration.IgniteConfiguration
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
 import org.grails.ignite.DistributedSchedulerServiceImpl
+import org.grails.ignite.IgniteStartupHelper
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 class IgniteGrailsPlugin {
@@ -47,12 +48,11 @@ A plugin for the Apache Ignite data grid framework.
     // Online location of the plugin's browseable source code.
     def scm = [url: "https://github.com/dstieglitz/grails-ignite"]
 
+    def dependsOn = ['hibernate4': '* > 4.3.8.1']
+
     def loadAfter = ['logging']
 
-    def loadBefore = ['hibernate4']
-
-    static def IGNITE_WEB_SESSION_CACHE_NAME = 'session-cache'
-    static def DEFAULT_GRID_NAME = 'grid'
+    def loadBefore = ['hibernate', 'hibernate4']
 
 //    def LOG = LoggerFactory.getLogger('grails.plugin.ignite.IgniteGrailsPlugin')
 
@@ -64,7 +64,7 @@ A plugin for the Apache Ignite data grid framework.
         def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
                 && application.config.ignite.webSessionClusteringEnabled.equals(true))
 
-        def configuredGridName = DEFAULT_GRID_NAME
+        def configuredGridName = IgniteStartupHelper.DEFAULT_GRID_NAME
         if (!(application.config.ignite.gridName instanceof ConfigObject)) {
             configuredGridName = application.config.ignite.gridName
         }
@@ -103,7 +103,7 @@ A plugin for the Apache Ignite data grid framework.
             contextParam[contextParam.size() - 1] + {
                 'context-param' {
                     'param-name'('IgniteWebSessionsCacheName')
-                    'param-value'(IGNITE_WEB_SESSION_CACHE_NAME)
+                    'param-value'(IgniteStartupHelper.IGNITE_WEB_SESSION_CACHE_NAME)
                 }
             }
         }
@@ -116,7 +116,7 @@ A plugin for the Apache Ignite data grid framework.
         def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
                 && application.config.ignite.webSessionClusteringEnabled.equals(true))
 
-        def configuredGridName = DEFAULT_GRID_NAME
+        def configuredGridName = IgniteStartupHelper.DEFAULT_GRID_NAME
         if (!(application.config.ignite.gridName instanceof ConfigObject)) {
             configuredGridName = application.config.ignite.gridName
         }
@@ -134,42 +134,96 @@ A plugin for the Apache Ignite data grid framework.
         def igniteEnabled = (!(application.config.ignite.enabled instanceof ConfigObject)
                 && application.config.ignite.enabled.equals(true))
 
+        // FIXME externalize
+        def l2CacheEnabled = true
+
         /*
          * Only configure Ignite if the configuration value ignite.enabled=true is defined
          */
         if (igniteEnabled) {
-            // Hibernate L2 cache parent configurations
-
-            atomicCache(CacheConfiguration) {
-                cacheMode = CacheMode.PARTITIONED
-                atomicityMode = CacheAtomicityMode.ATOMIC
-                writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
-            }
-
-            transactionalCache(CacheConfiguration) {
-                cacheMode = CacheMode.PARTITIONED
-                atomicityMode = CacheAtomicityMode.TRANSACTIONAL
-                writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
-            }
-
             // FIXME https://github.com/dstieglitz/grails-ignite/issues/1
             //gridLogger(Log4JLogger)
 
-            // Hibernate L2 cache parent configurations
-            application.domainClasses.each { clazz ->
-                println clazz.name
-                println clazz.fullName
-                "${clazz.fullName}" { bean ->
-                    // FIXME need to be able to configure transactional cache
+            if (l2CacheEnabled) {
+                // Hibernate L2 cache parent configurations
+                atomicCache(CacheConfiguration) {
+                    cacheMode = CacheMode.PARTITIONED
+                    atomicityMode = CacheAtomicityMode.ATOMIC
+                    writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
+                }
+
+                transactionalCache(CacheConfiguration) {
+                    cacheMode = CacheMode.PARTITIONED
+                    atomicityMode = CacheAtomicityMode.TRANSACTIONAL
+                    writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
+                }
+
+                // FIXME allow external cache configuration for optimization on a class-by-class basis
+                // Hibernate L2 cache parent configurations
+                application.domainClasses.each { clazz ->
+//                    println clazz.name
+//                    println clazz.fullName
+                    "${clazz.fullName}" { bean ->
+                        // FIXME need to be able to configure transactional cache
+                        bean.parent = ref('atomicCache')
+                    }
+
+                    // FIXME now do associations
+                }
+
+                // Hibernate query cache
+                'org.hibernate.cache.internal.StandardQueryCache' { bean ->
                     bean.parent = ref('atomicCache')
                 }
 
-                // FIXME now do associations
-            }
-
-            // Hibernate query cache
-            'org.hibernate.cache.internal.StandardQueryCache' { bean ->
-                bean.parent = ref('atomicCache')
+                // DO THIS IN THE APPLICATION NOT HERE
+//                /**
+//                 * Delay sessionFactory creation so we can initialize the Ignite grid. The grid must be running when the
+//                 * ignite HibernateRegionFactory is initialized
+//                 * @see http://burtbeckwith.com/blog/?p=312
+//                 * @see http://burtbeckwith.com/blog/?p=1565
+//                 */
+//                sessionFactory(DelayedSessionFactoryBean) {
+//                    def application = AH.application
+//                    def ds = application.config.dataSource
+//                    def hibConfig = application.config.hibernate
+//                    dataSource = ref('dataSource')
+//                    List hibConfigLocations = []
+//                    if (application.classLoader.getResource('hibernate.cfg.xml')) {
+//                        hibConfigLocations << 'classpath:hibernate.cfg.xml'
+//                    }
+//                    def explicitLocations = hibConfig?.config?.location
+//                    if (explicitLocations) {
+//                        if (explicitLocations instanceof Collection) {
+//                            hibConfigLocations.addAll(explicitLocations.collect { it.toString() })
+//                        } else {
+//                            hibConfigLocations << hibConfig.config.location.toString()
+//                        }
+//                    }
+//                    configLocations = hibConfigLocations
+//                    if (ds.configClass) {
+//                        configClass = ds.configClass
+//                    }
+//                    hibernateProperties = ref('hibernateProperties')
+//                    grailsApplication = ref('grailsApplication', true)
+//                    lobHandler = ref('lobHandlerDetector')
+//                    entityInterceptor = ref('entityInterceptor')
+//                    eventListeners = ['flush': new PatchedDefaultFlushEventListener(),
+//                            'pre-load': ref('eventTriggeringInterceptor'),
+//                            'post-load': ref('eventTriggeringInterceptor'),
+//                            'save': ref('eventTriggeringInterceptor'),
+//                            'save-update': ref('eventTriggeringInterceptor'),
+//                            'post-insert': ref('eventTriggeringInterceptor'),
+//                            'pre-update': ref('eventTriggeringInterceptor'),
+//                            'post-update': ref('eventTriggeringInterceptor'),
+//                            'pre-delete': ref('eventTriggeringInterceptor'),
+//                            'post-delete': ref('eventTriggeringInterceptor')]
+//                }
+//
+//                /**
+//                 * Delay actual DataSource definition
+//                 */
+//                dataSource(DelayedDataSource)
             }
 
             igniteCfg(IgniteConfiguration) {
@@ -192,7 +246,7 @@ A plugin for the Apache Ignite data grid framework.
 
                 if (webSessionClusteringEnabled) {
                     cacheConfiguration = { CacheConfiguration cacheConfiguration ->
-                        name = IGNITE_WEB_SESSION_CACHE_NAME
+                        name = IgniteStartupHelper.IGNITE_WEB_SESSION_CACHE_NAME
                         cacheMode = CacheMode.PARTITIONED
                         backups = 1
                         evictionPolicy = { LruEvictionPolicy lruEvictionPolicy ->
@@ -232,6 +286,8 @@ A plugin for the Apache Ignite data grid framework.
                 //gridLogger = ref('gridLogger')
             }
 
+            println "CONFIGURING IGNITE GRID BEAN"
+
             grid(org.grails.ignite.DeferredStartIgniteSpringBean) { bean ->
                 bean.lazyInit = true
                 bean.dependsOn = ['persistenceInterceptor']
@@ -249,39 +305,7 @@ A plugin for the Apache Ignite data grid framework.
                 && application.config.ignite.enabled.equals(true))
 
         if (igniteEnabled) {
-            System.setProperty("IGNITE_QUIET", "false");
-            //
-            // FIXME need to start grid LAST, can't configure with spring this way. Maybe wrap in a delayed start
-            // bean or something
-            //
-//        def configuredAddresses = []
-//        if (!(application.config.ignite.discoverySpi.addresses instanceof ConfigObject)) {
-//            configuredAddresses = application.config.ignite.discoverySpi.addresses
-//        }
-//
-//        IgniteConfiguration config = new IgniteConfiguration();
-//        config.setMarshaller(new OptimizedMarshaller(false));
-//        def discoverySpi = new org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi();
-//        discoverySpi.setNetworkTimeout(5000);
-//        def ipFinder = new org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder();
-//        ipFinder.setAddresses(configuredAddresses)
-//        discoverySpi.setIpFinder(ipFinder)
-//        def grid = Ignition.start(config);
-
-            try {
-                def grid = ctx.getBean('grid')
-                // FIXME https://github.com/dstieglitz/grails-ignite/issues/1
-//            grid.configuration().setGridLogger(new Log4JLogger())
-                log.info "Starting Ignite grid..."
-                grid.start()
-                grid.services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
-            } catch (NoSuchBeanDefinitionException e) {
-                log.warn e.message
-            } catch (IgniteCheckedException e) {
-                log.error e.message, e
-            }
-
-//        ctx.getBean('distributedSchedulerService').grid = grid
+            IgniteStartupHelper.startIgnite();
         }
     }
 

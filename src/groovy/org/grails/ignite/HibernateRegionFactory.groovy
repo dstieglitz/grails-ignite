@@ -1,10 +1,9 @@
 package org.grails.ignite
 
-import grails.util.Holders
-import org.apache.log4j.Logger;
-import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.*;
-import org.hibernate.cache.spi.access.AccessType;
+import org.apache.log4j.Logger
+import org.hibernate.cache.CacheException
+import org.hibernate.cache.spi.*
+import org.hibernate.cache.spi.access.AccessType
 import org.hibernate.cfg.Settings
 
 /**
@@ -40,11 +39,11 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
 
     @Override
     public void start(Settings settings, Properties properties) throws CacheException {
-        log.debug("Ignite HibernateRegionFactory start()");
+        log.debug("Ignite HibernateRegionFactory start() with settings=${settings}, properties=${properties}");
 
-        IgniteStartupHelper.applicationContext.beanDefinitionNames.each {
-            println it
-        }
+        // we need to re-write property names here, Grails will prepend "hibernate." to them
+        def gridName = properties.getProperty("hibernate.${org.apache.ignite.cache.hibernate.HibernateRegionFactory.GRID_NAME_PROPERTY}")
+        if (gridName) properties.setProperty(org.apache.ignite.cache.hibernate.HibernateRegionFactory.GRID_NAME_PROPERTY, gridName)
 
         if (init()) {
             underlyingRegionFactory.start(settings, properties);

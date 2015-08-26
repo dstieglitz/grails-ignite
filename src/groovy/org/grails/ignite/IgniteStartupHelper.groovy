@@ -99,13 +99,14 @@ class IgniteStartupHelper {
                 ApplicationContext cacheCtx = cacheBeans.createApplicationContext()
                 log.info "found ${cacheCtx.beanDefinitionCount} cache resource beans"
                 cacheCtx.beanDefinitionNames.each { beanDefName ->
+                    log.debug "found cache bean ${beanDefName}"
                     cacheConfigurationBeans.add(cacheCtx.getBean(beanDefName))
                 }
 
                 grid.configuration().setCacheConfiguration(cacheConfigurationBeans.toArray() as CacheConfiguration[])
             }
 
-            println grid.configuration().cacheConfiguration
+//            println grid.configuration().cacheConfiguration
             // FIXME https://github.com/dstieglitz/grails-ignite/issues/1
 //            grid.configuration().setGridLogger(new Log4JLogger())
 

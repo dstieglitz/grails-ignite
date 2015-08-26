@@ -4,8 +4,8 @@ import grails.spring.BeanBuilder
 import grails.util.Holders
 import groovy.util.logging.Log4j
 import org.apache.ignite.IgniteCheckedException
-import org.apache.ignite.IgniteState
 import org.apache.ignite.Ignition
+import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.ignite.configuration.IgniteConfiguration
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
 import org.codehaus.groovy.grails.plugins.GrailsPluginUtils
@@ -28,26 +28,36 @@ class IgniteStartupHelper {
     static def IGNITE_WEB_SESSION_CACHE_NAME = 'session-cache'
     static def DEFAULT_GRID_NAME = 'grid'
 
-    public static boolean startIgnite() {
-        // look for a IgniteResources.groovy file on the classpath
-        // load it into an igniteApplicationContext and start ignite
-        // merge the application context
-        def bb = new BeanBuilder(Holders.applicationContext)
+    public static BeanBuilder getBeans(String fileName) {
+        BeanBuilder bb = new BeanBuilder(Holders.applicationContext)
         bb.setClassLoader(this.class.classLoader)
-        def binding = new Binding()
+        Binding binding = new Binding()
         binding.application = Holders.grailsApplication
         bb.setBinding(binding)
 
         // FIXME instead, load defaults and overwrite with what's in application
         try {
-            bb.importBeans("file:grails-app/conf/spring/IgniteResources.groovy")
+            def url = "file:grails-app/conf/spring/${fileName}"
+            log.info "attempting to load beans from ${url}"
+            bb.importBeans(url)
         } catch (BeanDefinitionParsingException e) {
-            log.info "loading default Ignite configuration"
             def pluginDir = GrailsPluginUtils.pluginInfos.find { it.name == 'ignite' }.pluginDir
-            bb.importBeans("file:${pluginDir}/grails-app/conf/spring/IgniteResources.groovy")
+            def url = "file:${pluginDir}/grails-app/conf/spring/${fileName}"
+            log.info "loading default configuration from ${url}"
+            bb.importBeans(url)
         }
 
-        igniteApplicationContext = bb.createApplicationContext()
+        return bb
+    }
+
+    public static boolean startIgnite() {
+        // look for a IgniteResources.groovy file on the classpath
+        // load it into an igniteApplicationContext and start ignite
+        // merge the application context
+
+        BeanBuilder igniteBeans = getBeans("IgniteResources.groovy")
+
+        igniteApplicationContext = igniteBeans.createApplicationContext()
 
         igniteApplicationContext.beanDefinitionNames.each {
             log.info "found bean ${it}"
@@ -71,21 +81,38 @@ class IgniteStartupHelper {
 
         System.setProperty("IGNITE_QUIET", "false");
 
-        //
-        // FIXME need to start grid LAST, can't configure with spring this way. Maybe wrap in a delayed start
-        // bean or something
-        //
+        BeanBuilder cacheBeans = null
+
+        try {
+            log.info "looking for cache resources..."
+            cacheBeans = getBeans("IgniteCacheResources.groovy")
+        } catch (BeanDefinitionParsingException e) {
+            log.error e.message
+            log.warn "No cache configuration found or cache configuration could not be loaded"
+        }
 
         try {
             def grid = ctx.getBean('grid')
+
+            def cacheConfigurationBeans = []
+            if (cacheBeans != null) {
+                ApplicationContext cacheCtx = cacheBeans.createApplicationContext()
+                log.info "found ${cacheCtx.beanDefinitionCount} cache resource beans"
+                cacheCtx.beanDefinitionNames.each { beanDefName ->
+                    cacheConfigurationBeans.add(cacheCtx.getBean(beanDefName))
+                }
+
+                grid.configuration().setCacheConfiguration(cacheConfigurationBeans.toArray() as CacheConfiguration[])
+            }
+
             println grid.configuration().cacheConfiguration
             // FIXME https://github.com/dstieglitz/grails-ignite/issues/1
 //            grid.configuration().setGridLogger(new Log4JLogger())
 
- //           if (grid.state() != IgniteState.STARTED) {
-                log.info "Starting Ignite grid..."
-                grid.start()
-                grid.services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
+            //           if (grid.state() != IgniteState.STARTED) {
+            log.info "Starting Ignite grid..."
+            grid.start()
+            grid.services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
 //            }
 
         } catch (NoSuchBeanDefinitionException e) {

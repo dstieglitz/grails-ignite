@@ -3,6 +3,7 @@ package org.grails.ignite
 import grails.spring.BeanBuilder
 import grails.util.Holders
 import groovy.util.logging.Log4j
+import org.apache.ignite.Ignite
 import org.apache.ignite.IgniteCheckedException
 import org.apache.ignite.Ignition
 import org.apache.ignite.configuration.CacheConfiguration
@@ -27,6 +28,7 @@ class IgniteStartupHelper {
 
     static def IGNITE_WEB_SESSION_CACHE_NAME = 'session-cache'
     static def DEFAULT_GRID_NAME = 'grid'
+    static Ignite grid
 
     public static BeanBuilder getBeans(String fileName) {
         BeanBuilder bb = new BeanBuilder(Holders.applicationContext)
@@ -60,7 +62,7 @@ class IgniteStartupHelper {
         igniteApplicationContext = igniteBeans.createApplicationContext()
 
         igniteApplicationContext.beanDefinitionNames.each {
-            log.info "found bean ${it}"
+            log.debug "found bean ${it}"
         }
 
         if (igniteApplicationContext == null) {
@@ -92,7 +94,7 @@ class IgniteStartupHelper {
         }
 
         try {
-            def grid = ctx.getBean('grid')
+            grid = ctx.getBean('grid')
 
             def cacheConfigurationBeans = []
             if (cacheBeans != null) {

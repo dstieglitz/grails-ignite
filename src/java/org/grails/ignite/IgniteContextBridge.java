@@ -25,7 +25,9 @@ public class IgniteContextBridge implements Ignite {
 
     private Ignite getOrCreateIgnite() {
         if (underlyingIgnite == null) {
-            IgniteStartupHelper.startIgnite();
+            if (IgniteStartupHelper.grid == null) {
+                IgniteStartupHelper.startIgnite();
+            }
             underlyingIgnite = IgniteStartupHelper.grid;
         }
 

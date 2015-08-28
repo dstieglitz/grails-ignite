@@ -11,228 +11,229 @@ import org.apache.ignite.lang.IgniteProductVersion;
 import org.apache.ignite.plugin.IgnitePlugin;
 import org.apache.ignite.plugin.PluginNotFoundException;
 import org.jetbrains.annotations.Nullable;
-import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
 /**
- * Created with IntelliJ IDEA.
- * User: dstieglitz
- * Date: 8/28/15
- * Time: 8:25 AM
- * To change this template use File | Settings | File Templates.
+ * A Spring bean for the Ignite grid that can be configured in the main Grails application context, but bridges to
+ * a separate application context, which is where the Ignite grid is actually configured.
  */
 public class IgniteContextBridge implements Ignite {
 
     private Ignite underlyingIgnite;
 
-    public IgniteContextBridge() {
-        underlyingIgnite = IgniteStartupHelper.grid;
+    private Ignite getOrCreateIgnite() {
+        if (underlyingIgnite == null) {
+            IgniteStartupHelper.startIgnite();
+            underlyingIgnite = IgniteStartupHelper.grid;
+        }
+
+        return underlyingIgnite;
     }
 
     @Override
     public String name() {
-        return underlyingIgnite.name();
+        return getOrCreateIgnite().name();
     }
 
     @Override
     public IgniteLogger log() {
-        return underlyingIgnite.log();
+        return getOrCreateIgnite().log();
     }
 
     @Override
     public IgniteConfiguration configuration() {
-        return underlyingIgnite.configuration();
+        return getOrCreateIgnite().configuration();
     }
 
     @Override
     public IgniteCluster cluster() {
-        return underlyingIgnite.cluster();
+        return getOrCreateIgnite().cluster();
     }
 
     @Override
     public IgniteCompute compute() {
-        return underlyingIgnite.compute();
+        return getOrCreateIgnite().compute();
     }
 
     @Override
     public IgniteCompute compute(ClusterGroup clusterGroup) {
-        return underlyingIgnite.compute(clusterGroup);
+        return getOrCreateIgnite().compute(clusterGroup);
     }
 
     @Override
     public IgniteMessaging message() {
-        return underlyingIgnite.message();
+        return getOrCreateIgnite().message();
     }
 
     @Override
     public IgniteMessaging message(ClusterGroup clusterGroup) {
-        return underlyingIgnite.message(clusterGroup);
+        return getOrCreateIgnite().message(clusterGroup);
     }
 
     @Override
     public IgniteEvents events() {
-        return underlyingIgnite.events();
+        return getOrCreateIgnite().events();
     }
 
     @Override
     public IgniteEvents events(ClusterGroup clusterGroup) {
-        return underlyingIgnite.events(clusterGroup);
+        return getOrCreateIgnite().events(clusterGroup);
     }
 
     @Override
     public IgniteServices services() {
-        return underlyingIgnite.services();
+        return getOrCreateIgnite().services();
     }
 
     @Override
     public IgniteServices services(ClusterGroup clusterGroup) {
-        return underlyingIgnite.services(clusterGroup);
+        return getOrCreateIgnite().services(clusterGroup);
     }
 
     @Override
     public ExecutorService executorService() {
-        return underlyingIgnite.executorService();
+        return getOrCreateIgnite().executorService();
     }
 
     @Override
     public ExecutorService executorService(ClusterGroup clusterGroup) {
-        return underlyingIgnite.executorService(clusterGroup);
+        return getOrCreateIgnite().executorService(clusterGroup);
     }
 
     @Override
     public IgniteProductVersion version() {
-        return underlyingIgnite.version();
+        return getOrCreateIgnite().version();
     }
 
     @Override
     public IgniteScheduler scheduler() {
-        return underlyingIgnite.scheduler();
+        return getOrCreateIgnite().scheduler();
     }
 
     @Override
     public <K, V> IgniteCache<K, V> createCache(CacheConfiguration<K, V> kvCacheConfiguration) {
-        return underlyingIgnite.createCache(kvCacheConfiguration);
+        return getOrCreateIgnite().createCache(kvCacheConfiguration);
     }
 
     @Override
     public <K, V> IgniteCache<K, V> createCache(String s) {
-        return underlyingIgnite.createCache(s);
+        return getOrCreateIgnite().createCache(s);
     }
 
     @Override
     public <K, V> IgniteCache<K, V> getOrCreateCache(CacheConfiguration<K, V> kvCacheConfiguration) {
-        return underlyingIgnite.getOrCreateCache(kvCacheConfiguration);
+        return getOrCreateIgnite().getOrCreateCache(kvCacheConfiguration);
     }
 
     @Override
     public <K, V> IgniteCache<K, V> getOrCreateCache(String s) {
-        return underlyingIgnite.getOrCreateCache(s);
+        return getOrCreateIgnite().getOrCreateCache(s);
     }
 
     @Override
     public <K, V> void addCacheConfiguration(CacheConfiguration<K, V> kvCacheConfiguration) {
-        underlyingIgnite.addCacheConfiguration(kvCacheConfiguration);
+        getOrCreateIgnite().addCacheConfiguration(kvCacheConfiguration);
     }
 
     @Override
     public <K, V> IgniteCache<K, V> createCache(CacheConfiguration<K, V> kvCacheConfiguration, NearCacheConfiguration<K, V> kvNearCacheConfiguration) {
-        return underlyingIgnite.createCache(kvCacheConfiguration, kvNearCacheConfiguration);
+        return getOrCreateIgnite().createCache(kvCacheConfiguration, kvNearCacheConfiguration);
     }
 
     @Override
     public <K, V> IgniteCache<K, V> getOrCreateCache(CacheConfiguration<K, V> kvCacheConfiguration, NearCacheConfiguration<K, V> kvNearCacheConfiguration) {
-        return underlyingIgnite.getOrCreateCache(kvCacheConfiguration, kvNearCacheConfiguration);
+        return getOrCreateIgnite().getOrCreateCache(kvCacheConfiguration, kvNearCacheConfiguration);
     }
 
     @Override
     public <K, V> IgniteCache<K, V> createNearCache(@Nullable String s, NearCacheConfiguration<K, V> kvNearCacheConfiguration) {
-        return underlyingIgnite.createNearCache(s, kvNearCacheConfiguration);
+        return getOrCreateIgnite().createNearCache(s, kvNearCacheConfiguration);
     }
 
     @Override
     public <K, V> IgniteCache<K, V> getOrCreateNearCache(@Nullable String s, NearCacheConfiguration<K, V> kvNearCacheConfiguration) {
-        return underlyingIgnite.getOrCreateNearCache(s, kvNearCacheConfiguration);
+        return getOrCreateIgnite().getOrCreateNearCache(s, kvNearCacheConfiguration);
     }
 
     @Override
     public void destroyCache(String s) {
-        underlyingIgnite.destroyCache(s);
+        getOrCreateIgnite().destroyCache(s);
     }
 
     @Override
     public <K, V> IgniteCache<K, V> cache(@Nullable String s) {
-        return underlyingIgnite.cache(s);
+        return getOrCreateIgnite().cache(s);
     }
 
     @Override
     public IgniteTransactions transactions() {
-        return underlyingIgnite.transactions();
+        return getOrCreateIgnite().transactions();
     }
 
     @Override
     public <K, V> IgniteDataStreamer<K, V> dataStreamer(@Nullable String s) {
-        return underlyingIgnite.dataStreamer(s);
+        return getOrCreateIgnite().dataStreamer(s);
     }
 
     @Override
     public IgniteFileSystem fileSystem(String s) {
-        return underlyingIgnite.fileSystem(s);
+        return getOrCreateIgnite().fileSystem(s);
     }
 
     @Override
     public Collection<IgniteFileSystem> fileSystems() {
-        return underlyingIgnite.fileSystems();
+        return getOrCreateIgnite().fileSystems();
     }
 
     @Override
     public IgniteAtomicSequence atomicSequence(String s, long l, boolean b) throws IgniteException {
-        return underlyingIgnite.atomicSequence(s, l, b);
+        return getOrCreateIgnite().atomicSequence(s, l, b);
     }
 
     @Override
     public IgniteAtomicLong atomicLong(String s, long l, boolean b) throws IgniteException {
-        return underlyingIgnite.atomicLong(s, l, b);
+        return getOrCreateIgnite().atomicLong(s, l, b);
     }
 
     @Override
     public <T> IgniteAtomicReference<T> atomicReference(String s, @Nullable T t, boolean b) throws IgniteException {
-        return underlyingIgnite.atomicReference(s, t, b);
+        return getOrCreateIgnite().atomicReference(s, t, b);
     }
 
     @Override
     public <T, S> IgniteAtomicStamped<T, S> atomicStamped(String s, @Nullable T t, @Nullable S s2, boolean b) throws IgniteException {
-        return underlyingIgnite.atomicStamped(s, t, s2, b);
+        return getOrCreateIgnite().atomicStamped(s, t, s2, b);
     }
 
     @Override
     public IgniteCountDownLatch countDownLatch(String s, int i, boolean b, boolean b2) throws IgniteException {
-        return underlyingIgnite.countDownLatch(s, i, b, b2);
+        return getOrCreateIgnite().countDownLatch(s, i, b, b2);
     }
 
     @Override
     public <T> IgniteQueue<T> queue(String s, int i, @Nullable CollectionConfiguration collectionConfiguration) throws IgniteException {
-        return underlyingIgnite.queue(s, i, collectionConfiguration);
+        return getOrCreateIgnite().queue(s, i, collectionConfiguration);
     }
 
     @Override
     public <T> IgniteSet<T> set(String s, @Nullable CollectionConfiguration collectionConfiguration) throws IgniteException {
-        return underlyingIgnite.set(s, collectionConfiguration);
+        return getOrCreateIgnite().set(s, collectionConfiguration);
     }
 
     @Override
     public <T extends IgnitePlugin> T plugin(String s) throws PluginNotFoundException {
-        return underlyingIgnite.plugin(s);
+        return getOrCreateIgnite().plugin(s);
     }
 
     @Override
     public void close() throws IgniteException {
-        underlyingIgnite.close();
+        getOrCreateIgnite().close();
     }
 
     @Override
     public <K> Affinity<K> affinity(String s) {
-        return underlyingIgnite.affinity(s);
+        return getOrCreateIgnite().affinity(s);
     }
 }

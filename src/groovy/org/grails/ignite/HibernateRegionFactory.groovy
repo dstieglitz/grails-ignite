@@ -109,12 +109,11 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
         def configuredCaches = IgniteStartupHelper.grid.configuration().getCacheConfiguration().findAll { it.name.equals(entityName) }.size()
 
         if (configuredCaches == 0) {
-
-            def springConfiguration = IgniteStartupHelper.getSpringConfiguredCache(entityName)
-            if (springConfiguration != null) {
-                log.info "found a manually-configured cache for ${entityName}, will configure from external configuration"
-                IgniteStartupHelper.grid.addCacheConfiguration(springConfiguration);
-            } else {
+//            def springConfiguration = IgniteStartupHelper.getSpringConfiguredCache(entityName)
+//            if (springConfiguration != null) {
+//                log.info "found a manually-configured cache for ${entityName}, will configure from external configuration"
+//                IgniteStartupHelper.grid.addCacheConfiguration(springConfiguration);
+//            } else {
                 def grailsDomainClass = Holders.grailsApplication.getDomainClass(entityName);
                 log.debug "interrogating grails domain class ${entityName} for cache information"
                 log.debug "creating default cache for ${entityName}"
@@ -128,7 +127,7 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
 //            }
 
                 IgniteStartupHelper.grid.getOrCreateCache(cc);
-            }
+//            }
         }
     }
 
@@ -136,11 +135,11 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
         def configuredCaches = IgniteStartupHelper.grid.configuration().getCacheConfiguration().findAll { it.name.equals(associationName) }.size()
 
         if (configuredCaches == 0) {
-            def springConfiguration = IgniteStartupHelper.getSpringConfiguredCache(associationName);
-            if (springConfiguration != null) {
-                log.info "found a manually-configured cache for ${associationName}, will configure from external configuration"
-                IgniteStartupHelper.grid.addCacheConfiguration(springConfiguration);
-            } else {
+//            def springConfiguration = IgniteStartupHelper.getSpringConfiguredCache(associationName);
+//            if (springConfiguration != null) {
+//                log.info "found a manually-configured cache for ${associationName}, will configure from external configuration"
+//                IgniteStartupHelper.grid.addCacheConfiguration(springConfiguration);
+//            } else {
                 def grailsDomainClassName = associationName.substring(0, associationName.lastIndexOf('.'));
                 def grailsDomainClass = Holders.grailsApplication.getDomainClass(grailsDomainClassName);
                 log.debug "interrogating grails domain class ${grailsDomainClassName} for cache information"
@@ -155,7 +154,7 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
 //            }
 
                 IgniteStartupHelper.grid.getOrCreateCache(cc);
-            }
+//            }
         }
     }
 }

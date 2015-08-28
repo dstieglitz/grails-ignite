@@ -34,16 +34,17 @@ class IgniteStartupHelper {
         binding.application = Holders.grailsApplication
         bb.setBinding(binding)
 
-        // FIXME instead, load defaults and overwrite with what's in application
         try {
+            def pluginDir = GrailsPluginUtils.pluginInfos.find { it.name == 'ignite' }.pluginDir
+            def defaultUrl = "file:${pluginDir}/grails-app/conf/spring/${fileName}"
+            log.info "loading default configuration from ${defaultUrl}"
+            bb.importBeans(defaultUrl)
+
             def url = "file:grails-app/conf/spring/${fileName}"
             log.info "attempting to load beans from ${url}"
             bb.importBeans(url)
         } catch (BeanDefinitionParsingException e) {
-            def pluginDir = GrailsPluginUtils.pluginInfos.find { it.name == 'ignite' }.pluginDir
-            def url = "file:${pluginDir}/grails-app/conf/spring/${fileName}"
-            log.info "loading default configuration from ${url}"
-            bb.importBeans(url)
+            log.warn e.message
         }
 
         return bb
@@ -106,7 +107,7 @@ class IgniteStartupHelper {
                 ApplicationContext cacheCtx = cacheBeans.createApplicationContext()
                 log.info "found ${cacheCtx.beanDefinitionCount} cache resource beans"
                 cacheCtx.beanDefinitionNames.each { beanDefName ->
-                    log.debug "found cache bean ${beanDefName}"
+                    log.info "found manually-configured cache bean ${beanDefName}"
                     cacheConfigurationBeans.add(cacheCtx.getBean(beanDefName))
                 }
 
@@ -135,14 +136,14 @@ class IgniteStartupHelper {
         return true;
     }
 
-    public static CacheConfiguration getSpringConfiguredCache(String name) {
-        try {
-            return igniteApplicationContext.getBean(name)
-        } catch (NoSuchBeanDefinitionException e) {
-            return null;
-        }
-    }
-
+//    public static CacheConfiguration getSpringConfiguredCache(String name) {
+//        try {
+//            return igniteApplicationContext.getBean(name)
+//        } catch (NoSuchBeanDefinitionException e) {
+//            return null;
+//        }
+//    }
+//
 //    public static boolean startIgniteProgramatically() {
 //        def ctx = Holders.applicationContext
 //        def application = Holders.grailsApplication

@@ -74,16 +74,15 @@ By default, the plugin will create caches with reasonable defaults (whatever def
 In `grails-app/conf/resources/IgniteCacheResources.groovy`:
 
 ```
-        'com.package.MyDomainClass' { bean ->
-            bean.parent = ref('atomicCache')
-            name = 'com.package.MyDomainClass'
-            cacheMode = CacheMode.PARTITIONED
-            atomicityMode = CacheAtomicityMode.TRANSACTIONAL
-            writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
-            evictionPolicy = { org.apache.ignite.cache.eviction.lru.LruEvictionPolicy ->
-            	maxSize = 1000000
-            }
+    'com.mypackage.MyDomainClass' { bean ->
+        name = 'com.package.MyDomainClass'
+        cacheMode = CacheMode.PARTITIONED
+        atomicityMode = CacheAtomicityMode.TRANSACTIONAL
+        writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
+        evictionPolicy = { org.apache.ignite.cache.eviction.lru.LruEvictionPolicy policy ->
+            maxSize = 1000000
         }
+    }
 ```
 
 See Also:

@@ -7,8 +7,8 @@ import org.codehaus.groovy.grails.orm.hibernate.cfg.GrailsDomainBinder
 import org.grails.ignite.IgniteStartupHelper
 
 beans {
-    // FIXME externalize
-    def l2CacheEnabled = true
+    def l2CacheEnabled = (!(application.config.ignite.l2CacheEnabled instanceof ConfigObject)
+            && application.config.ignite.l2CacheEnabled.equals(true))
 
     def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
             && application.config.ignite.webSessionClusteringEnabled.equals(true))

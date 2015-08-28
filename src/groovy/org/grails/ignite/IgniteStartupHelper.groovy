@@ -135,6 +135,14 @@ class IgniteStartupHelper {
         return true;
     }
 
+    public static CacheConfiguration getSpringConfiguredCache(String name) {
+        try {
+            return igniteApplicationContext.getBean(name)
+        } catch (NoSuchBeanDefinitionException e) {
+            return null;
+        }
+    }
+
 //    public static boolean startIgniteProgramatically() {
 //        def ctx = Holders.applicationContext
 //        def application = Holders.grailsApplication

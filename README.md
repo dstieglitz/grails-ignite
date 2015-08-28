@@ -35,6 +35,12 @@ ignite {
      */
     webSessionClusteringEnabled=true
     
+    /** 
+      * Enable distributed hibernate l2 caching
+      * You must also set the region factory correctly 
+      */
+    l2CacheEnabled=true
+    
     peerClassLoadingEnabled=false
     discoverySpi {
         networkTimeout = 5000
@@ -42,6 +48,48 @@ ignite {
     }
 }
 ```
+
+#Advanced Ignite Grid Configuration
+
+The default dependency-injected grid can be configured via two resources.groovy files, `grails-app/conf/spring/IgniteResources.groovy` and `grails-app/conf/spring/IgniteCacheResources.groovy` (example below). The defaults for these files can be found in the project and will be loaded automatically unless a version of the file exists in the parent project. In that case, the plugin will load the overriding version found in the project.
+
+#Distributed Hibernate L2 Caching
+
+*Requires Hibernate 4*
+
+A basic functional version of distributed Hibernate L2 caching can be utilized by setting the region factory class as follows:
+
+```
+hibernate {
+    cache.region.factory_class = 'org.grails.ignite.HibernateRegionFactory'
+    org.apache.ignite.hibernate.grid_name = '<MY GRID NAME>'
+    org.apache.ignite.hibernate.default_access_type = 'READ_ONLY' // see Ignite docs
+}
+```
+
+By default, the plugin will create caches with reasonable defaults (whatever defaults existing when using Ignite.getOrCreateCache()) on demand when Hibernate configures the regions. You can override these defaults by creating the appropriate CacheConfiguration beans in `IgniteCacheResources.groovy`
+
+##Example Spring Cache Configuration
+
+In `grails-app/conf/resources/IgniteCacheResources.groovy`:
+
+```
+        'com.package.MyDomainClass' { bean ->
+            bean.parent = ref('atomicCache')
+            name = 'com.package.MyDomainClass'
+            cacheMode = CacheMode.PARTITIONED
+            atomicityMode = CacheAtomicityMode.TRANSACTIONAL
+            writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
+            evictionPolicy = { org.apache.ignite.cache.eviction.lru.LruEvictionPolicy ->
+            	maxSize = 1000000
+            }
+        }
+```
+
+See Also:
+
+http://apacheignite.gridgain.org/v1.1/docs/evictions
+
 	
 #Scheduled, Distributed Tasks
 

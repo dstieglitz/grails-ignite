@@ -1,8 +1,3 @@
-import org.grails.ignite.DistributedSchedulerServiceImpl
-import org.grails.ignite.HelloWorldGroovyTask
-
-import java.util.concurrent.TimeUnit
-
 class IgniteBootStrap {
     def grailsApplication
 

@@ -8,6 +8,7 @@ import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.ignite.configuration.IgniteConfiguration
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
 import org.grails.ignite.DistributedSchedulerServiceImpl
+import org.grails.ignite.IgniteContextBridge
 import org.grails.ignite.IgniteStartupHelper
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
@@ -110,7 +111,7 @@ A plugin for the Apache Ignite data grid framework.
     }
 
     def doWithSpring = {
-
+        grid(IgniteContextBridge)
     }
 
     def doWithDynamicMethods = { ctx ->
@@ -118,12 +119,7 @@ A plugin for the Apache Ignite data grid framework.
     }
 
     def doWithApplicationContext = { ctx ->
-        def igniteEnabled = (!(application.config.ignite.enabled instanceof ConfigObject)
-                && application.config.ignite.enabled.equals(true))
 
-        if (igniteEnabled) {
-            IgniteStartupHelper.startIgnite();
-        }
     }
 
     def onChange = { event ->

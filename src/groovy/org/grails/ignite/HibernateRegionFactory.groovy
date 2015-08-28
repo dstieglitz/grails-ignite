@@ -1,6 +1,10 @@
 package org.grails.ignite
 
+import grails.util.Holders
+import org.apache.ignite.cache.CacheAtomicityMode
+import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.log4j.Logger
+import org.codehaus.groovy.grails.orm.hibernate.cfg.GrailsDomainBinder
 import org.hibernate.cache.CacheException
 import org.hibernate.cache.spi.*
 import org.hibernate.cache.spi.access.AccessType
@@ -73,6 +77,7 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
 
     @Override
     public EntityRegion buildEntityRegion(String s, Properties properties, CacheDataDescription cacheDataDescription) throws CacheException {
+        configureEntityCache(s);
         return underlyingRegionFactory.buildEntityRegion(s, properties, cacheDataDescription);
     }
 
@@ -83,6 +88,10 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
 
     @Override
     public CollectionRegion buildCollectionRegion(String s, Properties properties, CacheDataDescription cacheDataDescription) throws CacheException {
+        // check if the cache exists, create it if not
+        log.debug "buildCollectionRegion(${s}, ${properties}, ${cacheDataDescription})"
+        configureAssociationCache(s);
+
         return underlyingRegionFactory.buildCollectionRegion(s, properties, cacheDataDescription);
     }
 
@@ -94,5 +103,46 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
     @Override
     public TimestampsRegion buildTimestampsRegion(String s, Properties properties) throws CacheException {
         return underlyingRegionFactory.buildTimestampsRegion(s, properties);
+    }
+
+    private void configureEntityCache(String entityName) {
+        def configuredCaches = IgniteStartupHelper.grid.configuration().getCacheConfiguration().findAll { it.name.equals(entityName) }.size()
+
+        if (configuredCaches==0) {
+            def grailsDomainClass = Holders.grailsApplication.getDomainClass(entityName);
+            log.debug "interrogating grails domain class ${entityName} for cache information"
+            log.debug "creating default cache for ${entityName}"
+            CacheConfiguration cc = new CacheConfiguration(entityName);
+            def binder = new GrailsDomainBinder()
+            def mapping = binder.getMapping(grailsDomainClass);
+            log.debug "found mapping ${mapping} for ${grailsDomainClass}"
+            cc.setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL);
+//            if (mapping?.cache?.usage?.equalsIgnoreCase("read-write")) {
+//
+//            }
+
+            IgniteStartupHelper.grid.getOrCreateCache(cc);
+        }
+    }
+
+    private void configureAssociationCache(String associationName) {
+        def configuredCaches = IgniteStartupHelper.grid.configuration().getCacheConfiguration().findAll { it.name.equals(associationName) }.size()
+
+        if (configuredCaches==0) {
+            def grailsDomainClassName = associationName.substring(0,associationName.lastIndexOf('.'));
+            def grailsDomainClass = Holders.grailsApplication.getDomainClass(grailsDomainClassName);
+            log.debug "interrogating grails domain class ${grailsDomainClassName} for cache information"
+            log.debug "creating default cache for ${associationName}"
+            CacheConfiguration cc = new CacheConfiguration(associationName);
+            def binder = new GrailsDomainBinder()
+            def mapping = binder.getMapping(grailsDomainClass);
+            log.debug "found mapping ${mapping} for ${grailsDomainClass}"
+            cc.setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL);
+//            if (mapping?.cache?.usage?.equalsIgnoreCase("read-write")) {
+//
+//            }
+
+            IgniteStartupHelper.grid.getOrCreateCache(cc);
+        }
     }
 }

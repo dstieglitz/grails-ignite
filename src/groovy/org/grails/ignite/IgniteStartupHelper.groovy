@@ -5,10 +5,7 @@ import grails.util.Holders
 import groovy.util.logging.Log4j
 import org.apache.ignite.Ignite
 import org.apache.ignite.IgniteCheckedException
-import org.apache.ignite.Ignition
 import org.apache.ignite.configuration.CacheConfiguration
-import org.apache.ignite.configuration.IgniteConfiguration
-import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
 import org.codehaus.groovy.grails.plugins.GrailsPluginUtils
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.parsing.BeanDefinitionParsingException
@@ -24,14 +21,14 @@ import org.springframework.context.ApplicationContext
 @Log4j
 class IgniteStartupHelper {
 
-    private static ApplicationContext igniteApplicationContext
-
     static def IGNITE_WEB_SESSION_CACHE_NAME = 'session-cache'
     static def DEFAULT_GRID_NAME = 'grid'
-    static Ignite grid
+
+    private static ApplicationContext igniteApplicationContext
+    public static Ignite grid
 
     public static BeanBuilder getBeans(String fileName) {
-        BeanBuilder bb = new BeanBuilder(Holders.applicationContext)
+        BeanBuilder bb = new BeanBuilder()
         bb.setClassLoader(this.class.classLoader)
         Binding binding = new Binding()
         binding.application = Holders.grailsApplication
@@ -57,19 +54,27 @@ class IgniteStartupHelper {
         // load it into an igniteApplicationContext and start ignite
         // merge the application context
 
-        BeanBuilder igniteBeans = getBeans("IgniteResources.groovy")
+        def igniteEnabled = (!(Holders.grailsApplication.config.ignite.enabled instanceof ConfigObject)
+                && Holders.grailsApplication.config.ignite.enabled.equals(true))
 
-        igniteApplicationContext = igniteBeans.createApplicationContext()
+        if (igniteEnabled) {
+            BeanBuilder igniteBeans = getBeans("IgniteResources.groovy")
 
-        igniteApplicationContext.beanDefinitionNames.each {
-            log.debug "found bean ${it}"
+            igniteApplicationContext = igniteBeans.createApplicationContext()
+
+            igniteApplicationContext.beanDefinitionNames.each {
+                log.debug "found bean ${it}"
+            }
+
+            if (igniteApplicationContext == null) {
+                throw new IllegalArgumentException("Unable to initialize");
+            }
+
+            return startIgniteFromSpring();
+        } else {
+            log.warn "startIgnite called, but ignite is not enabled in configuration"
+            return false;
         }
-
-        if (igniteApplicationContext == null) {
-            throw new IllegalArgumentException("Unable to initialize");
-        }
-
-        return startIgniteFromSpring();
     }
 
     public static boolean startIgniteFromSpring() {
@@ -130,28 +135,28 @@ class IgniteStartupHelper {
         return true;
     }
 
-    public static boolean startIgniteProgramatically() {
-        def ctx = Holders.applicationContext
-        def application = Holders.grailsApplication
-
-        def configuredAddresses = []
-        if (!(application.config.ignite.discoverySpi.addresses instanceof ConfigObject)) {
-            configuredAddresses = application.config.ignite.discoverySpi.addresses
-        }
-
-        IgniteConfiguration config = new IgniteConfiguration();
-        config.setMarshaller(new OptimizedMarshaller(false));
-        def discoverySpi = new org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi();
-        discoverySpi.setNetworkTimeout(5000);
-        def ipFinder = new org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder();
-        ipFinder.setAddresses(configuredAddresses)
-        discoverySpi.setIpFinder(ipFinder)
-        def grid = Ignition.start(config);
-
-        return grid != null
-    }
-
-    public static ApplicationContext getApplicationContext() {
-        return igniteApplicationContext;
-    }
+//    public static boolean startIgniteProgramatically() {
+//        def ctx = Holders.applicationContext
+//        def application = Holders.grailsApplication
+//
+//        def configuredAddresses = []
+//        if (!(application.config.ignite.discoverySpi.addresses instanceof ConfigObject)) {
+//            configuredAddresses = application.config.ignite.discoverySpi.addresses
+//        }
+//
+//        IgniteConfiguration config = new IgniteConfiguration();
+//        config.setMarshaller(new OptimizedMarshaller(false));
+//        def discoverySpi = new org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi();
+//        discoverySpi.setNetworkTimeout(5000);
+//        def ipFinder = new org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder();
+//        ipFinder.setAddresses(configuredAddresses)
+//        discoverySpi.setIpFinder(ipFinder)
+//        def grid = Ignition.start(config);
+//
+//        return grid != null
+//    }
+//
+//    public static ApplicationContext getApplicationContext() {
+//        return igniteApplicationContext;
+//    }
 }

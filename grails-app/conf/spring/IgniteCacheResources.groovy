@@ -40,32 +40,44 @@ beans {
             writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
         }
 
-        // FIXME allow external cache configuration for optimization on a class-by-class basis
-        // Hibernate L2 cache parent configurations
-        application.domainClasses.each { clazz ->
-            def binder = new GrailsDomainBinder()
-            def mapping = binder.getMapping(clazz)
-            if (mapping.cache && mapping.cache.enabled) {
-                "domainClassCache_${clazz.fullName}" { bean ->
-                    if (mapping.cache.usage.equalsIgnoreCase("read-write")) {
-                        bean.parent = ref('transactionalCache')
-                    } else {
-                        bean.parent = ref('atomicCache')
-                    }
-
-                    name = "${clazz.fullName}"
-                }
-
-                // FIXME now do associations
-                clazz.associationMap.each { k, v ->
-                    if (colMapping.cache && colMapping.cache.enabled) {
-
-                    }
-                    println "${k}=${v}"
-
-                }
-            }
-        }
+//        // FIXME allow external cache configuration for optimization on a class-by-class basis
+//        // Hibernate L2 cache parent configurations
+//        application.domainClasses.each { clazz ->
+////                    println clazz.name
+////                    println clazz.fullName
+////                    println clazz.class.name
+//            def binder = new GrailsDomainBinder()
+//            def mapping = binder.getMapping(clazz)
+//            // static org.codehaus.groovy.grails.orm.hibernate.cfg.GrailsDomainBinder.getMapping() is applicable for argument types: (org.codehaus.groovy.grails.commons.DefaultGrailsDomainClass)
+//            if (mapping.cache && mapping.cache.enabled) {
+//                "domainClassCache_${clazz.fullName}" { bean ->
+//                    if (mapping.cache.usage.equalsIgnoreCase("read-write")) {
+//                        bean.parent = ref('transactionalCache')
+//                    } else {
+//                        bean.parent = ref('atomicCache')
+//                    }
+//
+//                    name = "${clazz.fullName}"
+//                }
+//
+//                // FIXME now do associations
+//                // FIXME if we have a plugin with domain classes, they won't be picked up here
+//                clazz.associationMap.each { k, v ->
+//                    println "${k}=${v}"
+//                    println mapping.columns[k]
+//                    println mapping.getPropertyConfig(k)
+//                    "domainClassPropertyCache_${clazz.fullName}_k" { bean ->
+//                        if (mapping.cache.usage.equalsIgnoreCase("read-write")) {
+//                            bean.parent = ref('transactionalCache')
+//                        } else {
+//                            bean.parent = ref('atomicCache')
+//                        }
+//
+//                        name = "${clazz.fullName}.${k}"
+//                    }
+//                }
+//            }
+//        }
 
         'org.hibernate.cache.spi.UpdateTimestampsCache' { bean ->
             bean.parent = ref('atomicCache')

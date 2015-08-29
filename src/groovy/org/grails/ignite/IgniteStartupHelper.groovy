@@ -6,7 +6,6 @@ import groovy.util.logging.Log4j
 import org.apache.ignite.Ignite
 import org.apache.ignite.IgniteCheckedException
 import org.apache.ignite.configuration.CacheConfiguration
-import org.codehaus.groovy.grails.plugins.GrailsPluginUtils
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.parsing.BeanDefinitionParsingException
 import org.springframework.context.ApplicationContext
@@ -23,29 +22,40 @@ class IgniteStartupHelper {
 
     static def IGNITE_WEB_SESSION_CACHE_NAME = 'session-cache'
     static def DEFAULT_GRID_NAME = 'grid'
+    static def IGNITE_CONFIG_DIRECTORY_NAME = 'ignite'
 
     private static ApplicationContext igniteApplicationContext
     public static Ignite grid
+    private static BeanBuilder igniteBeans = new BeanBuilder()
 
-    public static BeanBuilder getBeans(String fileName) {
-        BeanBuilder bb = new BeanBuilder()
+    public static BeanBuilder getBeans(String resourcePattern, BeanBuilder bb = null) {
+        if (bb == null) {
+            bb = new BeanBuilder()
+        }
+
         bb.setClassLoader(this.class.classLoader)
         Binding binding = new Binding()
         binding.application = Holders.grailsApplication
         bb.setBinding(binding)
 
-        try {
-            def pluginDir = GrailsPluginUtils.pluginInfos.find { it.name == 'ignite' }.pluginDir
-            def defaultUrl = "file:${pluginDir}/grails-app/conf/spring/${fileName}"
-            log.info "loading default configuration from ${defaultUrl}"
-            bb.importBeans(defaultUrl)
+//        def pluginDir = GrailsPluginUtils.pluginInfos.find { it.name == 'ignite' }?.pluginDir
+//        def defaultUrl = null
+//        def url = null
+//
+//        if (pluginDir != null) {
+//            defaultUrl = "file:${pluginDir}/grails-app/conf/spring/${fileName}.groovy"
+//            url = "file:grails-app/conf/spring/${fileName}"
+//            log.info "loading default configuration from ${defaultUrl}"
+//            bb.importBeans(defaultUrl)
+//        } else {
+//            url = "classpath*:${fileName}*"
+//        }
+//
+//        log.info "attempting to load beans from ${url}"
+//        bb.importBeans(url)
 
-            def url = "file:grails-app/conf/spring/${fileName}"
-            log.info "attempting to load beans from ${url}"
-            bb.importBeans(url)
-        } catch (BeanDefinitionParsingException e) {
-            log.warn e.message
-        }
+
+        bb.importBeans(resourcePattern)
 
         return bb
     }
@@ -58,8 +68,23 @@ class IgniteStartupHelper {
         def igniteEnabled = (!(Holders.grailsApplication.config.ignite.enabled instanceof ConfigObject)
                 && Holders.grailsApplication.config.ignite.enabled.equals(true))
 
+        if (Holders.grailsApplication.config.ignite.config.locations instanceof ConfigObject) {
+            throw new IllegalArgumentException("You must specify the locations to Ignite configuration files in ignite.config.locations, see docs");
+        }
+
+        if (!Holders.grailsApplication.config.ignite.config.locations instanceof Collection) {
+            throw new IllegalArgumentException("You must specify a collection of resource locations to Ignite configuration files in ignite.config.locations, see docs");
+        }
+
+        if (Holders.grailsApplication.config.ignite.config.locations.empty) {
+            throw new IllegalArgumentException("You must specify the locations to Ignite configuration files in ignite.config.locations, see docs");
+        }
+
         if (igniteEnabled) {
-            BeanBuilder igniteBeans = getBeans("IgniteResources.groovy")
+            Holders.grailsApplication.config.ignite.config.locations.each {
+                log.info "loading Ignite beans configuration from ${it}"
+                getBeans(it, igniteBeans)
+            }
 
             igniteApplicationContext = igniteBeans.createApplicationContext()
 
@@ -93,7 +118,7 @@ class IgniteStartupHelper {
 
         try {
             log.info "looking for cache resources..."
-            cacheBeans = getBeans("IgniteCacheResources.groovy")
+            cacheBeans = getBeans("IgniteCacheResources")
         } catch (BeanDefinitionParsingException e) {
             log.error e.message
             log.warn "No cache configuration found or cache configuration could not be loaded"
@@ -103,16 +128,19 @@ class IgniteStartupHelper {
             grid = ctx.getBean('grid')
 
             def cacheConfigurationBeans = []
-            if (cacheBeans != null) {
-                ApplicationContext cacheCtx = cacheBeans.createApplicationContext()
-                log.info "found ${cacheCtx.beanDefinitionCount} cache resource beans"
-                cacheCtx.beanDefinitionNames.each { beanDefName ->
-                    log.info "found manually-configured cache bean ${beanDefName}"
-                    cacheConfigurationBeans.add(cacheCtx.getBean(beanDefName))
+//            if (cacheBeans != null) {
+//                ApplicationContext cacheCtx = cacheBeans.createApplicationContext()
+//                log.info "found ${cacheCtx.beanDefinitionCount} cache resource beans"
+                igniteApplicationContext.beanDefinitionNames.each { beanDefName ->
+                    def bean = igniteApplicationContext.getBean(beanDefName)
+                    if (bean instanceof CacheConfiguration) {
+                        log.info "found manually-configured cache bean ${beanDefName}"
+                        cacheConfigurationBeans.add(bean)
+                    }
                 }
 
                 grid.configuration().setCacheConfiguration(cacheConfigurationBeans.toArray() as CacheConfiguration[])
-            }
+//            }
 
 //            println grid.configuration().cacheConfiguration
             // FIXME https://github.com/dstieglitz/grails-ignite/issues/1

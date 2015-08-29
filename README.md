@@ -22,11 +22,16 @@ The plugin provides a configured instance of the Ingite grid as a bean called "g
 
 #Configuration
 
-You can configure Ignite from the Config.groovy file (with limited configuration support for now):
+In order to support hibernate l2 caching, which requires the Ignite grid to be started prior to the sessionFactory and therefore the vast majority of Grails artifacts, Ignite must be configured from external configuration files.
+
+The external files must be referenced in the ignite configuration block in Config.groovy:
 
 ```
 ignite {
     enabled=true
+    config.locations = [
+            "file:ignite/conf/*.groovy"
+    ]
     gridName="myGrid"
     
     /*
@@ -49,9 +54,13 @@ ignite {
 }
 ```
 
-#Advanced Ignite Grid Configuration
+The files can be located anywhere but in the example above we have put them under ignite/conf in the project root. In a production deployment they would likely be in a completely different directory.
 
-The default dependency-injected grid can be configured via two resources.groovy files, `grails-app/conf/spring/IgniteResources.groovy` and `grails-app/conf/spring/IgniteCacheResources.groovy` (example below). The defaults for these files can be found in the project and will be loaded automatically unless a version of the file exists in the parent project. In that case, the plugin will load the overriding version found in the project.
+The configuration files follow the standard Ignite spring configuration conventions, however they must (for the time being) be expressed as Grails Spring DSL files for use with a BeanBuilder.
+
+Example configuration files:
+
+
 
 #Distributed Hibernate L2 Caching
 
@@ -71,7 +80,7 @@ By default, the plugin will create caches with reasonable defaults (whatever def
 
 ##Example Spring Cache Configuration
 
-In `grails-app/conf/resources/IgniteCacheResources.groovy`:
+In `grails-app/ignite/conf/resources/IgniteCacheResources.groovy`:
 
 ```
     'com.mypackage.MyDomainClass' { bean ->

@@ -7,4 +7,5 @@
 // For example you can create directory under project tree:
 //
 //    ant.mkdir(dir:"${basedir}/grails-app/jobs")
-//
+
+// FIXME create directory grails-app/ignite and grails-app/ignite/conf

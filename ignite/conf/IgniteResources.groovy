@@ -11,8 +11,6 @@ beans {
     def peerClassLoadingEnabledInConfig = (!(application.config.ignite.peerClassLoadingEnabled instanceof ConfigObject)
             && application.config.ignite.peerClassLoadingEnabled.equals(true))
 
-
-
     def configuredGridName = IgniteStartupHelper.DEFAULT_GRID_NAME
     if (!(application.config.ignite.gridName instanceof ConfigObject)) {
         configuredGridName = application.config.ignite.gridName

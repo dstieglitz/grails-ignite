@@ -58,8 +58,7 @@ The files can be located anywhere but in the example above we have put them unde
 
 The configuration files follow the standard Ignite spring configuration conventions, however they must (for the time being) be expressed as Grails Spring DSL files for use with a BeanBuilder.
 
-Example configuration files:
-
+See the `ignite/conf` directory for sample configuration files. For basic configuration you can copy the directory to your project.
 
 
 #Distributed Hibernate L2 Caching

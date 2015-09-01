@@ -71,7 +71,7 @@ A plugin for the Apache Ignite data grid framework.
         }
 
         // FIXME no log.(anything) output from here
-        println "Web session clustering enabled in config? ${webSessionClusteringEnabled}"
+        println "Web session clustering enabled in config? ${webSessionClusteringEnabled} for gridName=${configuredGridName}"
 
         if (webSessionClusteringEnabled) {
 //            def listenerNode = xml.'listener'
@@ -85,7 +85,7 @@ A plugin for the Apache Ignite data grid framework.
             contextParam[contextParam.size() - 1] + {
                 'filter' {
                     'filter-name'('IgniteWebSessionsFilter')
-                    'filter-class'('org.apache.ignite.cache.websession.WebSessionFilter')
+                    'filter-class'('org.grails.ignite.WebSessionFilter')
                     'init-param' {
                         'param-name'('IgniteWebSessionsGridName')
                         'param-value'(configuredGridName)

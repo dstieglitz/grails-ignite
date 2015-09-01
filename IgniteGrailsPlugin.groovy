@@ -62,18 +62,18 @@ A plugin for the Apache Ignite data grid framework.
     }
 
     def doWithWebDescriptor = { xml ->
-        def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
-                && application.config.ignite.webSessionClusteringEnabled.equals(true))
-
         def configuredGridName = IgniteStartupHelper.DEFAULT_GRID_NAME
         if (!(application.config.ignite.gridName instanceof ConfigObject)) {
             configuredGridName = application.config.ignite.gridName
         }
 
         // FIXME no log.(anything) output from here
-        println "Web session clustering enabled in config? ${webSessionClusteringEnabled} for gridName=${configuredGridName}"
+        //println "Web session clustering enabled in config? ${webSessionClusteringEnabled} for gridName=${configuredGridName}"
 
-        if (webSessionClusteringEnabled) {
+//        //
+//        // FIXME this will be checked at BUILD time and therefore must be "true" if the filters are to be installed
+//        //
+//        if (webSessionClusteringEnabled) {
 //            def listenerNode = xml.'listener'
 //            listenerNode[listenerNode.size() - 1] + {
 //                listener {
@@ -81,33 +81,33 @@ A plugin for the Apache Ignite data grid framework.
 //                }
 //            }
 
-            def contextParam = xml.'context-param'
-            contextParam[contextParam.size() - 1] + {
-                'filter' {
-                    'filter-name'('IgniteWebSessionsFilter')
-                    'filter-class'('org.grails.ignite.WebSessionFilter')
-                    'init-param' {
-                        'param-name'('IgniteWebSessionsGridName')
-                        'param-value'(configuredGridName)
-                    }
-                }
-            }
-
-            def filterMappingNode = xml.'filter-mapping'
-            filterMappingNode[filterMappingNode.size() - 1] + {
-                'filter-mapping' {
-                    'filter-name'('IgniteWebSessionsFilter')
-                    'url-pattern'('/*')
-                }
-            }
-
-            contextParam[contextParam.size() - 1] + {
-                'context-param' {
-                    'param-name'('IgniteWebSessionsCacheName')
-                    'param-value'(IgniteStartupHelper.IGNITE_WEB_SESSION_CACHE_NAME)
+        def contextParam = xml.'context-param'
+        contextParam[contextParam.size() - 1] + {
+            'filter' {
+                'filter-name'('IgniteWebSessionsFilter')
+                'filter-class'('org.grails.ignite.WebSessionFilter')
+                'init-param' {
+                    'param-name'('IgniteWebSessionsGridName')
+                    'param-value'(configuredGridName)
                 }
             }
         }
+
+        def filterMappingNode = xml.'filter-mapping'
+        filterMappingNode[filterMappingNode.size() - 1] + {
+            'filter-mapping' {
+                'filter-name'('IgniteWebSessionsFilter')
+                'url-pattern'('/*')
+            }
+        }
+
+        contextParam[contextParam.size() - 1] + {
+            'context-param' {
+                'param-name'('IgniteWebSessionsCacheName')
+                'param-value'(IgniteStartupHelper.IGNITE_WEB_SESSION_CACHE_NAME)
+            }
+        }
+//        }
     }
 
     def doWithSpring = {

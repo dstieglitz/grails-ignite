@@ -2,8 +2,7 @@ package org.grails.ignite
 
 import grails.util.Holders
 
-import javax.servlet.FilterConfig
-import javax.servlet.ServletException
+import javax.servlet.*
 
 /**
  * Created by dstieglitz on 9/1/15.
@@ -21,9 +20,27 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
             configuredGridName = application.config.ignite.gridName
         }
 
-        log.info "configuring web session clustering for gridName=${configuredGridName}"
+        def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
+                && application.config.ignite.webSessionClusteringEnabled.equals(true))
 
         decorator.overrideInitParameter('IgniteWebSessionsGridName', configuredGridName)
-        super.init(decorator)
+
+        if (webSessionClusteringEnabled) {
+            log.info "configuring web session clustering for gridName=${configuredGridName}"
+            super.init(decorator)
+        }
+    }
+
+    @Override
+    void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
+        def application = Holders.grailsApplication
+        def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
+                && application.config.ignite.webSessionClusteringEnabled.equals(true))
+
+        if (webSessionClusteringEnabled) {
+            super.doFilter(req, res, chain)
+        } else {
+            chain.doFilter(req, res)
+        }
     }
 }

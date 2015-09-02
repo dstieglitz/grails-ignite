@@ -17,7 +17,8 @@ grails.project.fork = [
     console: [maxMemory: 768, minMemory: 64, debug: false, maxPerm: 256]
 ]
 
-def igniteVer = '1.2.0-incubating'
+def igniteVer = '1.3.0-incubating'
+def igniteHibernateVer = '1.2.0-incubating'
 
 grails.project.dependency.resolver = "maven" // or ivy
 grails.project.dependency.resolution = {
@@ -47,7 +48,7 @@ grails.project.dependency.resolution = {
             excludes 'spring-core', 'spring-aop', 'spring-beans', 'spring-context', 'spring-expression', 'spring-tx'
         }
         compile "org.apache.ignite:ignite-indexing:${igniteVer}"
-        compile("org.apache.ignite:ignite-hibernate:${igniteVer}") {
+        compile("org.apache.ignite:ignite-hibernate:${igniteHibernateVer}") {
             excludes 'hibernate-core'
         }
         compile "org.apache.ignite:ignite-web:${igniteVer}"

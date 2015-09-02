@@ -2,6 +2,8 @@ package org.grails.ignite
 
 import grails.util.Holders
 import org.apache.ignite.cache.CacheAtomicityMode
+import org.apache.ignite.cache.eviction.EvictionPolicy
+import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
 import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.log4j.Logger
 import org.codehaus.groovy.grails.orm.hibernate.cfg.GrailsDomainBinder
@@ -106,7 +108,9 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
     }
 
     private void configureEntityCache(String entityName) {
-        def configuredCaches = IgniteStartupHelper.grid.configuration().getCacheConfiguration().findAll { it.name.equals(entityName) }.size()
+        def configuredCaches = IgniteStartupHelper.grid.configuration().getCacheConfiguration().findAll {
+            it.name.equals(entityName)
+        }.size()
 
         if (configuredCaches == 0) {
 //            def springConfiguration = IgniteStartupHelper.getSpringConfiguredCache(entityName)
@@ -114,25 +118,36 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
 //                log.info "found a manually-configured cache for ${entityName}, will configure from external configuration"
 //                IgniteStartupHelper.grid.addCacheConfiguration(springConfiguration);
 //            } else {
-                def grailsDomainClass = Holders.grailsApplication.getDomainClass(entityName);
-                log.debug "interrogating grails domain class ${entityName} for cache information"
-                log.debug "creating default cache for ${entityName}"
-                CacheConfiguration cc = new CacheConfiguration(entityName);
-                def binder = new GrailsDomainBinder()
-                def mapping = binder.getMapping(grailsDomainClass);
-                log.debug "found mapping ${mapping} for ${grailsDomainClass}"
-                cc.setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL);
+            def grailsDomainClass = Holders.grailsApplication.getDomainClass(entityName);
+            log.debug "interrogating grails domain class ${entityName} for cache information"
+            log.debug "creating default cache for ${entityName}"
+            CacheConfiguration cc = new CacheConfiguration(entityName);
+            def binder = new GrailsDomainBinder()
+            def mapping = binder.getMapping(grailsDomainClass);
+            log.debug "found mapping ${mapping} for ${grailsDomainClass}"
+            cc.setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL);
+
+            // @see http://apacheignite.gridgain.org/docs/performance-tips
+            cc.setBackups(0);
+            cc.setOffHeapMaxMemory(0);
+            LruEvictionPolicy evictionPolicy = new LruEvictionPolicy();
+            evictionPolicy.setMaxSize(1000000);
+            cc.setEvictionPolicy(evictionPolicy);
+            cc.setSwapEnabled(false);
+
 //            if (mapping?.cache?.usage?.equalsIgnoreCase("read-write")) {
 //
 //            }
 
-                IgniteStartupHelper.grid.getOrCreateCache(cc);
+            IgniteStartupHelper.grid.getOrCreateCache(cc);
 //            }
         }
     }
 
     private void configureAssociationCache(String associationName) {
-        def configuredCaches = IgniteStartupHelper.grid.configuration().getCacheConfiguration().findAll { it.name.equals(associationName) }.size()
+        def configuredCaches = IgniteStartupHelper.grid.configuration().getCacheConfiguration().findAll {
+            it.name.equals(associationName)
+        }.size()
 
         if (configuredCaches == 0) {
 //            def springConfiguration = IgniteStartupHelper.getSpringConfiguredCache(associationName);
@@ -140,20 +155,29 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
 //                log.info "found a manually-configured cache for ${associationName}, will configure from external configuration"
 //                IgniteStartupHelper.grid.addCacheConfiguration(springConfiguration);
 //            } else {
-                def grailsDomainClassName = associationName.substring(0, associationName.lastIndexOf('.'));
-                def grailsDomainClass = Holders.grailsApplication.getDomainClass(grailsDomainClassName);
-                log.debug "interrogating grails domain class ${grailsDomainClassName} for cache information"
-                log.debug "creating default cache for ${associationName}"
-                CacheConfiguration cc = new CacheConfiguration(associationName);
-                def binder = new GrailsDomainBinder()
-                def mapping = binder.getMapping(grailsDomainClass);
-                log.debug "found mapping ${mapping} for ${grailsDomainClass}"
-                cc.setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL);
+            def grailsDomainClassName = associationName.substring(0, associationName.lastIndexOf('.'));
+            def grailsDomainClass = Holders.grailsApplication.getDomainClass(grailsDomainClassName);
+            log.debug "interrogating grails domain class ${grailsDomainClassName} for cache information"
+            log.debug "creating default cache for ${associationName}"
+            CacheConfiguration cc = new CacheConfiguration(associationName);
+            def binder = new GrailsDomainBinder()
+            def mapping = binder.getMapping(grailsDomainClass);
+            log.debug "found mapping ${mapping} for ${grailsDomainClass}"
+            cc.setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL);
+
+            // @see http://apacheignite.gridgain.org/docs/performance-tips
+            cc.setBackups(0);
+            cc.setOffHeapMaxMemory(0);
+            LruEvictionPolicy evictionPolicy = new LruEvictionPolicy();
+            evictionPolicy.setMaxSize(1000000);
+            cc.setEvictionPolicy(evictionPolicy);
+            cc.setSwapEnabled(false);
+
 //            if (mapping?.cache?.usage?.equalsIgnoreCase("read-write")) {
 //
 //            }
 
-                IgniteStartupHelper.grid.getOrCreateCache(cc);
+            IgniteStartupHelper.grid.getOrCreateCache(cc);
 //            }
         }
     }

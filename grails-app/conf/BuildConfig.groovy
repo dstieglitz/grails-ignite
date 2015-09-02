@@ -53,6 +53,8 @@ grails.project.dependency.resolution = {
         }
         compile "org.apache.ignite:ignite-web:${igniteVer}"
         compile "org.apache.ignite:ignite-log4j:${igniteVer}"
+        compile "org.apache.ignite:ignite-rest-http:${igniteVer}"
+        compile "org.apache.ignite:ignite-aws:${igniteVer}"
 
         compile 'org.bouncycastle:bcprov-jdk15on:1.52'
         compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.0'

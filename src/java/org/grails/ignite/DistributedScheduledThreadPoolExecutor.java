@@ -4,6 +4,7 @@ import groovy.util.logging.Log4j;
 import it.sauronsoftware.cron4j.Scheduler;
 import it.sauronsoftware.cron4j.SchedulerListener;
 import org.apache.ignite.Ignite;
+import org.apache.ignite.lang.IgniteRunnable;
 import org.apache.ignite.resources.IgniteInstanceResource;
 import org.apache.log4j.Logger;
 
@@ -95,7 +96,7 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
         this.running = trueOrFalse;
     }
 
-    private class IgniteDistributedRunnable implements Runnable {
+    private class IgniteDistributedRunnable implements IgniteRunnable {
         protected Runnable runnable;
 
         public IgniteDistributedRunnable(Runnable scheduledRunnable) {

@@ -106,17 +106,17 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
 
         @Override
         public void run() {
-            try {
+//            try {
                 if (running) {
                     ignite.executorService().submit(runnable);
                 }
-            } catch (Exception e) {
-                // LOG IT HERE!!!
-                log.error("error in executing: " + runnable + ". It will no longer be run!", e);
-
-                // and re throw it so that the Executor also gets this error so that it can do what it would usually do
-                throw new RuntimeException(e);
-            }
+//            } catch (Exception e) {
+//                // LOG IT HERE!!!
+//                log.error("error in executing: " + runnable + ". It will no longer be run!", e);
+//
+//                // and re throw it so that the Executor also gets this error so that it can do what it would usually do
+//                throw new RuntimeException(e);
+//            }
         }
     }
 

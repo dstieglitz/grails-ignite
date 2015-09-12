@@ -1,5 +1,6 @@
 package org.grails.ignite;
 
+import groovy.util.logging.Log4j;
 import it.sauronsoftware.cron4j.Scheduler;
 import it.sauronsoftware.cron4j.SchedulerListener;
 import org.apache.ignite.Ignite;
@@ -18,6 +19,7 @@ import java.util.concurrent.*;
  * @author srasul
  * @see http://code.nomad-labs.com/2011/12/09/mother-fk-the-scheduledexecutorservice/
  */
+@Log4j
 public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
     private static final Logger log = Logger.getLogger(DistributedScheduledThreadPoolExecutor.class.getName());
@@ -109,11 +111,9 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
                 }
             } catch (Exception e) {
                 // LOG IT HERE!!!
-                System.err.println("error in executing: " + runnable + ". It will no longer be run!");
-                e.printStackTrace();
+                log.error("error in executing: " + runnable + ". It will no longer be run!", e);
 
-                // and re throw it so that the Executor also gets this error so that it can do what it would
-                // usually do
+                // and re throw it so that the Executor also gets this error so that it can do what it would usually do
                 throw new RuntimeException(e);
             }
         }

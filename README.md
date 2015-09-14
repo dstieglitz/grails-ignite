@@ -46,6 +46,20 @@ ignite {
       */
     l2CacheEnabled=true
     
+    /**
+     * DEFAULTS; you can also configure individual caches as spring beans 
+     */
+    l2cache { 
+        associationMemoryMode =  CacheMemoryMode.OFFHEAP_TIERED
+        associationAtomicityMode = CacheAtomicityMode.TRANSACTIONAL
+        associationWriteSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC
+        associationMaxSize = 1000
+        entityMemoryMode = CacheMemoryMode.OFFHEAP_TIERED
+        entityAtomicityMode = CacheAtomicityMode.TRANSACTIONAL
+        entityWriteSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC
+        entityMaxSize = 1000
+    }
+    
     peerClassLoadingEnabled=false
     discoverySpi {
         networkTimeout = 5000

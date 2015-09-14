@@ -1,4 +1,4 @@
-#Grails Ignite Plugin
+ #Grails Ignite Plugin
 
 A plugin that provides basic Grails integration with the Apache Ignite compute grid framework.
 
@@ -54,10 +54,12 @@ ignite {
         associationAtomicityMode = CacheAtomicityMode.TRANSACTIONAL
         associationWriteSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC
         associationMaxSize = 1000
+        associationEvictSynchronized=true
         entityMemoryMode = CacheMemoryMode.OFFHEAP_TIERED
         entityAtomicityMode = CacheAtomicityMode.TRANSACTIONAL
         entityWriteSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC
         entityMaxSize = 1000
+        entityEvictSynchronized=true
     }
     
     peerClassLoadingEnabled=false

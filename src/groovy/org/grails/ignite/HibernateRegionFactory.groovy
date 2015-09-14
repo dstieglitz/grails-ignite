@@ -26,10 +26,12 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
     private static final String ASSOCIATION_CACHE_ATOMICITY_MODE_KEY = 'ignite.l2cache.associationAtomicityMode'
     private static final String ASSOCIATION_CACHE_WRITE_SYNC_MODE_KEY = 'ignite.l2cache.associationWriteSynchronizationMode'
     private static final String ASSOCIATION_CACHE_MAX_SIZE = 'ignite.l2cache.associationMaxSize'
+    private static final String ASSOCIATION_CACHE_EVICT_SYNCHRONIZED = 'ignite.l2cache.associationEvictSynchronized'
     private static final String ENTITY_CACHE_MEMORY_MODE_KEY = 'ignite.l2cache.entityMemoryMode'
     private static final String ENTITY_CACHE_ATOMICITY_MODE_KEY = 'ignite.l2cache.entityAtomicityMode'
     private static final String ENTITY_CACHE_WRITE_SYNC_MODE_KEY = 'ignite.l2cache.entityWriteSynchronizationMode'
     private static final String ENTITY_CACHE_MAX_SIZE = 'ignite.l2cache.entityMaxSize'
+    private static final String ENTITY_CACHE_EVICT_SYNCHRONIZED = 'ignite.l2cache.entityEvictSynchronized'
 
     private static final Logger log = Logger.getLogger(HibernateRegionFactory.class.getName());
     private org.apache.ignite.cache.hibernate.HibernateRegionFactory underlyingRegionFactory;
@@ -151,6 +153,8 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
             log.debug "setting sync mode for ${entityName} cache to ${syncMode}"
             cc.setWriteSynchronizationMode(syncMode);
 
+            cc.setEvictSynchronized(valueOrDefault(ENTITY_CACHE_EVICT_SYNCHRONIZED, false));
+
             // @see http://apacheignite.gridgain.org/docs/performance-tips
             cc.setBackups(0);
             cc.setOffHeapMaxMemory(0);
@@ -200,6 +204,8 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
             def syncMode = valueOrDefault(ASSOCIATION_CACHE_WRITE_SYNC_MODE_KEY, CacheWriteSynchronizationMode.FULL_SYNC)
             log.debug "setting sync mode for ${associationName} cache to ${syncMode}"
             cc.setWriteSynchronizationMode(syncMode);
+
+            cc.setEvictSynchronized(valueOrDefault(ASSOCIATION_CACHE_EVICT_SYNCHRONIZED, false));
 
             // @see http://apacheignite.gridgain.org/docs/performance-tips
             cc.setBackups(0);

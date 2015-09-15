@@ -1,16 +1,6 @@
 import grails.plugin.webxml.FilterManager
-import org.apache.ignite.IgniteCheckedException
-import org.apache.ignite.cache.CacheAtomicityMode
-import org.apache.ignite.cache.CacheMode
-import org.apache.ignite.cache.CacheWriteSynchronizationMode
-import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
-import org.apache.ignite.configuration.CacheConfiguration
-import org.apache.ignite.configuration.IgniteConfiguration
-import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
-import org.grails.ignite.DistributedSchedulerServiceImpl
 import org.grails.ignite.IgniteContextBridge
 import org.grails.ignite.IgniteStartupHelper
-import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 class IgniteGrailsPlugin {
     // the plugin version
@@ -111,7 +101,10 @@ A plugin for the Apache Ignite data grid framework.
     }
 
     def doWithSpring = {
-        grid(IgniteContextBridge)
+        if (!(application.config.ignite.enabled instanceof ConfigObject)
+                && application.config.ignite.enabled.toBoolean().equals(true)) {
+            grid(IgniteContextBridge)
+        }
     }
 
     def doWithDynamicMethods = { ctx ->

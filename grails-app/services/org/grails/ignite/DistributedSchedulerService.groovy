@@ -111,10 +111,6 @@ class DistributedSchedulerService {
         return grid.compute().activeTaskFutures()
     }
 
-    public Future getFuture(String id) {
-//        DistributedSchedulerServiceImpl.ScheduledRunnable d = getServiceProxy().getS
-    }
-
     boolean cancel(String name, boolean interrupt) {
         log.debug "cancel '${name}', ${interrupt}"
         return getServiceProxy().cancel(name, interrupt);

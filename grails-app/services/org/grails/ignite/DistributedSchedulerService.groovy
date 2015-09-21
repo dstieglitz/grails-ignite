@@ -1,6 +1,8 @@
 package org.grails.ignite
 
 import org.apache.ignite.compute.ComputeExecutionRejectedException
+import org.apache.ignite.compute.ComputeTaskFuture
+import org.apache.ignite.lang.IgniteUuid
 import org.grails.ignite.ScheduledRunnable
 import org.grails.ignite.SchedulerService
 
@@ -103,6 +105,10 @@ class DistributedSchedulerService {
         def future = getServiceProxy().scheduleWithCron(scheduledRunnable)
         log.debug "getServiceProxy().schedule returned future ${future}"
         return future
+    }
+
+    public Map<IgniteUuid, ComputeTaskFuture> getFutures() {
+        return grid.compute().activeTaskFutures()
     }
 
     public Future getFuture(String id) {

@@ -1,4 +1,4 @@
- #Grails Ignite Plugin
+#Grails Ignite Plugin
 
 A plugin that provides basic Grails integration with the Apache Ignite compute grid framework.
 
@@ -75,6 +75,18 @@ The files can be located anywhere but in the example above we have put them unde
 The configuration files follow the standard Ignite spring configuration conventions, however they must (for the time being) be expressed as Grails Spring DSL files for use with a BeanBuilder.
 
 See the `ignite/conf` directory for sample configuration files. For basic configuration you can copy the directory to your project.
+
+#Logging
+
+The project contains an implementation of `IgniteLogger` for use with Grails. This class allows you to use the Grails log4j DSL to configure logging for the embedded Ignite node. The logger can be configured from the Ignite spring bean:
+
+```
+        gridLogger(org.grails.ignite.IgniteGrailsLogger)
+        
+        igniteCfg(IgniteConfiguration) {
+        	gridLogger = ref('gridLogger')
+        }
+```
 
 
 #Distributed Hibernate L2 Caching

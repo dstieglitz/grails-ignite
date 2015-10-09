@@ -1,6 +1,7 @@
 // configuration for plugin testing - will not be included in the plugin zip
 
 ignite.enabled = true
+ignite.config.locations = ['ignite/conf/*.groovy']
 
 log4j = {
     // Example of changing the log pattern for the default console
@@ -24,4 +25,6 @@ log4j = {
            'org.springframework',
            'org.hibernate',
            'net.sf.ehcache.hibernate'
+
+    debug 'org.apache.ignite'
 }

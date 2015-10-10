@@ -9,7 +9,8 @@ class IgniteGrailsPlugin {
     def grailsVersion = "2.3 > *"
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
-            "grails-app/views/error.gsp"
+            "grails-app/views/error.gsp",
+            "grails-app/domain"
     ]
 
     def title = "Grails Ignite Plugin" // Headline display name of the plugin

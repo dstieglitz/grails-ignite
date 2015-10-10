@@ -2,6 +2,7 @@
 
 ignite.enabled = true
 ignite.config.locations = ['ignite/conf/*.groovy']
+ignite.l2CacheEnabled = true
 
 log4j = {
     // Example of changing the log pattern for the default console

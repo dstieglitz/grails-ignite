@@ -16,7 +16,7 @@ class ConfigurationIntegrationSpec extends IntegrationSpec {
     def cleanup() {
     }
 
-    void "test cache modes"() {
+    void "test cache configuration"() {
         setup:
         assert grid.name() != null // force creation of grid
         assert grid.underlyingIgnite != null

@@ -89,15 +89,19 @@ beans {
             bean.parent = ref('atomicCache')
             name = 'org.hibernate.cache.internal.StandardQueryCache'
         }
+    }
 
-        testReplicatedCache(CacheConfiguration) {
-            name = 'test_replicated'
-            mode = CacheMode.REPLICATED
-        }
+    testReplicatedCache(CacheConfiguration) {
+        name = 'test_replicated'
+        atomicityMode = CacheAtomicityMode.TRANSACTIONAL
+        cacheMode = CacheMode.REPLICATED
+        writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_SYNC
+    }
 
-        testPartitionedCache(CacheConfiguration) {
-            name = 'test_partitioned'
-            mode = CacheMode.PARTITIONED
-        }
+    testPartitionedCache(CacheConfiguration) {
+        name = 'test_partitioned'
+        atomicityMode = CacheAtomicityMode.ATOMIC
+        cacheMode = CacheMode.PARTITIONED
+        writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC
     }
 }

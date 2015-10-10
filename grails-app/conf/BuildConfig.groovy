@@ -71,6 +71,7 @@ grails.project.dependency.resolution = {
         build ':tomcat:7.0.54'
 
         compile ':webxml:1.4.1'
+
         runtime ":hibernate4:4.3.8.1"
     }
 }

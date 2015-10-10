@@ -26,5 +26,6 @@ log4j = {
            'org.hibernate',
            'net.sf.ehcache.hibernate'
 
-    debug 'org.apache.ignite'
+    info 'org.apache.ignite'
+    debug 'org.grails.ignite'
 }

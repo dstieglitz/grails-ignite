@@ -80,6 +80,8 @@ class IgniteStartupHelper {
             throw new IllegalArgumentException("You must specify the locations to Ignite configuration files in ignite.config.locations, see docs");
         }
 
+        log.debug "igniteEnabled=${igniteEnabled}"
+
         if (igniteEnabled) {
             Holders.grailsApplication.config.ignite.config.locations.each {
                 log.info "loading Ignite beans configuration from ${it}"
@@ -119,6 +121,7 @@ class IgniteStartupHelper {
         try {
             log.info "looking for cache resources..."
             cacheBeans = getBeans("IgniteCacheResources")
+            log.debug "found ${cacheBeans} cache resources"
         } catch (BeanDefinitionParsingException e) {
             log.error e.message
             log.warn "No cache configuration found or cache configuration could not be loaded"
@@ -128,29 +131,32 @@ class IgniteStartupHelper {
             grid = ctx.getBean('grid')
 
             def cacheConfigurationBeans = []
-//            if (cacheBeans != null) {
-//                ApplicationContext cacheCtx = cacheBeans.createApplicationContext()
-//                log.info "found ${cacheCtx.beanDefinitionCount} cache resource beans"
-                igniteApplicationContext.beanDefinitionNames.each { beanDefName ->
-                    def bean = igniteApplicationContext.getBean(beanDefName)
+
+            if (cacheBeans != null) {
+                ApplicationContext cacheCtx = cacheBeans.createApplicationContext()
+                log.info "found ${cacheCtx.beanDefinitionCount} cache resource beans"
+                cacheCtx.beanDefinitionNames.each { beanDefName ->
+                    def bean = cacheCtx.getBean(beanDefName)
                     if (bean instanceof CacheConfiguration) {
                         log.info "found manually-configured cache bean ${beanDefName}"
                         cacheConfigurationBeans.add(bean)
                     }
                 }
+            }
 
-                grid.configuration().setCacheConfiguration(cacheConfigurationBeans.toArray() as CacheConfiguration[])
-//            }
+            igniteApplicationContext.beanDefinitionNames.each { beanDefName ->
+                def bean = igniteApplicationContext.getBean(beanDefName)
+                if (bean instanceof CacheConfiguration) {
+                    log.info "found manually-configured cache bean ${beanDefName}"
+                    cacheConfigurationBeans.add(bean)
+                }
+            }
 
-//            println grid.configuration().cacheConfiguration
-            // FIXME https://github.com/dstieglitz/grails-ignite/issues/1
-//            grid.configuration().setGridLogger(new Log4JLogger())
+            grid.configuration().setCacheConfiguration(cacheConfigurationBeans.toArray() as CacheConfiguration[])
 
-            //           if (grid.state() != IgniteState.STARTED) {
             log.info "Starting Ignite grid..."
             grid.start()
             grid.services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
-//            }
 
         } catch (NoSuchBeanDefinitionException e) {
             log.warn e.message
@@ -162,6 +168,10 @@ class IgniteStartupHelper {
 
 //        ctx.getBean('distributedSchedulerService').grid = grid
         return true;
+    }
+
+    public static ApplicationContext getIgniteApplicationContext() {
+        return igniteApplicationContext;
     }
 
 //    public static CacheConfiguration getSpringConfiguredCache(String name) {

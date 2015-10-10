@@ -5,6 +5,9 @@ import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
 import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.ignite.configuration.IgniteConfiguration
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
+import org.grails.ignite.IgniteGrailsLogger
+
+//import org.apache.ignite.logger.log4j.Log4JLogger
 import org.grails.ignite.IgniteStartupHelper
 
 beans {
@@ -34,7 +37,7 @@ beans {
      */
     if (igniteEnabled) {
         // FIXME https://github.com/dstieglitz/grails-ignite/issues/1
-        //gridLogger(Log4JLogger)
+        gridLogger(IgniteGrailsLogger)
 
         igniteCfg(IgniteConfiguration) {
             gridName = configuredGridName
@@ -81,7 +84,7 @@ beans {
 //                    service = { DistributedSchedulerServiceImpl impl -> }
 //                }]
 
-            //gridLogger = ref('gridLogger')
+            gridLogger = ref('gridLogger')
         }
 
         grid(org.grails.ignite.DeferredStartIgniteSpringBean) { bean ->

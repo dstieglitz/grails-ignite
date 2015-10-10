@@ -1,3 +1,5 @@
+import org.grails.ignite.IgniteStartupHelper
+
 class IgniteBootStrap {
     def grailsApplication
 

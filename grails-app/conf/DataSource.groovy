@@ -8,9 +8,13 @@ dataSource {
 hibernate {
     cache.use_second_level_cache = true
     cache.use_query_cache = false
-    cache.region.factory_class = 'net.sf.ehcache.hibernate.EhCacheRegionFactory' // Hibernate 3
+//    cache.region.factory_class = 'net.sf.ehcache.hibernate.EhCacheRegionFactory' // Hibernate 3
 //    cache.region.factory_class = 'org.hibernate.cache.ehcache.EhCacheRegionFactory' // Hibernate 4
     singleSession = true // configure OSIV singleSession mode
+
+    cache.region.factory_class = 'org.grails.ignite.HibernateRegionFactory'
+    org.apache.ignite.hibernate.grid_name = 'grid'
+    org.apache.ignite.hibernate.default_access_type = 'READ_ONLY' // see Ignite docs
 }
 
 // environment specific settings

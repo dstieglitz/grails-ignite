@@ -4,17 +4,11 @@ import grails.test.spock.IntegrationSpec
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.cache.CacheWriteSynchronizationMode
-import org.codehaus.groovy.grails.commons.GrailsApplication
 
 class ConfigurationIntegrationSpec extends IntegrationSpec {
 
     def grid
-
-    def setup() {
-    }
-
-    def cleanup() {
-    }
+    def sessionFactory
 
     void "test cache configuration"() {
         setup:
@@ -22,7 +16,6 @@ class ConfigurationIntegrationSpec extends IntegrationSpec {
         assert grid.underlyingIgnite != null
 
         when:
-        println grid.configuration()
         def caches = grid.configuration().cacheConfiguration.collectEntries { [(it.name): it] }
 
         then:
@@ -35,5 +28,32 @@ class ConfigurationIntegrationSpec extends IntegrationSpec {
         assert caches['test_partitioned'].cacheMode == CacheMode.PARTITIONED
         assert caches['test_partitioned'].writeSynchronizationMode == CacheWriteSynchronizationMode.FULL_ASYNC
         assert caches['test_partitioned'].atomicityMode == CacheAtomicityMode.ATOMIC
+    }
+
+    void "test l2 cache configuration"() {
+        setup:
+        assert grid.name() != null // force creation of grid
+        assert grid.underlyingIgnite != null
+
+        when:
+        def caches = grid.configuration().cacheConfiguration.collectEntries { [(it.name): it] }
+
+        then:
+        assert caches.containsKey('org.grails.ignite.Widget') // region configured manually
+
+        when:
+        def widget = new Widget(name: 'test widget')
+        widget.save(flush: true)
+        caches = grid.configuration().cacheConfiguration.collectEntries { [(it.name): it] }
+        println grid.configuration().cacheConfiguration.collect { it.name }
+        widget = Widget.get(1)
+
+        then:
+        Widget.count() == 1
+        assert caches.containsKey('org.grails.ignite.Widget')
+        println sessionFactory.statistics
+        println sessionFactory.statistics.secondLevelCacheStatistics
+
+        // caches configured programatically cannot be queried via the Ignite interface (until version 1.5)
     }
 }

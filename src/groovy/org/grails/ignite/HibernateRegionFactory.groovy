@@ -42,6 +42,7 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
     }
 
     private boolean init() {
+        log.debug "init() --> igniteNodeInitialized=${igniteNodeInitialized}"
         if (igniteNodeInitialized) {
             return;
         }
@@ -63,9 +64,13 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
         // we need to re-write property names here, Grails will prepend "hibernate." to them
         //
         def gridName = properties.getProperty("hibernate.${org.apache.ignite.cache.hibernate.HibernateRegionFactory.GRID_NAME_PROPERTY}")
-        if (gridName) properties.setProperty(org.apache.ignite.cache.hibernate.HibernateRegionFactory.GRID_NAME_PROPERTY, gridName)
+        log.debug "grid name is ${gridName}"
+        if (gridName) {
+            properties.setProperty(org.apache.ignite.cache.hibernate.HibernateRegionFactory.GRID_NAME_PROPERTY, gridName)
+        }
 
         if (init()) {
+            log.debug "starting underlyingRegionFactory"
             underlyingRegionFactory.start(settings, properties);
         }
     }

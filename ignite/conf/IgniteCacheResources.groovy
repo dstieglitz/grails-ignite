@@ -1,4 +1,5 @@
 import org.apache.ignite.cache.CacheAtomicityMode
+import org.apache.ignite.cache.CacheMemoryMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.cache.CacheWriteSynchronizationMode
 import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
@@ -103,5 +104,13 @@ beans {
         atomicityMode = CacheAtomicityMode.ATOMIC
         cacheMode = CacheMode.PARTITIONED
         writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC
+    }
+
+    testWidgetCache(CacheConfiguration) {
+        name = 'org.grails.ignite.Widget'
+        atomicityMode = CacheAtomicityMode.TRANSACTIONAL
+        cacheMode = CacheMode.REPLICATED
+        writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC
+        memoryMode =  CacheMemoryMode.OFFHEAP_VALUES
     }
 }

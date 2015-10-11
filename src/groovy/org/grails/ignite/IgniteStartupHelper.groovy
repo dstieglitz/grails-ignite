@@ -80,7 +80,7 @@ class IgniteStartupHelper {
             throw new IllegalArgumentException("You must specify the locations to Ignite configuration files in ignite.config.locations, see docs");
         }
 
-        log.debug "igniteEnabled=${igniteEnabled}"
+        log.debug "startIgnite() --> igniteEnabled=${igniteEnabled}"
 
         if (igniteEnabled) {
             Holders.grailsApplication.config.ignite.config.locations.each {

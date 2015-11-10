@@ -42,14 +42,14 @@ A plugin for the Apache Ignite data grid framework.
 
     def dependsOn = ['hibernate4': '* > 4.3.8.1']
 
-    def loadAfter = ['logging']
+    def loadAfter = ['logging', 'shiro', 'springSecurityCore', 'cors']
 
     def loadBefore = ['hibernate', 'hibernate4']
 
 //    def LOG = LoggerFactory.getLogger('grails.plugin.ignite.IgniteGrailsPlugin')
 
     def getWebXmlFilterOrder() {
-        [IgniteWebSessionsFilter: FilterManager.CHAR_ENCODING_POSITION + 100]
+        [IgniteWebSessionsFilter: FilterManager.CHAR_ENCODING_POSITION - 100]
     }
 
     def doWithWebDescriptor = { xml ->

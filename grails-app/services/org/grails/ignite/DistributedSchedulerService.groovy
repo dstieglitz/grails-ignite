@@ -3,10 +3,7 @@ package org.grails.ignite
 import org.apache.ignite.compute.ComputeExecutionRejectedException
 import org.apache.ignite.compute.ComputeTaskFuture
 import org.apache.ignite.lang.IgniteUuid
-import org.grails.ignite.ScheduledRunnable
-import org.grails.ignite.SchedulerService
 
-import java.util.concurrent.Future
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
@@ -17,7 +14,7 @@ class DistributedSchedulerService {
     def grid
 
     public ScheduledFuture scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit, String name = null)
-    throws Exception {
+            throws Exception {
         log.debug "scheduleAtFixedRate ${command}, ${initialDelay}, ${period}, ${unit}"
 
         ScheduledRunnable scheduledRunnable;
@@ -41,7 +38,7 @@ class DistributedSchedulerService {
     }
 
     public ScheduledFuture scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit, String name = null)
-    throws Exception {
+            throws Exception {
         log.debug "scheduleWithFixedDelay ${command}, ${initialDelay}, ${delay}, ${unit}"
 
         ScheduledRunnable scheduledRunnable;
@@ -108,6 +105,9 @@ class DistributedSchedulerService {
     }
 
     public Map<IgniteUuid, ComputeTaskFuture> getFutures() {
+        if (grid == null) {
+            throw new RuntimeException("Grid has not been initialized")
+        }
         return grid.compute().activeTaskFutures()
     }
 
@@ -133,6 +133,9 @@ class DistributedSchedulerService {
     }
 
     private SchedulerService getServiceProxy() {
+        if (grid == null) {
+            throw new RuntimeException("Grid has not been initialized")
+        }
         return grid.services().serviceProxy("distributedSchedulerService", SchedulerService.class, false)
     }
 }

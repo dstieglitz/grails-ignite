@@ -1,15 +1,9 @@
-import org.apache.ignite.cache.CacheAtomicityMode
-import org.apache.ignite.cache.CacheMode
-import org.apache.ignite.cache.CacheWriteSynchronizationMode
-import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
-import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.ignite.configuration.IgniteConfiguration
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
 import org.grails.ignite.IgniteGrailsLogger
-
-//import org.apache.ignite.logger.log4j.Log4JLogger
 import org.grails.ignite.IgniteStartupHelper
 
+//import org.apache.ignite.logger.log4j.Log4JLogger
 beans {
     def peerClassLoadingEnabledInConfig = (!(application.config.ignite.peerClassLoadingEnabled instanceof ConfigObject)
             && application.config.ignite.peerClassLoadingEnabled.equals(true))
@@ -31,6 +25,9 @@ beans {
 
     def igniteEnabled = (!(application.config.ignite.enabled instanceof ConfigObject)
             && application.config.ignite.enabled.equals(true))
+
+    def s3DiscoveryEnabled = (!(application.config.ignite.discoverySpi.s3Discovery instanceof ConfigObject)
+            && application.config.ignite.discoverySpi.s3Discovery.equals(true))
 
     /*
      * Only configure Ignite if the configuration value ignite.enabled=true is defined
@@ -58,18 +55,43 @@ beans {
             //            }
 
             includeEventTypes = [org.apache.ignite.events.EventType.EVT_TASK_STARTED,
-                    org.apache.ignite.events.EventType.EVT_TASK_FINISHED,
-                    org.apache.ignite.events.EventType.EVT_TASK_FAILED,
-                    org.apache.ignite.events.EventType.EVT_TASK_TIMEDOUT,
-                    org.apache.ignite.events.EventType.EVT_TASK_SESSION_ATTR_SET,
-                    org.apache.ignite.events.EventType.EVT_TASK_REDUCED,
-                    org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_PUT,
-                    org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_READ]
+                                 org.apache.ignite.events.EventType.EVT_TASK_FINISHED,
+                                 org.apache.ignite.events.EventType.EVT_TASK_FAILED,
+                                 org.apache.ignite.events.EventType.EVT_TASK_TIMEDOUT,
+                                 org.apache.ignite.events.EventType.EVT_TASK_SESSION_ATTR_SET,
+                                 org.apache.ignite.events.EventType.EVT_TASK_REDUCED,
+                                 org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_PUT,
+                                 org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_READ]
 
-            discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
-                networkTimeout = configuredNetworkTimeout
-                ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder tcpDiscoveryMulticastIpFinder ->
-                    addresses = configuredAddresses
+            if (s3DiscoveryEnabled) {
+                def accessKey = application.config.ignite.discoverySpi.awsAccessKey
+                def secretKey = application.config.ignite.discoverySpi.awsSecretKey
+                def bucketName = application.config.ignite.discoverySpi.s3DiscoveryBucketName
+                if (accessKey instanceof ConfigObject) {
+                    throw new IllegalArgumentException("You must provide an AWS access key for s3-based discovery");
+                }
+                if (secretKey instanceof ConfigObject) {
+                    throw new IllegalArgumentException("You must provide an AWS secret key for s3-based discovery");
+                }
+                if (bucketName instanceof ConfigObject) {
+                    throw new IllegalArgumentException("You must provide an AWS S3 bucket name for s3-based discovery");
+                }
+                discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
+                    networkTimeout = configuredNetworkTimeout
+                    ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.s3.TcpDiscoveryS3IpFinder tcpDiscoveryS3IpFinder ->
+                        bucketName = buckeName
+                        awsCredentials = ref('awsCredentials')
+                    }
+                }
+                awsCredentials(com.amazonaws.auth.BasicAWSCredentials) { bean ->
+                    bean.constructorArgs = [accessKey, secretKey]
+                }
+            } else {
+                discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
+                    networkTimeout = configuredNetworkTimeout
+                    ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder tcpDiscoveryMulticastIpFinder ->
+                        addresses = configuredAddresses
+                    }
                 }
             }
 

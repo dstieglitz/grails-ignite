@@ -28,7 +28,7 @@ public class IgniteGrailsLogger implements IgniteLogger {
         String className = null;
 
         if (o instanceof String) {
-            className = (String)o;
+            className = (String) o;
         } else if (o instanceof Class) {
             className = ((Class) o).getName();
         } else {
@@ -46,32 +46,36 @@ public class IgniteGrailsLogger implements IgniteLogger {
     public void trace(String s) {
         if (underlyingLogger == null) {
             System.out.println(s);
+        } else {
+            underlyingLogger.trace(s);
         }
-        underlyingLogger.trace(s);
     }
 
     @Override
     public void debug(String s) {
         if (underlyingLogger == null) {
             System.out.println(s);
+        } else {
+            underlyingLogger.debug(s);
         }
-        underlyingLogger.debug(s);
     }
 
     @Override
     public void info(String s) {
         if (underlyingLogger == null) {
             System.out.println(s);
+        } else {
+            underlyingLogger.info(s);
         }
-        underlyingLogger.info(s);
     }
 
     @Override
     public void warning(String s) {
         if (underlyingLogger == null) {
             System.out.println(s);
+        } else {
+            underlyingLogger.warn(s);
         }
-        underlyingLogger.warn(s);
     }
 
     @Override
@@ -79,16 +83,18 @@ public class IgniteGrailsLogger implements IgniteLogger {
         if (underlyingLogger == null) {
             System.out.println(s);
             throwable.printStackTrace();
+        } else {
+            underlyingLogger.warn(s, throwable);
         }
-        underlyingLogger.warn(s, throwable);
     }
 
     @Override
     public void error(String s) {
         if (underlyingLogger == null) {
             System.err.println(s);
+        } else {
+            underlyingLogger.error(s);
         }
-        underlyingLogger.error(s);
     }
 
     @Override
@@ -96,32 +102,36 @@ public class IgniteGrailsLogger implements IgniteLogger {
         if (underlyingLogger == null) {
             System.err.println(s);
             throwable.printStackTrace();
+        } else {
+            underlyingLogger.error(s, throwable);
         }
-        underlyingLogger.error(s, throwable);
     }
 
     @Override
     public boolean isTraceEnabled() {
         if (underlyingLogger == null) {
             return Logger.getRootLogger().isTraceEnabled();
+        } else {
+            return underlyingLogger.isTraceEnabled();
         }
-        return underlyingLogger.isTraceEnabled();
     }
 
     @Override
     public boolean isDebugEnabled() {
         if (underlyingLogger == null) {
             return Logger.getRootLogger().isDebugEnabled();
+        } else {
+            return underlyingLogger.isDebugEnabled();
         }
-        return underlyingLogger.isDebugEnabled();
     }
 
     @Override
     public boolean isInfoEnabled() {
         if (underlyingLogger == null) {
             return Logger.getRootLogger().isInfoEnabled();
+        } else {
+            return underlyingLogger.isInfoEnabled();
         }
-        return underlyingLogger.isInfoEnabled();
     }
 
     @Override

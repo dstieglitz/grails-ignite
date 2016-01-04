@@ -22,7 +22,7 @@ The plugin provides a configured instance of the Ingite grid as a bean called "g
 
 #Configuration
 
-In order to support hibernate l2 caching, which requires the Ignite grid to be started prior to the sessionFactory and therefore the vast majority of Grails artifacts, Ignite must be configured from external configuration files.
+In order to support hibernate l2 caching, which requires the Ignite grid to be started prior to the sessionFactory and therefore the vast majority of Grails artifacts, Ignite must be configured from external configuration files. 
 
 The external files must be referenced in the ignite configuration block in Config.groovy:
 
@@ -75,6 +75,19 @@ The files can be located anywhere but in the example above we have put them unde
 The configuration files follow the standard Ignite spring configuration conventions, however they must (for the time being) be expressed as Grails Spring DSL files for use with a BeanBuilder.
 
 See the `ignite/conf` directory for sample configuration files. For basic configuration you can copy the directory to your project.
+
+#Startup
+
+In order to facilitate the correct startup order of the Ignite grid (to support hibernate L2 caching it must start before the SessionFactory, which in turn is started by Grails before the application), Ignite uses a special startup hook called `IgniteStartupHelper`. The `IgniteStartupHelper` class will load it's own application context specifically for the Ignite grid. This application context can be managed using the Spring DSL by specifying beans in *Resources.groovy files in the `ignite/conf` directory of your application, or by specifying external config directories for these files:
+
+```
+ignite {
+    enabled=true
+    config.locations = [
+            "file:ignite/conf/*.groovy"
+    ]
+    gridName="myGrid"
+```
 
 #Logging
 

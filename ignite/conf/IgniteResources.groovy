@@ -29,6 +29,9 @@ beans {
     def s3DiscoveryEnabled = (!(application.config.ignite.discoverySpi.s3Discovery instanceof ConfigObject)
             && application.config.ignite.discoverySpi.s3Discovery.equals(true))
 
+    def multicastDiscoveryEnabled = (!(application.config.ignite.discoverySpi.multicastDiscovery instanceof ConfigObject)
+            && application.config.ignite.discoverySpi.multicastDiscovery.equals(true))
+
     /*
      * Only configure Ignite if the configuration value ignite.enabled=true is defined
      */
@@ -66,30 +69,36 @@ beans {
             if (s3DiscoveryEnabled) {
                 def accessKey = application.config.ignite.discoverySpi.awsAccessKey
                 def secretKey = application.config.ignite.discoverySpi.awsSecretKey
-                def bucketName = application.config.ignite.discoverySpi.s3DiscoveryBucketName
+                def theBucketName = application.config.ignite.discoverySpi.s3DiscoveryBucketName
                 if (accessKey instanceof ConfigObject) {
                     throw new IllegalArgumentException("You must provide an AWS access key for s3-based discovery");
                 }
                 if (secretKey instanceof ConfigObject) {
                     throw new IllegalArgumentException("You must provide an AWS secret key for s3-based discovery");
                 }
-                if (bucketName instanceof ConfigObject) {
+                if (theBucketName instanceof ConfigObject) {
                     throw new IllegalArgumentException("You must provide an AWS S3 bucket name for s3-based discovery");
                 }
                 discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
-                    networkTimeout = configuredNetworkTimeout
                     ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.s3.TcpDiscoveryS3IpFinder tcpDiscoveryS3IpFinder ->
-                        bucketName = buckeName
+                        bucketName = theBucketName
                         awsCredentials = ref('awsCredentials')
                     }
                 }
                 awsCredentials(com.amazonaws.auth.BasicAWSCredentials) { bean ->
                     bean.constructorArgs = [accessKey, secretKey]
                 }
-            } else {
+            } else if (multicastDiscoveryEnabled) {
                 discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
                     networkTimeout = configuredNetworkTimeout
                     ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder tcpDiscoveryMulticastIpFinder ->
+                        addresses = configuredAddresses
+                    }
+                }
+            } else {
+                discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
+                    networkTimeout = configuredNetworkTimeout
+                    ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder tcpDiscoveryVmIpFinder ->
                         addresses = configuredAddresses
                     }
                 }

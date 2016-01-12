@@ -26,6 +26,10 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
         decorator.overrideInitParameter('IgniteWebSessionsGridName', configuredGridName)
 
         if (webSessionClusteringEnabled) {
+            if (IgniteStartupHelper.grid == null) {
+                log.info "web session clustering is enabled but grid is not started, starting now"
+                IgniteStartupHelper.startIgnite();
+            }
             log.info "configuring web session clustering for gridName=${configuredGridName}"
             super.init(decorator)
         }

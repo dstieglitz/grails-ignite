@@ -37,13 +37,19 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
 
     @Override
     void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
+        log.debug "doFilter ${req}, ${res}, ${chain}"
+
         def application = Holders.grailsApplication
         def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
                 && application.config.ignite.webSessionClusteringEnabled.equals(true))
 
+        log.debug "webSessionClusteringEnabled=${webSessionClusteringEnabled}"
+
         if (webSessionClusteringEnabled) {
+            log.debug "super.doFilter..."
             super.doFilter(req, res, chain)
         } else {
+            log.debug "chain.doFilter..."
             chain.doFilter(req, res)
         }
     }

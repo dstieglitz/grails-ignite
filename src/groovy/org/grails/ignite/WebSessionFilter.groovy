@@ -1,13 +1,17 @@
 package org.grails.ignite
 
 import grails.util.Holders
+import org.springframework.util.AntPathMatcher
 
 import javax.servlet.*
+import javax.servlet.http.HttpServletRequest
 
 /**
  * Created by dstieglitz on 9/1/15.
  */
 class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilter {
+
+    def excludes
 
     @Override
     void init(FilterConfig cfg) throws ServletException {
@@ -25,6 +29,13 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
 
         decorator.overrideInitParameter('IgniteWebSessionsGridName', configuredGridName)
 
+        this.excludes = application.config.ignite.webSessionClusteringPathExcludes
+        if (this.excludes instanceof ConfigObject) {
+            this.excludes = []
+        }
+
+        log.info "excluding the following URIs from web session clustering by configuration: ${this.excludes}"
+
         if (webSessionClusteringEnabled) {
             if (IgniteStartupHelper.grid == null) {
                 log.info "web session clustering is enabled but grid is not started, starting now"
@@ -33,6 +44,23 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
             log.info "configuring web session clustering for gridName=${configuredGridName}"
             super.init(decorator)
         }
+    }
+
+    private boolean shouldExclude(String path) {
+        log.debug "shouldExclude '${path}' ?"
+        AntPathMatcher pathMatcher = new AntPathMatcher();
+
+        for (String exclude : excludes) {
+            log.debug "checking ${exclude}"
+
+            // FIXME use a regex
+            if (pathMatcher.match(exclude, path)) {
+                log.debug "found excluded prefix ${path}"
+                return true
+            }
+        }
+
+        return false
     }
 
     @Override
@@ -45,7 +73,8 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
 
         log.debug "webSessionClusteringEnabled=${webSessionClusteringEnabled}"
 
-        if (webSessionClusteringEnabled) {
+        String path = ((HttpServletRequest) req).getServletPath();
+        if (webSessionClusteringEnabled && !shouldExclude(path)) {
             log.debug "super.doFilter..."
             super.doFilter(req, res, chain)
         } else {

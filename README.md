@@ -40,6 +40,11 @@ ignite {
      */
     webSessionClusteringEnabled=true
     
+    /**
+     * Set of Ant paths to exclude from web session clustering logic
+     */
+    webSessionClusteringPathExcludes = ['*/api/**','*/otherExclude/']
+    
     /** 
       * Enable distributed hibernate l2 caching
       * You must also set the region factory correctly 

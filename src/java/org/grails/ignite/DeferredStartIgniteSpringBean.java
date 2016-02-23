@@ -143,6 +143,13 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
 //        g = IgniteSpring.start(cfg, appCtx);
     }
 
+    public void start() throws IgniteCheckedException {
+        if (cfg == null)
+            cfg = new IgniteConfiguration();
+
+        g = IgniteSpring.start(cfg, appCtx);
+    }
+
     /**
      * {@inheritDoc}
      */

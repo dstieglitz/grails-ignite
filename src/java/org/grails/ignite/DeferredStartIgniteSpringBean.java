@@ -84,10 +84,13 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
         ApplicationContextAware, Externalizable {
     /** */
     private static final long serialVersionUID = 0L;
+
     /** */
     private Ignite g;
+
     /** */
     private IgniteConfiguration cfg;
+
     /** */
     private ApplicationContext appCtx;
 
@@ -133,14 +136,11 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public void afterPropertiesSet() throws Exception {
-
-    }
-
-    public void start() throws IgniteCheckedException {
-        if (cfg == null)
-            cfg = new IgniteConfiguration();
-
-        g = IgniteSpring.start(cfg, appCtx);
+        // Don't automatically start the grid.
+//        if (cfg == null)
+//            cfg = new IgniteConfiguration();
+//
+//        g = IgniteSpring.start(cfg, appCtx);
     }
 
     /**
@@ -303,6 +303,17 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
         return g.cache(name);
     }
 
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Collection<String> cacheNames() {
+        assert g != null;
+
+        return g.cacheNames();
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -458,6 +469,16 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      * {@inheritDoc}
      */
     @Override
+    public IgniteBinary binary() {
+        assert g != null;
+
+        return g.binary();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void close() throws IgniteException {
         g.close();
     }
@@ -523,6 +544,21 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
         assert g != null;
 
         return g.countDownLatch(name, cnt, autoDel, create);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nullable
+    @Override
+    public IgniteSemaphore semaphore(String name,
+                                     int cnt,
+                                     boolean failoverSafe,
+                                     boolean create) {
+        assert g != null;
+
+        return g.semaphore(name, cnt,
+                failoverSafe, create);
     }
 
     /**

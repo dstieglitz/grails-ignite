@@ -170,6 +170,11 @@ public class IgniteContextBridge implements Ignite {
     }
 
     @Override
+    public Collection<String> cacheNames() {
+        return getOrCreateIgnite().cacheNames();
+    }
+
+    @Override
     public IgniteTransactions transactions() {
         return getOrCreateIgnite().transactions();
     }
@@ -215,6 +220,11 @@ public class IgniteContextBridge implements Ignite {
     }
 
     @Override
+    public IgniteSemaphore semaphore(String s, int i, boolean b, boolean b1) throws IgniteException {
+        return getOrCreateIgnite().semaphore(s, i, b, b1);
+    }
+
+    @Override
     public <T> IgniteQueue<T> queue(String s, int i, @Nullable CollectionConfiguration collectionConfiguration) throws IgniteException {
         return getOrCreateIgnite().queue(s, i, collectionConfiguration);
     }
@@ -227,6 +237,11 @@ public class IgniteContextBridge implements Ignite {
     @Override
     public <T extends IgnitePlugin> T plugin(String s) throws PluginNotFoundException {
         return getOrCreateIgnite().plugin(s);
+    }
+
+    @Override
+    public IgniteBinary binary() {
+        return getOrCreateIgnite().binary();
     }
 
     @Override

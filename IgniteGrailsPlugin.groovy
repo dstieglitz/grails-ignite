@@ -49,8 +49,7 @@ A plugin for the Apache Ignite data grid framework.
 //    def LOG = LoggerFactory.getLogger('grails.plugin.ignite.IgniteGrailsPlugin')
 
     def getWebXmlFilterOrder() {
-        def FilterManager = getClass().getClassLoader().loadClass('grails.plugin.webxml.FilterManager')
-        [IgniteWebSessionsFilter: FilterManager.CHAR_ENCODING_POSITION - 100]
+        [IgniteWebSessionsFilter: FilterManager.DEFAULT_POSITION + 100000]
     }
 
     def doWithWebDescriptor = { xml ->

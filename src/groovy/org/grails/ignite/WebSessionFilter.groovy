@@ -1,6 +1,7 @@
 package org.grails.ignite
 
 import grails.util.Holders
+import org.codehaus.groovy.grails.web.util.WebUtils
 import org.springframework.util.AntPathMatcher
 
 import javax.servlet.*
@@ -47,15 +48,15 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
     }
 
     private boolean shouldExclude(String path) {
-        log.debug "shouldExclude '${path}' ?"
+        log.trace "shouldExclude '${path}' ?"
         AntPathMatcher pathMatcher = new AntPathMatcher();
 
         for (String exclude : excludes) {
-            log.debug "checking ${exclude}"
+            log.trace "checking ${exclude}"
 
             // FIXME use a regex
             if (pathMatcher.match(exclude, path)) {
-                log.debug "found excluded prefix ${path}"
+                log.trace "found excluded prefix ${path}"
                 return true
             }
         }
@@ -65,20 +66,32 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
 
     @Override
     void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
-        log.debug "doFilter ${req}, ${res}, ${chain}"
+        HttpServletRequest httpReq = (HttpServletRequest) req;
+        String path = httpReq.getServletPath();
+        log.debug "doFilter ${path}"
+
+        def flashScope = WebUtils.retrieveGrailsWebRequest().flashScope
+        log.trace "flashScope=${flashScope} (type=${flashScope?.class?.name})"
+
+        flashScope.keySet().each {
+            log.debug "flash.${it}=${flashScope.get(it)}"
+        }
+
+        httpReq.session.attributeNames.each {
+            log.trace "request attribute ${it}=${httpReq.session.getAttribute(it)}"
+        }
 
         def application = Holders.grailsApplication
         def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
                 && application.config.ignite.webSessionClusteringEnabled.equals(true))
 
-        log.debug "webSessionClusteringEnabled=${webSessionClusteringEnabled}"
+        log.trace "webSessionClusteringEnabled=${webSessionClusteringEnabled}"
 
-        String path = ((HttpServletRequest) req).getServletPath();
         if (webSessionClusteringEnabled && !shouldExclude(path)) {
-            log.debug "super.doFilter..."
+            log.debug "invoking Ignite WebSessionFilter"
             super.doFilter(req, res, chain)
         } else {
-            log.debug "chain.doFilter..."
+            log.trace "chain.doFilter..."
             chain.doFilter(req, res)
         }
     }

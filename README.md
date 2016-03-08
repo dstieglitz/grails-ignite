@@ -94,6 +94,34 @@ ignite {
     gridName="myGrid"
 ```
 
+#Discovery
+
+Ignite can be configured to discover nodes via static, multicast or s3 discovery mechanisms. You need to include the correct ignite spring resources in your project and set the proper Grails configuration.
+
+See IgniteResources.groovy
+
+The example below shows how to configure discovery via the Grails configuration:
+
+```
+    discoverySpi {
+        s3Discovery = true 
+        awsAccessKey = <ACCESS KEY WITH S3 PERMISSIONS>
+        awsSecretKey = <SECRET KEY FOR ACCESS KEY>
+        s3DiscoveryBucketName = "ignite-localdev"
+
+		/* OR */
+		
+        multicastDiscovery = false
+        networkTimeout = 5000
+        addresses = ["${myIP}:47500..47509".toString()]
+
+		/* OR */
+		
+        // use static IP discovery
+        addresses = ['1.2.3.4','5.6.7.8']
+    }
+ ```
+
 #Logging
 
 The project contains an implementation of `IgniteLogger` for use with Grails. This class allows you to use the Grails log4j DSL to configure logging for the embedded Ignite node. The logger can be configured from the Ignite spring bean:

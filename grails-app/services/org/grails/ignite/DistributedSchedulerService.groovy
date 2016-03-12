@@ -15,7 +15,7 @@ class DistributedSchedulerService {
 
     public ScheduledFuture scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit, String name = null)
             throws Exception {
-        log.debug "scheduleAtFixedRate ${command}, ${initialDelay}, ${period}, ${unit}"
+        log.debug "scheduleAtFixedRate ${command}, ${initialDelay}, ${period}, ${unit}, ${name}"
 
         ScheduledRunnable scheduledRunnable;
         if (name != null) {
@@ -39,7 +39,7 @@ class DistributedSchedulerService {
 
     public ScheduledFuture scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit, String name = null)
             throws Exception {
-        log.debug "scheduleWithFixedDelay ${command}, ${initialDelay}, ${delay}, ${unit}"
+        log.debug "scheduleWithFixedDelay ${command}, ${initialDelay}, ${delay}, ${unit}, ${name}"
 
         ScheduledRunnable scheduledRunnable;
         if (name != null) {
@@ -62,7 +62,7 @@ class DistributedSchedulerService {
     }
 
     public ScheduledFuture schedule(Runnable command, long delay, TimeUnit unit, String name = null) throws Exception {
-        log.debug "scheduleWithFixedDelay ${command}, ${delay}, ${unit}"
+        log.debug "schedule ${command}, ${delay}, ${unit}, ${name}"
 
         ScheduledRunnable scheduledRunnable;
         if (name != null) {
@@ -84,7 +84,7 @@ class DistributedSchedulerService {
     }
 
     public ScheduledFuture scheduleWithCron(Runnable command, String cronExpression, String name = null) throws Exception {
-        log.debug "scheduleWithFixedDelay ${command}, ${cronExpression}"
+        log.debug "scheduleWithCron ${command}, ${cronExpression}, ${name}"
 
         ScheduledRunnable scheduledRunnable;
         if (name != null) {

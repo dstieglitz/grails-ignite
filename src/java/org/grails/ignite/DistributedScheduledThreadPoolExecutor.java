@@ -20,10 +20,9 @@ import java.util.concurrent.*;
  * @author srasul
  * @see http://code.nomad-labs.com/2011/12/09/mother-fk-the-scheduledexecutorservice/
  */
-@Log4j
 public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
-    private static final Logger log = Logger.getLogger(DistributedScheduledThreadPoolExecutor.class.getName());
+    private final Logger log = Logger.getLogger(getClass().getName());
     @IgniteInstanceResource
     private Ignite ignite;
     private boolean running = true;

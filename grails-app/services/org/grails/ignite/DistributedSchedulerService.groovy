@@ -29,12 +29,14 @@ class DistributedSchedulerService {
         scheduledRunnable.setTimeUnit(unit);
 
         if (getServiceProxy().isScheduled(scheduledRunnable.getName())) {
-            throw new ComputeExecutionRejectedException("Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName());
+//            throw new ComputeExecutionRejectedException("Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName());
+            log.warn "Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName()
+            return null
+        } else {
+            def future = getServiceProxy().scheduleAtFixedRate(scheduledRunnable)
+            log.debug "getServiceProxy().scheduleAtFixedRate returned future ${future}"
+            return future
         }
-
-        def future = getServiceProxy().scheduleAtFixedRate(scheduledRunnable)
-        log.debug "getServiceProxy().scheduleAtFixedRate returned future ${future}"
-        return future
     }
 
     public ScheduledFuture scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit, String name = null)
@@ -53,12 +55,14 @@ class DistributedSchedulerService {
         scheduledRunnable.setTimeUnit(unit);
 
         if (getServiceProxy().isScheduled(scheduledRunnable)) {
-            throw new ComputeExecutionRejectedException("Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName());
+//            throw new ComputeExecutionRejectedException("Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName());
+            log.warn "Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName()
+            return null
+        } else {
+            def future = getServiceProxy().scheduleWithFixedDelay(scheduledRunnable)
+            log.debug "getServiceProxy().scheduleWithFixedDelay returned future ${future}"
+            return future
         }
-
-        def future = getServiceProxy().scheduleWithFixedDelay(scheduledRunnable)
-        log.debug "getServiceProxy().scheduleWithFixedDelay returned future ${future}"
-        return future
     }
 
     public ScheduledFuture schedule(Runnable command, long delay, TimeUnit unit, String name = null) throws Exception {
@@ -75,12 +79,14 @@ class DistributedSchedulerService {
         scheduledRunnable.setTimeUnit(unit);
 
         if (getServiceProxy().isScheduled(scheduledRunnable)) {
-            throw new ComputeExecutionRejectedException("Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName());
+//            throw new ComputeExecutionRejectedException("Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName());
+            log.warn "Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName()
+            return null
+        } else {
+            def future = getServiceProxy().schedule(scheduledRunnable)
+            log.debug "getServiceProxy().schedule returned future ${future}"
+            return future
         }
-
-        def future = getServiceProxy().schedule(scheduledRunnable)
-        log.debug "getServiceProxy().schedule returned future ${future}"
-        return future
     }
 
     public ScheduledFuture scheduleWithCron(Runnable command, String cronExpression, String name = null) throws Exception {
@@ -90,18 +96,21 @@ class DistributedSchedulerService {
         if (name != null) {
             scheduledRunnable = new ScheduledRunnable(name, command);
         } else {
-            scheduledRunnable = new ScheduledRunnable(command);
+            throw new ComputeExecutionRejectedException("No name supplied to CRON job while being scheduled. You must supply a name.");
+//            scheduledRunnable = new ScheduledRunnable(command);
         }
 
         scheduledRunnable.setCronString(cronExpression);
 
         if (name != null && getServiceProxy().isScheduled(name)) {
-            throw new ComputeExecutionRejectedException("Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName());
+//            throw new ComputeExecutionRejectedException("Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName());
+            log.warn "Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName()
+            return null
+        } else {
+            def future = getServiceProxy().scheduleWithCron(scheduledRunnable)
+            log.debug "getServiceProxy().schedule returned future ${future}"
+            return future
         }
-
-        def future = getServiceProxy().scheduleWithCron(scheduledRunnable)
-        log.debug "getServiceProxy().schedule returned future ${future}"
-        return future
     }
 
     public Map<IgniteUuid, ComputeTaskFuture> getFutures() {

@@ -23,6 +23,7 @@ class IgniteStartupHelper {
     static def IGNITE_WEB_SESSION_CACHE_NAME = 'session-cache'
     static def DEFAULT_GRID_NAME = 'grid'
     static def IGNITE_CONFIG_DIRECTORY_NAME = 'ignite'
+    static String SCHEDULER_SERVICE_NAME = 'distributedSchedulerService'
 
     private static ApplicationContext igniteApplicationContext
     public static Ignite grid
@@ -156,8 +157,11 @@ class IgniteStartupHelper {
 
             log.info "Starting Ignite grid..."
             grid.start()
-            grid.services().deployClusterSingleton("distributedSchedulerService", new DistributedSchedulerServiceImpl());
-
+            def deployedSchedulerService = grid.services().service(SCHEDULER_SERVICE_NAME)
+            log.debug "service returns ==================>>>>>> ${deployedSchedulerService}"
+            if (deployedSchedulerService == null) {
+                grid.services().deployClusterSingleton(SCHEDULER_SERVICE_NAME, new DistributedSchedulerServiceImpl());
+            }
         } catch (NoSuchBeanDefinitionException e) {
             log.warn e.message
             return false;

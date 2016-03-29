@@ -185,6 +185,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         log.debug("cancel '" + name + "', " + mayInterruptIfRunning);
         Future future = nameFutureMap.get(name);
         if (future == null) {
+            if (!isScheduled(name)) return true;
             log.warn("tried to cancel, but no Future found for '" + name + "'");
             boolean removed = schedule.remove(findScheduleDataByName(name));
             log.debug("remove from schedule " + name + " returned " + removed);
@@ -199,6 +200,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
             log.debug("cancel returned " + cancelled);
             boolean removed = false;
             if (cancelled) {
+                if (!isScheduled(name)) return true;
                 removed = schedule.remove(findScheduleDataByName(name));
                 log.debug("remove from schedule " + name + " returned " + removed);
                 if (removed) {

@@ -1,13 +1,14 @@
 package org.grails.ignite;
 
-import groovy.util.logging.Log4j;
+import it.sauronsoftware.cron4j.Predictor;
 import it.sauronsoftware.cron4j.Scheduler;
-import it.sauronsoftware.cron4j.SchedulerListener;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.lang.IgniteRunnable;
 import org.apache.ignite.resources.IgniteInstanceResource;
 import org.apache.log4j.Logger;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -49,18 +50,18 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
 
     @Override
     public ScheduledFuture scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
-        log.debug("scheduleAtFixedRate "+command+","+initialDelay+","+period+","+unit);
+        log.debug("scheduleAtFixedRate " + command + "," + initialDelay + "," + period + "," + unit);
         return super.scheduleAtFixedRate(new IgniteDistributedRunnable(command), initialDelay, period, unit);
     }
 
     @Override
     public ScheduledFuture scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
-        log.debug("scheduleWithFixedDelay "+command+","+initialDelay+","+delay+","+unit);
+        log.debug("scheduleWithFixedDelay " + command + "," + initialDelay + "," + delay + "," + unit);
         return super.scheduleWithFixedDelay(new IgniteDistributedRunnable(command), initialDelay, delay, unit);
     }
 
     public ScheduledFuture scheduleWithCron(Runnable command, String cronString) throws it.sauronsoftware.cron4j.InvalidPatternException {
-        log.debug("scheduleWithCron "+command+" cron string");
+        log.debug("scheduleWithCron " + command + " cron string");
         IgniteCronDistributedRunnable scheduledFuture = new IgniteCronDistributedRunnable(command);
         String id = cronScheduler.schedule(cronString, scheduledFuture);
         scheduledFuture.setCronTaskId(id);
@@ -95,7 +96,7 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
     }
 
     public void setRunning(boolean trueOrFalse) {
-        log.debug("setRunning "+trueOrFalse);
+        log.debug("setRunning " + trueOrFalse);
         this.running = trueOrFalse;
     }
 
@@ -111,12 +112,12 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
         @Override
         public void run() {
 //            try {
-                if (running) {
-                    log.trace("run "+ runnable);
-                    ignite.executorService().submit(runnable);
-                } else {
-                    log.debug("scheduler is disabled, will not run "+ runnable);
-                }
+            if (running) {
+                log.trace("run " + runnable);
+                ignite.executorService().submit(runnable);
+            } else {
+                log.debug("scheduler is disabled, will not run " + runnable);
+            }
 //            } catch (Exception e) {
 //                // LOG IT HERE!!!
 //                log.error("error in executing: " + runnable + ". It will no longer be run!", e);
@@ -189,6 +190,23 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
 
         public void setCronTaskId(String cronTaskId) {
             this.cronTaskId = cronTaskId;
+        }
+
+        public Map toDataMap() {
+            Map result = new HashMap();
+            String cronExpression = cronScheduler.getSchedulingPattern(cronTaskId).toString();
+            Predictor p = new Predictor(cronExpression);
+            result.put("cronTaskId", cronTaskId);
+            result.put("cancelled", cancelled);
+            result.put("cronExpression", cronExpression);
+            result.put("nextRun", p.nextMatchingDate());
+            return result;
+        }
+
+        public String toString() {
+            String cronExpression = cronScheduler.getSchedulingPattern(cronTaskId).toString();
+            Predictor p = new Predictor(cronExpression);
+            return "{\"cronTaskId\": \"" + cronTaskId + "\", \"cancelled\": " + cancelled + ", \"expr\": \"" + cronExpression + "\", \"nextRun\":\"" + p.nextMatchingDate() + "\"}";
         }
     }
 }

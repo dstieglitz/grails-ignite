@@ -2,6 +2,7 @@ package org.grails.ignite;
 
 import it.sauronsoftware.cron4j.Predictor;
 import it.sauronsoftware.cron4j.Scheduler;
+import it.sauronsoftware.cron4j.SchedulingPattern;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.lang.IgniteRunnable;
 import org.apache.ignite.resources.IgniteInstanceResource;
@@ -159,7 +160,7 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
             if (cronTaskId == null) {
                 throw new IllegalArgumentException("Can't cancel a task without a cron task ID");
             }
-            cronScheduler.deschedule(cronTaskId);
+            DistributedScheduledThreadPoolExecutor.this.cronScheduler.deschedule(cronTaskId);
             cancelled = true;
             return isCancelled();
         }
@@ -194,19 +195,31 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
 
         public Map toDataMap() {
             Map result = new HashMap();
-            String cronExpression = cronScheduler.getSchedulingPattern(cronTaskId).toString();
-            Predictor p = new Predictor(cronExpression);
-            result.put("cronTaskId", cronTaskId);
-            result.put("cancelled", cancelled);
-            result.put("cronExpression", cronExpression);
-            result.put("nextRun", p.nextMatchingDate());
-            return result;
-        }
+            Scheduler cronScheduler = DistributedScheduledThreadPoolExecutor.this.cronScheduler;
+            if (cronScheduler == null) {
+                result.put("cronExpression", "NULL SCHEDULER");
+            } else {
+                SchedulingPattern schedulingPattern = cronScheduler.getSchedulingPattern(cronTaskId);
+                String cronExpression;
+                Predictor p = null;
 
-        public String toString() {
-            String cronExpression = cronScheduler.getSchedulingPattern(cronTaskId).toString();
-            Predictor p = new Predictor(cronExpression);
-            return "{\"cronTaskId\": \"" + cronTaskId + "\", \"cancelled\": " + cancelled + ", \"expr\": \"" + cronExpression + "\", \"nextRun\":\"" + p.nextMatchingDate() + "\"}";
+                if (schedulingPattern == null) {
+                    cronExpression = "NO PATTERN";
+                } else {
+                    cronExpression = schedulingPattern.toString();
+                    p = new Predictor(cronExpression);
+                }
+
+                result.put("cronTaskId", cronTaskId);
+                result.put("cancelled", cancelled);
+                result.put("cronExpression", cronExpression);
+
+                if (p != null) {
+                    result.put("nextRun", p.nextMatchingDate());
+                }
+            }
+
+            return result;
         }
     }
 }

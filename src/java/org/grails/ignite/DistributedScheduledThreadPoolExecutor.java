@@ -59,7 +59,7 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
         return super.scheduleWithFixedDelay(new IgniteDistributedRunnable(command), initialDelay, delay, unit);
     }
 
-    public ScheduledFuture scheduleWithCron(Runnable command, String cronString) {
+    public ScheduledFuture scheduleWithCron(Runnable command, String cronString) throws it.sauronsoftware.cron4j.InvalidPatternException {
         log.debug("scheduleWithCron "+command+" cron string");
         IgniteCronDistributedRunnable scheduledFuture = new IgniteCronDistributedRunnable(command);
         String id = cronScheduler.schedule(cronString, scheduledFuture);

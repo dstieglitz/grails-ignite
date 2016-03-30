@@ -1,15 +1,10 @@
 package org.grails.ignite;
 
-import it.sauronsoftware.cron4j.Predictor;
 import it.sauronsoftware.cron4j.Scheduler;
-import it.sauronsoftware.cron4j.SchedulingPattern;
 import org.apache.ignite.Ignite;
-import org.apache.ignite.lang.IgniteRunnable;
 import org.apache.ignite.resources.IgniteInstanceResource;
 import org.apache.log4j.Logger;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -20,7 +15,7 @@ import java.util.concurrent.*;
  *
  * @author dstieglitz
  * @author srasul
- * @see http://code.nomad-labs.com/2011/12/09/mother-fk-the-scheduledexecutorservice/
+ * @see 'http://code.nomad-labs.com/2011/12/09/mother-fk-the-scheduledexecutorservice/'
  */
 public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
@@ -52,18 +47,18 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
     @Override
     public ScheduledFuture scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
         log.debug("scheduleAtFixedRate " + command + "," + initialDelay + "," + period + "," + unit);
-        return super.scheduleAtFixedRate(new IgniteDistributedRunnable(command), initialDelay, period, unit);
+        return super.scheduleAtFixedRate(new IgniteDistributedRunnable(this, command), initialDelay, period, unit);
     }
 
     @Override
     public ScheduledFuture scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
         log.debug("scheduleWithFixedDelay " + command + "," + initialDelay + "," + delay + "," + unit);
-        return super.scheduleWithFixedDelay(new IgniteDistributedRunnable(command), initialDelay, delay, unit);
+        return super.scheduleWithFixedDelay(new IgniteDistributedRunnable(this, command), initialDelay, delay, unit);
     }
 
     public ScheduledFuture scheduleWithCron(Runnable command, String cronString) throws it.sauronsoftware.cron4j.InvalidPatternException {
         log.debug("scheduleWithCron " + command + " cron string");
-        IgniteCronDistributedRunnable scheduledFuture = new IgniteCronDistributedRunnable(command);
+        IgniteCronDistributedRunnable scheduledFuture = new IgniteCronDistributedRunnable(this, command);
         String id = cronScheduler.schedule(cronString, scheduledFuture);
         scheduledFuture.setCronTaskId(id);
 
@@ -101,125 +96,29 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
         this.running = trueOrFalse;
     }
 
-    private class IgniteDistributedRunnable implements IgniteRunnable {
-        protected Runnable runnable;
-        private final Logger log = Logger.getLogger(getClass().getName());
-
-        public IgniteDistributedRunnable(Runnable scheduledRunnable) {
-            super();
-            this.runnable = scheduledRunnable;
-        }
-
-        @Override
-        public void run() {
-//            try {
-            if (running) {
-                log.trace("run " + runnable);
-                ignite.executorService().submit(runnable);
-            } else {
-                log.debug("scheduler is disabled, will not run " + runnable);
-            }
-//            } catch (Exception e) {
-//                // LOG IT HERE!!!
-//                log.error("error in executing: " + runnable + ". It will no longer be run!", e);
-//
-//                // and re throw it so that the Executor also gets this error so that it can do what it would usually do
-//                throw new RuntimeException(e);
-//            }
-        }
+    @Override
+    public Future submit(Runnable runnable) {
+        log.debug("submitting " + runnable + " to ignite executor service");
+        return ignite.executorService().submit(runnable);
     }
 
-    private class IgniteCronDistributedRunnable<V>
-            extends IgniteDistributedRunnable
-            implements RunnableScheduledFuture<V> {
+    @Override
+    public <T> Future<T> submit(Runnable task, T result) {
+        log.debug("submitting " + task + "," + result + " to ignite executor service");
+        return ignite.executorService().submit(task, result);
+    }
 
-        private String cronTaskId;
-        private boolean cancelled;
+    @Override
+    public <T> Future<T> submit(Callable<T> task) {
+        log.debug("submitting " + task + " to ignite executor service");
+        return ignite.executorService().submit(task);
+    }
 
-        public IgniteCronDistributedRunnable(Runnable runnable) {
-            super(runnable);
-        }
+    public void deschedule(String cronTaskId) {
+        cronScheduler.deschedule(cronTaskId);
+    }
 
-        @Override
-        public boolean isPeriodic() {
-            throw new UnsupportedOperationException("Operation not supported (yet)");
-        }
-
-        @Override
-        public long getDelay(TimeUnit unit) {
-            throw new UnsupportedOperationException("Operation not supported (yet)");
-        }
-
-        @Override
-        public int compareTo(Delayed o) {
-            return 0;
-        }
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            if (cronTaskId == null) {
-                throw new IllegalArgumentException("Can't cancel a task without a cron task ID");
-            }
-            DistributedScheduledThreadPoolExecutor.this.cronScheduler.deschedule(cronTaskId);
-            cancelled = true;
-            return isCancelled();
-        }
-
-        @Override
-        public boolean isCancelled() {
-            return this.cancelled;
-        }
-
-        @Override
-        public boolean isDone() {
-            throw new UnsupportedOperationException("Operation not supported (yet)");
-        }
-
-        @Override
-        public V get() throws InterruptedException, ExecutionException {
-            throw new UnsupportedOperationException("Operation not supported (yet)");
-        }
-
-        @Override
-        public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-            throw new UnsupportedOperationException("Operation not supported (yet)");
-        }
-
-        public String getCronTaskId() {
-            return this.cronTaskId;
-        }
-
-        public void setCronTaskId(String cronTaskId) {
-            this.cronTaskId = cronTaskId;
-        }
-
-        public Map toDataMap() {
-            Map result = new HashMap();
-            Scheduler cronScheduler = DistributedScheduledThreadPoolExecutor.this.cronScheduler;
-            if (cronScheduler == null) {
-                result.put("cronExpression", "NULL SCHEDULER");
-            } else {
-                SchedulingPattern schedulingPattern = cronScheduler.getSchedulingPattern(cronTaskId);
-                String cronExpression;
-                Predictor p = null;
-
-                if (schedulingPattern == null) {
-                    cronExpression = "NO PATTERN";
-                } else {
-                    cronExpression = schedulingPattern.toString();
-                    p = new Predictor(cronExpression);
-                }
-
-                result.put("cronTaskId", cronTaskId);
-                result.put("cancelled", cancelled);
-                result.put("cronExpression", cronExpression);
-
-                if (p != null) {
-                    result.put("nextRun", p.nextMatchingDate());
-                }
-            }
-
-            return result;
-        }
+    public Scheduler getCronScheduler() {
+        return cronScheduler;
     }
 }

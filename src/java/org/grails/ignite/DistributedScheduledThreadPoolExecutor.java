@@ -20,22 +20,21 @@ import java.util.concurrent.*;
 public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
     private final Logger log = Logger.getLogger(getClass().getName());
-    @IgniteInstanceResource
     private Ignite ignite;
     private boolean running = true;
     private Scheduler cronScheduler;
 
-    public DistributedScheduledThreadPoolExecutor() {
-        super(5);
-        this.cronScheduler = new Scheduler();
-        this.cronScheduler.start();
-    }
-
-    public DistributedScheduledThreadPoolExecutor(int corePoolSize) {
-        super(corePoolSize);
-        this.cronScheduler = new Scheduler();
-        this.cronScheduler.start();
-    }
+//    public DistributedScheduledThreadPoolExecutor() {
+//        super(5);
+//        this.cronScheduler = new Scheduler();
+//        this.cronScheduler.start();
+//    }
+//
+//    public DistributedScheduledThreadPoolExecutor(int corePoolSize) {
+//        super(corePoolSize);
+//        this.cronScheduler = new Scheduler();
+//        this.cronScheduler.start();
+//    }
 
     public DistributedScheduledThreadPoolExecutor(Ignite ignite, int corePoolSize) {
         super(corePoolSize);

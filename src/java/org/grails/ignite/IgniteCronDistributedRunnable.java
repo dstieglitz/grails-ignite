@@ -75,27 +75,32 @@ public class IgniteCronDistributedRunnable<V> extends IgniteDistributedRunnable 
 
     public Map toDataMap() {
         Map result = new HashMap();
-        Scheduler cronScheduler = executor.getCronScheduler();
-        if (cronScheduler == null) {
-            result.put("cronExpression", "NULL SCHEDULER");
+
+        if (executor == null) { // FIXME this occurs, but why?!
+            result.put("error", "NULL EXECUTOR");
         } else {
-            SchedulingPattern schedulingPattern = cronScheduler.getSchedulingPattern(cronTaskId);
-            String cronExpression;
-            Predictor p = null;
-
-            if (schedulingPattern == null) {
-                cronExpression = "NO PATTERN";
+            Scheduler cronScheduler = executor.getCronScheduler();
+            if (cronScheduler == null) {
+                result.put("cronExpression", "NULL SCHEDULER");
             } else {
-                cronExpression = schedulingPattern.toString();
-                p = new Predictor(cronExpression);
-            }
+                SchedulingPattern schedulingPattern = cronScheduler.getSchedulingPattern(cronTaskId);
+                String cronExpression;
+                Predictor p = null;
 
-            result.put("cronTaskId", cronTaskId);
-            result.put("cancelled", cancelled);
-            result.put("cronExpression", cronExpression);
+                if (schedulingPattern == null) {
+                    cronExpression = "NO PATTERN";
+                } else {
+                    cronExpression = schedulingPattern.toString();
+                    p = new Predictor(cronExpression);
+                }
 
-            if (p != null) {
-                result.put("nextRun", p.nextMatchingDate());
+                result.put("cronTaskId", cronTaskId);
+                result.put("cancelled", cancelled);
+                result.put("cronExpression", cronExpression);
+
+                if (p != null) {
+                    result.put("nextRun", p.nextMatchingDate());
+                }
             }
         }
 

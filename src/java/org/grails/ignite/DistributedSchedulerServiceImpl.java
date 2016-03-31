@@ -51,6 +51,24 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         this.ignite = ignite;
     }
 
+    @Override
+    public void init(ServiceContext serviceContext) throws Exception {
+        this.executor = new DistributedScheduledThreadPoolExecutor(this.ignite, 1);
+        schedule = initializeSet(ignite);
+
+        log.info("scheduling cron jobs...");
+        for (ScheduledRunnable datum : schedule) {
+            if (datum.getCronString() != null) {
+                log.info("found previously scheduled cron job " + datum);
+                ScheduledFuture future = executor.scheduleWithCron(datum, datum.getCronString());
+                nameFutureMap.put(datum.getName(), future);
+                log.debug("job scheduled and added to namedFutureMap");
+            }
+        }
+
+        log.info("service " + this + " initialized");
+    }
+
     private static IgniteSet initializeSet(Ignite ignite) throws IgniteException {
         log.info("initializing distributed dataset: " + JOB_SCHEDULE_DATA_SET_NAME);
         CollectionConfiguration setCfg = new CollectionConfiguration();
@@ -230,13 +248,6 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     @Override
     public void cancel(ServiceContext serviceContext) {
         log.info("service " + this + "cancelled!");
-    }
-
-    @Override
-    public void init(ServiceContext serviceContext) throws Exception {
-        this.executor = new DistributedScheduledThreadPoolExecutor(ignite, 1);
-        schedule = initializeSet(ignite);
-        log.info("service " + this + " initialized");
     }
 
     @Override

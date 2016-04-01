@@ -2,7 +2,6 @@ package org.grails.ignite;
 
 import it.sauronsoftware.cron4j.Scheduler;
 import org.apache.ignite.Ignite;
-import org.apache.ignite.resources.IgniteInstanceResource;
 import org.apache.log4j.Logger;
 
 import java.util.concurrent.*;
@@ -55,14 +54,18 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
         return super.scheduleWithFixedDelay(new IgniteDistributedRunnable(this, command), initialDelay, delay, unit);
     }
 
-    public ScheduledFuture scheduleWithCron(Runnable command, String cronString) throws it.sauronsoftware.cron4j.InvalidPatternException {
-        log.debug("scheduleWithCron " + command + " cron string");
-        IgniteCronDistributedRunnable scheduledFuture = new IgniteCronDistributedRunnable(this, command);
-        String id = cronScheduler.schedule(cronString, scheduledFuture);
-        scheduledFuture.setCronTaskId(id);
+    public ScheduledFuture scheduleWithCron(Runnable command, String cronString) throws DistributedRunnableException {
+        try {
+            log.debug("scheduleWithCron " + command + " cron string");
+            IgniteCronDistributedRunnable scheduledFuture = new IgniteCronDistributedRunnable(this, command);
+            String id = cronScheduler.schedule(cronString, scheduledFuture);
+            scheduledFuture.setCronTaskId(id);
 
-        // return ScheduledFuture for cron task with embedded id
-        return scheduledFuture;
+            // return ScheduledFuture for cron task with embedded id
+            return scheduledFuture;
+        } catch (Throwable t) {
+            throw new DistributedRunnableException(t.getMessage(), t);
+        }
     }
 
     public boolean cancel(Runnable runnable, boolean mayInterruptIfRunning) {

@@ -59,10 +59,18 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         log.info("scheduling cron jobs...");
         for (ScheduledRunnable datum : schedule) {
             if (datum.getCronString() != null) {
-                log.info("found previously scheduled cron job " + datum);
-                ScheduledFuture future = executor.scheduleWithCron(datum, datum.getCronString());
-                nameFutureMap.put(datum.getName(), future);
-                log.debug("job scheduled and added to namedFutureMap");
+                try {
+                    // if this block is called, we are re-scheduling some previously scheduled jobs.
+                    // any scheduling errors that occur should already have occurred when the jobs
+                    // were originally scheduled (and handled, presumably), so we just note them here but
+                    // do not bubble up exceptions
+                    log.info("found previously scheduled cron job " + datum);
+                    ScheduledFuture future = executor.scheduleWithCron(datum, datum.getCronString());
+                    nameFutureMap.put(datum.getName(), future);
+                    log.debug("job scheduled and added to namedFutureMap");
+                } catch (Throwable t) {
+                    log.error(t.getMessage(), t);
+                }
             }
         }
 
@@ -129,25 +137,30 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     }
 
     @Override
-    public ScheduledFuture scheduleWithCron(ScheduledRunnable scheduledRunnable) {
-        log.debug("scheduleWithCron '" + scheduledRunnable + "'," + scheduledRunnable.getCronString());
-
+    public ScheduledFuture scheduleWithCron(ScheduledRunnable scheduledRunnable) throws DistributedRunnableException {
         if (scheduledRunnable.getCronString() == null) {
-            throw new RuntimeException("No cron string provided for requested cron schedule: " + scheduledRunnable);
+            throw new DistributedRunnableException("No cron string provided for requested cron schedule: " + scheduledRunnable);
         }
 
-        ScheduledFuture future = executor.scheduleWithCron(scheduledRunnable, scheduledRunnable.getCronString());
+        try {
+            log.debug("scheduleWithCron '" + scheduledRunnable + "'," + scheduledRunnable.getCronString());
 
-        log.debug("schedule returned " + future);
+            // SERVICE FAILURE HAPPENS HERE
+            ScheduledFuture future = executor.scheduleWithCron(scheduledRunnable, scheduledRunnable.getCronString());
 
-        ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
-        log.info("added " + scheduledRunnable + " to schedule");
-        log.debug("scheduledRunnable: " + schedule);
+            log.debug("schedule returned " + future);
 
-        log.debug("added " + scheduledRunnable.getName() + ", " + future + " to namedFutureMap");
-        nameFutureMap.put(scheduledRunnable.getName(), future);
+            ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
+            log.info("added " + scheduledRunnable + " to schedule");
+            log.debug("scheduledRunnable: " + schedule);
 
-        return future;
+            log.debug("added " + scheduledRunnable.getName() + ", " + future + " to namedFutureMap");
+            nameFutureMap.put(scheduledRunnable.getName(), future);
+
+            return future;
+        } catch (Throwable t) {
+            throw new DistributedRunnableException(t.getMessage(), t);
+        }
     }
 
     @Override

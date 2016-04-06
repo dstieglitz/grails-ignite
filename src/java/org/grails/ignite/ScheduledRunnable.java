@@ -2,7 +2,6 @@ package org.grails.ignite;
 
 import java.io.Serializable;
 import java.util.UUID;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -84,7 +83,12 @@ public class ScheduledRunnable implements NamedRunnable, Serializable {
     }
 
     public String toString() {
-        return name;
+        return this.getClass().getSimpleName() + "[name=\"" + name +
+                "\", period=" + period +
+                ", delay=" + delay +
+                ", initialDelay=" + initialDelay +
+                ", timeUnit=" + timeUnit +
+                ", cronString=\"" + cronString + "\"]";
     }
 
     public String getName() {
@@ -106,7 +110,7 @@ public class ScheduledRunnable implements NamedRunnable, Serializable {
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof ScheduledRunnable)) return false;
-        return ((ScheduledRunnable) obj).toString().equals(this.toString());
+        return ((ScheduledRunnable) obj).getName().equals(this.getName());
     }
 
     @Override

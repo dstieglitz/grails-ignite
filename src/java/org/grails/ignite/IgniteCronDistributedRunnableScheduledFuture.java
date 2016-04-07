@@ -41,8 +41,8 @@ public class IgniteCronDistributedRunnableScheduledFuture<V> extends IgniteDistr
             throw new IllegalArgumentException("Can't cancel a task without a cron task ID");
         }
         executor.deschedule(cronTaskId);
-        cancelled = true;
-        return isCancelled();
+        this.cancelled = true;
+        return true;
     }
 
     @Override

@@ -65,7 +65,8 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
     }
 
     public boolean cancel(Runnable runnable, boolean mayInterruptIfRunning) {
-        log.debug("cancel " + runnable + "," + mayInterruptIfRunning);
+        log.info("cancel " + runnable + "," + mayInterruptIfRunning);
+        boolean cancelled = false;
 
         if (mayInterruptIfRunning) {
             // FIXME interrupt the Runnable?
@@ -74,15 +75,19 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
 
         if (runnable instanceof IgniteCronDistributedRunnableScheduledFuture) {
             ((IgniteCronDistributedRunnableScheduledFuture) runnable).cancel(mayInterruptIfRunning);
-            return true;
+            cancelled = true;
         } else {
             // these are ScheduledFutureTasks
 //            for (Runnable r : getQueue()) {
 //                log.debug("found queued runnable: " + r);
 //            }
 
-            return super.remove(runnable);
+            log.debug("super.remove "+runnable);
+            cancelled = super.remove(runnable);
         }
+
+        super.purge();
+        return cancelled;
     }
 
     public boolean isRunning() {

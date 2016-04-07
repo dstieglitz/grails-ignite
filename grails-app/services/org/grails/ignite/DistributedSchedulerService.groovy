@@ -122,7 +122,9 @@ class DistributedSchedulerService {
 
     boolean cancel(String name, boolean interrupt) {
         log.debug "cancel '${name}', ${interrupt}"
-        return getServiceProxy().cancel(name, interrupt);
+        boolean result = getServiceProxy().cancel(name, interrupt);
+        log.debug "serviceProxy returned ${result} for cancel"
+        return result
     }
 
     void stopScheduler() {

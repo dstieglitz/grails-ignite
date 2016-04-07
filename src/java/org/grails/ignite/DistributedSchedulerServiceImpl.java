@@ -192,7 +192,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     @Override
     public boolean isScheduled(String id) {
         for (ScheduledRunnable scheduleDatum : schedule) {
-            if (scheduleDatum.toString().equals(id)) return true;
+            if (scheduleDatum.getName().equals(id)) return true;
         }
 
         return false;
@@ -200,7 +200,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     private ScheduledRunnable findScheduleDataByName(String name) {
         for (ScheduledRunnable scheduleDatum : schedule) {
-            if (scheduleDatum.toString().equals(name)) return scheduleDatum;
+            if (scheduleDatum.getName().equals(name)) return scheduleDatum;
         }
 
         return null;
@@ -213,10 +213,15 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     @Override
     public boolean cancel(String name, boolean mayInterruptIfRunning) {
-        log.debug("cancel '" + name + "', " + mayInterruptIfRunning);
+        log.info("cancel '" + name + "', " + mayInterruptIfRunning);
         Future future = nameFutureMap.get(name);
+        log.debug("found future " + future);
+
         if (future == null) {
-            if (!isScheduled(name)) return true;
+            if (!isScheduled(name)) {
+                log.debug("job is not scheduled, returning...");
+                return true;
+            }
             log.warn("tried to cancel, but no Future found for '" + name + "'");
             boolean removed = schedule.remove(findScheduleDataByName(name));
             log.debug("remove from schedule " + name + " returned " + removed);
@@ -231,12 +236,13 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
             log.debug("cancel returned " + cancelled);
             boolean removed = false;
             if (cancelled) {
-                if (!isScheduled(name)) return true;
+                nameFutureMap.remove(name);
+                if (!isScheduled(name)) {
+                    log.debug("job is not scheduled, returning...");
+                    return true;
+                }
                 removed = schedule.remove(findScheduleDataByName(name));
                 log.debug("remove from schedule " + name + " returned " + removed);
-                if (removed) {
-                    nameFutureMap.remove(name);
-                }
             }
 
             return cancelled && removed;

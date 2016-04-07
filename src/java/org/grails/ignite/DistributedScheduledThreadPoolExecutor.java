@@ -54,18 +54,14 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
         return super.scheduleWithFixedDelay(new IgniteDistributedRunnable(this, command), initialDelay, delay, unit);
     }
 
-    public ScheduledFuture scheduleWithCron(Runnable command, String cronString) throws DistributedRunnableException {
-        try {
-            log.debug("scheduleWithCron " + command + " cron string");
-            IgniteCronDistributedRunnableScheduledFuture scheduledFuture = new IgniteCronDistributedRunnableScheduledFuture(this, command);
-            String id = cronScheduler.schedule(cronString, scheduledFuture);
-            scheduledFuture.setCronTaskId(id);
+    public ScheduledFuture scheduleWithCron(Runnable command, String cronString) {
+        log.debug("scheduleWithCron " + command + " cron string");
+        IgniteCronDistributedRunnableScheduledFuture scheduledFuture = new IgniteCronDistributedRunnableScheduledFuture(this, command);
+        String id = cronScheduler.schedule(cronString, scheduledFuture);
+        scheduledFuture.setCronTaskId(id);
 
-            // return ScheduledFuture for cron task with embedded id
-            return scheduledFuture;
-        } catch (Throwable t) {
-            throw new DistributedRunnableException(t.getMessage(), t);
-        }
+        // return ScheduledFuture for cron task with embedded id
+        return scheduledFuture;
     }
 
     public boolean cancel(Runnable runnable, boolean mayInterruptIfRunning) {

@@ -157,11 +157,19 @@ class IgniteStartupHelper {
 
             log.info "Starting Ignite grid..."
             grid.start()
-            def deployedSchedulerService = grid.services().service(SCHEDULER_SERVICE_NAME)
-            log.debug "service returns ==================>>>>>> ${deployedSchedulerService}"
-            if (deployedSchedulerService == null) {
+
+            // don't re-deploy the scheduler service
+            def schedulerServiceDeployed = false
+            grid.services().serviceDescriptors().each { serviceDescriptor ->
+                log.info "found deployed service ${serviceDescriptor.name()}"
+                if (serviceDescriptor.name().equals(SCHEDULER_SERVICE_NAME)) {
+                    schedulerServiceDeployed = true
+                }
+            }
+            if (!schedulerServiceDeployed) {
                 grid.services().deployClusterSingleton(SCHEDULER_SERVICE_NAME, new DistributedSchedulerServiceImpl());
             }
+
         } catch (NoSuchBeanDefinitionException e) {
             log.warn e.message
             return false;

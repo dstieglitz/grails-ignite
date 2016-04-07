@@ -69,7 +69,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                     nameFutureMap.put(datum.getName(), future);
                     log.debug("job scheduled and added to namedFutureMap");
                 } catch (Throwable t) {
-                    log.error(t.getMessage(), t);
+                    log.error(t.getMessage());
                 }
             }
         }

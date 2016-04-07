@@ -8,13 +8,21 @@ import org.apache.log4j.Logger;
  */
 public class IgniteDistributedRunnable implements IgniteRunnable {
 
-    protected Runnable runnable;
+    protected Runnable underlyingRunnable;
     protected DistributedScheduledThreadPoolExecutor executor;
     private final Logger log = Logger.getLogger(getClass().getName());
 
     public IgniteDistributedRunnable(DistributedScheduledThreadPoolExecutor executor, Runnable scheduledRunnable) {
         super();
-        this.runnable = scheduledRunnable;
+
+        if (executor == null) {
+            throw new RuntimeException("Can't create a distributed runnable with a null executor");
+        }
+        if (scheduledRunnable == null) {
+            throw new RuntimeException("Can't create a distributed runnable with a null scheduledRunnable");
+        }
+
+        this.underlyingRunnable = scheduledRunnable;
         this.executor = executor;
     }
 
@@ -22,10 +30,10 @@ public class IgniteDistributedRunnable implements IgniteRunnable {
     public void run() {
 //            try {
         if (executor.isRunning()) {
-            log.trace("run " + runnable);
-            executor.submit(runnable);
+            log.trace("run " + underlyingRunnable);
+            executor.submit(underlyingRunnable);
         } else {
-            log.debug("scheduler is disabled, will not run " + runnable);
+            log.debug("scheduler is disabled, will not run " + underlyingRunnable);
         }
 //            } catch (Exception e) {
 //                // LOG IT HERE!!!

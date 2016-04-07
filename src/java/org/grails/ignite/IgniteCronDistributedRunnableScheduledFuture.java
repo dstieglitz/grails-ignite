@@ -11,12 +11,12 @@ import java.util.concurrent.*;
 /**
  * Created by dstieglitz on 3/30/16.
  */
-public class IgniteCronDistributedRunnable<V> extends IgniteDistributedRunnable implements RunnableScheduledFuture<V> {
+public class IgniteCronDistributedRunnableScheduledFuture<V> extends IgniteDistributedRunnable implements RunnableScheduledFuture<V> {
 
     private String cronTaskId;
     private boolean cancelled;
 
-    public IgniteCronDistributedRunnable(DistributedScheduledThreadPoolExecutor executor, Runnable runnable) {
+    public IgniteCronDistributedRunnableScheduledFuture(DistributedScheduledThreadPoolExecutor executor, Runnable runnable) {
         super(executor, runnable);
     }
 

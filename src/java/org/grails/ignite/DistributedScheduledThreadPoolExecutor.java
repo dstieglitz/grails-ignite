@@ -57,7 +57,7 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
     public ScheduledFuture scheduleWithCron(Runnable command, String cronString) throws DistributedRunnableException {
         try {
             log.debug("scheduleWithCron " + command + " cron string");
-            IgniteCronDistributedRunnable scheduledFuture = new IgniteCronDistributedRunnable(this, command);
+            IgniteCronDistributedRunnableScheduledFuture scheduledFuture = new IgniteCronDistributedRunnableScheduledFuture(this, command);
             String id = cronScheduler.schedule(cronString, scheduledFuture);
             scheduledFuture.setCronTaskId(id);
 
@@ -76,14 +76,14 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
             log.warn("mayInterruptIfRunning is currently ignored");
         }
 
-        if (runnable instanceof IgniteCronDistributedRunnable) {
-            ((IgniteCronDistributedRunnable) runnable).cancel(mayInterruptIfRunning);
+        if (runnable instanceof IgniteCronDistributedRunnableScheduledFuture) {
+            ((IgniteCronDistributedRunnableScheduledFuture) runnable).cancel(mayInterruptIfRunning);
             return true;
         } else {
             // these are ScheduledFutureTasks
-            for (Runnable r : getQueue()) {
-                log.debug("found queued runnable: " + r);
-            }
+//            for (Runnable r : getQueue()) {
+//                log.debug("found queued runnable: " + r);
+//            }
 
             return super.remove(runnable);
         }

@@ -53,6 +53,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     @Override
     public void init(ServiceContext serviceContext) throws Exception {
+        log.debug("init [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
         this.executor = new DistributedScheduledThreadPoolExecutor(this.ignite, 1);
         schedule = initializeSet(ignite);
 
@@ -88,6 +89,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     @Override
     public ScheduledFuture scheduleAtFixedRate(ScheduledRunnable scheduledRunnable) {
+        log.debug("scheduleAtFixedRate [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
         log.debug("scheduleAtFixedRate '" + scheduledRunnable + "',"
                 + scheduledRunnable.getInitialDelay() + ","
                 + scheduledRunnable.getPeriod() + ","
@@ -113,6 +115,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     @Override
     public ScheduledFuture scheduleWithFixedDelay(ScheduledRunnable scheduledRunnable) {
+        log.debug("scheduleWithFixedDelay [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
         log.debug("scheduleWithFixedDelay '" + scheduledRunnable + "',"
                 + scheduledRunnable.getInitialDelay() + ","
                 + scheduledRunnable.getDelay() + ","
@@ -138,6 +141,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     @Override
     public ScheduledFuture scheduleWithCron(ScheduledRunnable scheduledRunnable) throws DistributedRunnableException {
+        log.debug("scheduleWithCron [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
         if (scheduledRunnable.getCronString() == null) {
             throw new DistributedRunnableException("No cron string provided for requested cron schedule: " + scheduledRunnable);
         }
@@ -165,6 +169,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     @Override
     public ScheduledFuture schedule(ScheduledRunnable scheduledRunnable) {
+        log.debug("schedule [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
         log.debug("schedule '" + scheduledRunnable + "'," + scheduledRunnable.getDelay() + "," + scheduledRunnable.getTimeUnit());
 
         ScheduledFuture future = executor.schedule(scheduledRunnable,
@@ -191,6 +196,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
      */
     @Override
     public boolean isScheduled(String id) {
+        log.debug("isScheduled [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
         for (ScheduledRunnable scheduleDatum : schedule) {
             if (scheduleDatum.getName().equals(id)) return true;
         }
@@ -213,6 +219,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     @Override
     public boolean cancel(String name, boolean mayInterruptIfRunning) {
+        log.debug("cancel [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
         log.info("cancel '" + name + "', " + mayInterruptIfRunning);
         Future future = nameFutureMap.get(name);
         log.debug("found future " + future);
@@ -271,6 +278,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     @Override
     public void execute(ServiceContext serviceContext) throws Exception {
+        log.debug("execute [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
         log.debug("schedule.size()=" + this.schedule.size());
         for (ScheduledRunnable datum : schedule) {
             log.debug("found existing schedule data " + datum);

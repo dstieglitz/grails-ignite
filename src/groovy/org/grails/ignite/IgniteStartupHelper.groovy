@@ -115,7 +115,12 @@ class IgniteStartupHelper {
             configuredGridName = application.config.ignite.gridName
         }
 
-        System.setProperty("IGNITE_QUIET", "false");
+        def quiet = "false"
+        if (!(application.config.ignite.quiet instanceof ConfigObject)) {
+            quiet = application.config.ignite.quiet.toString()
+        }
+
+        System.setProperty("IGNITE_QUIET", quiet);
 
         BeanBuilder cacheBeans = null
 

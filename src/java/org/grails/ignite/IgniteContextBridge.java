@@ -225,6 +225,11 @@ public class IgniteContextBridge implements Ignite {
     }
 
     @Override
+    public IgniteLock reentrantLock(String s, boolean b, boolean b1, boolean b2) throws IgniteException {
+        return getOrCreateIgnite().reentrantLock(s, b, b1, b2);
+    }
+
+    @Override
     public <T> IgniteQueue<T> queue(String s, int i, @Nullable CollectionConfiguration collectionConfiguration) throws IgniteException {
         return getOrCreateIgnite().queue(s, i, collectionConfiguration);
     }

@@ -17,7 +17,7 @@ grails.project.fork = [
     console: [maxMemory: 768, minMemory: 64, debug: false, maxPerm: 256]
 ]
 
-def igniteVer = '1.5.0.final'
+def igniteVer = '1.7.0'
 def igniteHibernateVer = '1.2.0-incubating'
 
 grails.project.dependency.resolver = "maven" // or ivy

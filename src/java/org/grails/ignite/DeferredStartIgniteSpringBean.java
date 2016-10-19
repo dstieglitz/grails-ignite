@@ -29,13 +29,13 @@ import org.apache.ignite.internal.util.typedef.internal.S;
 import org.apache.ignite.lang.IgniteProductVersion;
 import org.apache.ignite.plugin.IgnitePlugin;
 import org.apache.ignite.plugin.PluginNotFoundException;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+import javax.annotation.Nullable;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -52,7 +52,7 @@ import java.util.concurrent.ExecutorService;
  * By virtue of implementing {@link DisposableBean} and {@link InitializingBean}
  * interfaces, {@code GridSpringBean} automatically starts and stops underlying
  * grid instance.
- * <p/>
+ * <p>
  * <h1 class="header">Spring Configuration Example</h1>
  * Here is a typical example of describing it in Spring file:
  * <pre name="code" class="xml">
@@ -72,13 +72,13 @@ import java.util.concurrent.ExecutorService;
  * Here is how you may access this bean from code:
  * <pre name="code" class="java">
  * AbstractApplicationContext ctx = new FileSystemXmlApplicationContext("/path/to/spring/file");
- * <p/>
+ * <p>
  * // Register Spring hook to destroy bean automatically.
  * ctx.registerShutdownHook();
- * <p/>
+ * <p>
  * Grid grid = (Grid)ctx.getBean("mySpringBean");
  * </pre>
- * <p/>
+ * <p>
  */
 public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, InitializingBean,
         ApplicationContextAware, Externalizable {
@@ -103,12 +103,43 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
     }
 
     /**
-     * Sets grid configuration.
+     * Gets the configuration of this Ignite instance.
+     * <p>
+     * This method is required for proper Spring integration and is the same as
+     * {@link #configuration()}.
+     * See https://issues.apache.org/jira/browse/IGNITE-1102 for details.
+     * <p>
+     * <b>NOTE:</b>
+     * <br>
+     * SPIs obtains through this method should never be used directly. SPIs provide
+     * internal view on the subsystem and is used internally by Ignite kernal. In rare use cases when
+     * access to a specific implementation of this SPI is required - an instance of this SPI can be obtained
+     * via this method to check its configuration properties or call other non-SPI
+     * methods.
      *
-     * @param cfg Grid configuration.
+     * @return Ignite configuration instance.
+     * @see #configuration()
+     */
+    public IgniteConfiguration getConfiguration() {
+        return cfg;
+    }
+
+    /**
+     * Sets Ignite configuration.
+     *
+     * @param cfg Ignite configuration.
      */
     public void setConfiguration(IgniteConfiguration cfg) {
         this.cfg = cfg;
+    }
+
+    /**
+     * Gets the spring application context this Ignite runs in.
+     *
+     * @return Application context this Ignite runs in.
+     */
+    public ApplicationContext getApplicationContext() throws BeansException {
+        return appCtx;
     }
 
     /**
@@ -136,7 +167,6 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public void afterPropertiesSet() throws Exception {
-        // Don't automatically start the grid.
 //        if (cfg == null)
 //            cfg = new IgniteConfiguration();
 //
@@ -155,7 +185,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteLogger log() {
-        assert cfg != null;
+        checkIgnite();
 
         return cfg.getGridLogger();
     }
@@ -165,7 +195,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteProductVersion version() {
-        assert g != null;
+        checkIgnite();
 
         return g.version();
     }
@@ -175,7 +205,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteCompute compute() {
-        assert g != null;
+        checkIgnite();
 
         return g.compute();
     }
@@ -185,7 +215,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteServices services() {
-        assert g != null;
+        checkIgnite();
 
         return g.services();
     }
@@ -195,7 +225,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteMessaging message() {
-        assert g != null;
+        checkIgnite();
 
         return g.message();
     }
@@ -205,7 +235,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteEvents events() {
-        assert g != null;
+        checkIgnite();
 
         return g.events();
     }
@@ -215,7 +245,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public ExecutorService executorService() {
-        assert g != null;
+        checkIgnite();
 
         return g.executorService();
     }
@@ -225,7 +255,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteCluster cluster() {
-        assert g != null;
+        checkIgnite();
 
         return g.cluster();
     }
@@ -235,7 +265,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteCompute compute(ClusterGroup grp) {
-        assert g != null;
+        checkIgnite();
 
         return g.compute(grp);
     }
@@ -245,7 +275,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteMessaging message(ClusterGroup prj) {
-        assert g != null;
+        checkIgnite();
 
         return g.message(prj);
     }
@@ -255,7 +285,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteEvents events(ClusterGroup grp) {
-        assert g != null;
+        checkIgnite();
 
         return g.events(grp);
     }
@@ -265,7 +295,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteServices services(ClusterGroup grp) {
-        assert g != null;
+        checkIgnite();
 
         return g.services(grp);
     }
@@ -275,7 +305,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public ExecutorService executorService(ClusterGroup grp) {
-        assert g != null;
+        checkIgnite();
 
         return g.executorService(grp);
     }
@@ -285,7 +315,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteScheduler scheduler() {
-        assert g != null;
+        checkIgnite();
 
         return g.scheduler();
     }
@@ -295,7 +325,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public String name() {
-        assert g != null;
+        checkIgnite();
 
         return g.name();
     }
@@ -305,7 +335,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public <K, V> IgniteCache<K, V> cache(@Nullable String name) {
-        assert g != null;
+        checkIgnite();
 
         return g.cache(name);
     }
@@ -316,7 +346,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public Collection<String> cacheNames() {
-        assert g != null;
+        checkIgnite();
 
         return g.cacheNames();
     }
@@ -326,7 +356,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public <K, V> IgniteCache<K, V> createCache(CacheConfiguration<K, V> cacheCfg) {
-        assert g != null;
+        checkIgnite();
 
         return g.createCache(cacheCfg);
     }
@@ -336,7 +366,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public <K, V> IgniteCache<K, V> getOrCreateCache(CacheConfiguration<K, V> cacheCfg) {
-        assert g != null;
+        checkIgnite();
 
         return g.getOrCreateCache(cacheCfg);
     }
@@ -347,7 +377,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
     @Override
     public <K, V> IgniteCache<K, V> createCache(CacheConfiguration<K, V> cacheCfg,
                                                 NearCacheConfiguration<K, V> nearCfg) {
-        assert g != null;
+        checkIgnite();
 
         return g.createCache(cacheCfg, nearCfg);
     }
@@ -357,7 +387,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public <K, V> IgniteCache<K, V> getOrCreateCache(CacheConfiguration<K, V> cacheCfg, NearCacheConfiguration<K, V> nearCfg) {
-        assert g != null;
+        checkIgnite();
 
         return g.getOrCreateCache(cacheCfg, nearCfg);
     }
@@ -367,7 +397,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public <K, V> IgniteCache<K, V> createNearCache(String cacheName, NearCacheConfiguration<K, V> nearCfg) {
-        assert g != null;
+        checkIgnite();
 
         return g.createNearCache(cacheName, nearCfg);
     }
@@ -377,7 +407,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public <K, V> IgniteCache<K, V> getOrCreateNearCache(@Nullable String cacheName, NearCacheConfiguration<K, V> nearCfg) {
-        assert g != null;
+        checkIgnite();
 
         return g.getOrCreateNearCache(cacheName, nearCfg);
     }
@@ -387,7 +417,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public <K, V> IgniteCache<K, V> getOrCreateCache(String cacheName) {
-        assert g != null;
+        checkIgnite();
 
         return g.getOrCreateCache(cacheName);
     }
@@ -397,7 +427,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public <K, V> IgniteCache<K, V> createCache(String cacheName) {
-        assert g != null;
+        checkIgnite();
 
         return g.createCache(cacheName);
     }
@@ -407,7 +437,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public <K, V> void addCacheConfiguration(CacheConfiguration<K, V> cacheCfg) {
-        assert g != null;
+        checkIgnite();
 
         g.addCacheConfiguration(cacheCfg);
     }
@@ -417,7 +447,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public void destroyCache(String cacheName) {
-        assert g != null;
+        checkIgnite();
 
         g.destroyCache(cacheName);
     }
@@ -427,7 +457,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteTransactions transactions() {
-        assert g != null;
+        checkIgnite();
 
         return g.transactions();
     }
@@ -437,7 +467,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public <K, V> IgniteDataStreamer<K, V> dataStreamer(@Nullable String cacheName) {
-        assert g != null;
+        checkIgnite();
 
         return g.dataStreamer(cacheName);
     }
@@ -447,7 +477,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteFileSystem fileSystem(String name) {
-        assert g != null;
+        checkIgnite();
 
         return g.fileSystem(name);
     }
@@ -457,7 +487,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public Collection<IgniteFileSystem> fileSystems() {
-        assert g != null;
+        checkIgnite();
 
         return g.fileSystems();
     }
@@ -467,7 +497,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public <T extends IgnitePlugin> T plugin(String name) throws PluginNotFoundException {
-        assert g != null;
+        checkIgnite();
 
         return g.plugin(name);
     }
@@ -477,7 +507,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public IgniteBinary binary() {
-        assert g != null;
+        checkIgnite();
 
         return g.binary();
     }
@@ -496,7 +526,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
     @Nullable
     @Override
     public IgniteAtomicSequence atomicSequence(String name, long initVal, boolean create) {
-        assert g != null;
+        checkIgnite();
 
         return g.atomicSequence(name, initVal, create);
     }
@@ -507,7 +537,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
     @Nullable
     @Override
     public IgniteAtomicLong atomicLong(String name, long initVal, boolean create) {
-        assert g != null;
+        checkIgnite();
 
         return g.atomicLong(name, initVal, create);
     }
@@ -520,7 +550,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
     public <T> IgniteAtomicReference<T> atomicReference(String name,
                                                         @Nullable T initVal,
                                                         boolean create) {
-        assert g != null;
+        checkIgnite();
 
         return g.atomicReference(name, initVal, create);
     }
@@ -534,7 +564,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
                                                           @Nullable T initVal,
                                                           @Nullable S initStamp,
                                                           boolean create) {
-        assert g != null;
+        checkIgnite();
 
         return g.atomicStamped(name, initVal, initStamp, create);
     }
@@ -548,7 +578,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
                                                int cnt,
                                                boolean autoDel,
                                                boolean create) {
-        assert g != null;
+        checkIgnite();
 
         return g.countDownLatch(name, cnt, autoDel, create);
     }
@@ -562,7 +592,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
                                      int cnt,
                                      boolean failoverSafe,
                                      boolean create) {
-        assert g != null;
+        checkIgnite();
 
         return g.semaphore(name, cnt,
                 failoverSafe, create);
@@ -573,10 +603,24 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Nullable
     @Override
+    public IgniteLock reentrantLock(String name,
+                                    boolean failoverSafe,
+                                    boolean fair,
+                                    boolean create) {
+        checkIgnite();
+
+        return g.reentrantLock(name, failoverSafe, create, fair);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Nullable
+    @Override
     public <T> IgniteQueue<T> queue(String name,
                                     int cap,
                                     CollectionConfiguration cfg) {
-        assert g != null;
+        checkIgnite();
 
         return g.queue(name, cap, cfg);
     }
@@ -588,7 +632,7 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
     @Override
     public <T> IgniteSet<T> set(String name,
                                 CollectionConfiguration cfg) {
-        assert g != null;
+        checkIgnite();
 
         return g.set(name, cfg);
     }
@@ -599,14 +643,6 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
     @Override
     public <K> Affinity<K> affinity(String cacheName) {
         return g.affinity(cacheName);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        return S.toString(DeferredStartIgniteSpringBean.class, this);
     }
 
     /**
@@ -625,5 +661,27 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
         g = (Ignite) in.readObject();
 
         cfg = g.configuration();
+    }
+
+    /**
+     * Checks if this bean is valid.
+     *
+     * @throws IllegalStateException If bean is not valid, i.e. Ignite has already been stopped
+     *                               or has not yet been started.
+     */
+    protected void checkIgnite() throws IllegalStateException {
+        if (g == null) {
+            throw new IllegalStateException("Ignite is in invalid state to perform this operation. " +
+                    "It either not started yet or has already being or have stopped " +
+                    "[ignite=" + g + ", cfg=" + cfg + ']');
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return S.toString(DeferredStartIgniteSpringBean.class, this);
     }
 }

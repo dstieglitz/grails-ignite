@@ -112,5 +112,6 @@ beans {
         cacheMode = CacheMode.REPLICATED
         writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC
         memoryMode =  CacheMemoryMode.OFFHEAP_VALUES
+        statisticsEnabled = true
     }
 }

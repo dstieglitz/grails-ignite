@@ -8,6 +8,7 @@ grails.project.fork = [
 
     // configure settings for the test-app JVM, uses the daemon by default
     test: [maxMemory: 768, minMemory: 64, debug: false, maxPerm: 256, daemon:true],
+//    test: false,
     // configure settings for the run-app JVM
     run: [maxMemory: 768, minMemory: 64, debug: false, maxPerm: 256, forkReserve:false],
     //run: false,
@@ -26,7 +27,7 @@ grails.project.dependency.resolution = {
     inherits("global") {
         // uncomment to disable ehcache
         // excludes 'ehcache'
-        excludes 'h2'
+        //excludes 'h2'
     }
     log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
     repositories {
@@ -42,7 +43,7 @@ grails.project.dependency.resolution = {
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
         // runtime 'mysql:mysql-connector-java:5.1.27'
-        compile "com.h2database:h2:1.3.175"
+        compile "com.h2database:h2:1.4.192"
         compile "org.apache.ignite:ignite-core:${igniteVer}"
         compile ("org.apache.ignite:ignite-spring:${igniteVer}") {
             excludes 'spring-core', 'spring-aop', 'spring-beans', 'spring-context', 'spring-expression', 'spring-tx'
@@ -69,9 +70,7 @@ grails.project.dependency.resolution = {
         }
 
         build ':tomcat:7.0.54'
-
         compile ':webxml:1.4.1'
-
         runtime ":hibernate4:4.3.8.1"
     }
 }

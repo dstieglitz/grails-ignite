@@ -34,7 +34,7 @@ class IgniteStartupHelper {
             bb = new BeanBuilder()
         }
 
-        bb.setClassLoader(this.class.classLoader)
+        bb.setClassLoader(Thread.currentThread().contextClassLoader)
         Binding binding = new Binding()
         binding.application = Holders.grailsApplication
         bb.setBinding(binding)
@@ -54,7 +54,6 @@ class IgniteStartupHelper {
 //
 //        log.info "attempting to load beans from ${url}"
 //        bb.importBeans(url)
-
 
         bb.importBeans(resourcePattern)
 

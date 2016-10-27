@@ -24,7 +24,8 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
 
     private static final String ASSOCIATION_CACHE_MEMORY_MODE_KEY = 'ignite.l2cache.associationMemoryMode'
     private static final String ASSOCIATION_CACHE_ATOMICITY_MODE_KEY = 'ignite.l2cache.associationAtomicityMode'
-    private static final String ASSOCIATION_CACHE_WRITE_SYNC_MODE_KEY = 'ignite.l2cache.associationWriteSynchronizationMode'
+    private static
+    final String ASSOCIATION_CACHE_WRITE_SYNC_MODE_KEY = 'ignite.l2cache.associationWriteSynchronizationMode'
     private static final String ASSOCIATION_CACHE_MAX_SIZE = 'ignite.l2cache.associationMaxSize'
     private static final String ASSOCIATION_CACHE_EVICT_SYNCHRONIZED = 'ignite.l2cache.associationEvictSynchronized'
     private static final String ENTITY_CACHE_MEMORY_MODE_KEY = 'ignite.l2cache.entityMemoryMode'
@@ -38,6 +39,9 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
     private boolean igniteNodeInitialized;
 
     public HibernateRegionFactory() {
+        if (Holders.config.ignite.l2CacheEnabled == false) {
+            throw new RuntimeException("Can't initialize HibernateRegionFactory, l2Cache is disable in config.");
+        }
         underlyingRegionFactory = new org.apache.ignite.cache.hibernate.HibernateRegionFactory();
     }
 
@@ -53,7 +57,6 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
         }
 
         return false;
-
     }
 
     @Override
@@ -64,9 +67,30 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
         // we need to re-write property names here, Grails will prepend "hibernate." to them
         //
         def gridName = properties.getProperty("hibernate.${org.apache.ignite.cache.hibernate.HibernateRegionFactory.GRID_NAME_PROPERTY}")
-        log.debug "grid name is ${gridName}"
+        def dfltCacheNameProperty = properties.getProperty("hibernate.${org.apache.ignite.cache.hibernate.HibernateRegionFactory.DFLT_CACHE_NAME_PROPERTY}")
+        def regionCacheProperty = properties.getProperty("hibernate.${org.apache.ignite.cache.hibernate.HibernateRegionFactory.REGION_CACHE_PROPERTY}")
+        def defaultAccessTypeProperty = properties.getProperty("hibernate.${org.apache.ignite.cache.hibernate.HibernateRegionFactory.DFLT_ACCESS_TYPE_PROPERTY}")
+        def gridConfigProperty = properties.getProperty("hibernate.${org.apache.ignite.cache.hibernate.HibernateRegionFactory.GRID_CONFIG_PROPERTY}")
+
+        log.info "grid name is ${gridName}"
         if (gridName) {
             properties.setProperty(org.apache.ignite.cache.hibernate.HibernateRegionFactory.GRID_NAME_PROPERTY, gridName)
+        }
+        log.info "default cache name is ${dfltCacheNameProperty}"
+        if (dfltCacheNameProperty) {
+            properties.setProperty(org.apache.ignite.cache.hibernate.HibernateRegionFactory.DFLT_CACHE_NAME_PROPERTY, dfltCacheNameProperty)
+        }
+        log.info "region cache is ${regionCacheProperty}"
+        if (regionCacheProperty) {
+            properties.setProperty(org.apache.ignite.cache.hibernate.HibernateRegionFactory.REGION_CACHE_PROPERTY, regionCacheProperty)
+        }
+        log.info "defaultAccessTypeProperty is ${defaultAccessTypeProperty}"
+        if (defaultAccessTypeProperty) {
+            properties.setProperty(org.apache.ignite.cache.hibernate.HibernateRegionFactory.DFLT_ACCESS_TYPE_PROPERTY, defaultAccessTypeProperty)
+        }
+        log.info "grid config is ${gridConfigProperty}"
+        if (gridConfigProperty) {
+            properties.setProperty(org.apache.ignite.cache.hibernate.HibernateRegionFactory.GRID_CONFIG_PROPERTY, gridConfigProperty)
         }
 
         if (init()) {
@@ -110,7 +134,7 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
     @Override
     public CollectionRegion buildCollectionRegion(String s, Properties properties, CacheDataDescription cacheDataDescription) throws CacheException {
         // check if the cache exists, create it if not
-        log.debug "buildCollectionRegion(${s}, ${properties}, ${cacheDataDescription})"
+        log.trace "buildCollectionRegion(${s}, ${properties}, ${cacheDataDescription})"
         configureAssociationCache(s);
 
         return underlyingRegionFactory.buildCollectionRegion(s, properties, cacheDataDescription);

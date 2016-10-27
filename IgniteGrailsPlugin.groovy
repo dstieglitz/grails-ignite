@@ -40,7 +40,7 @@ A plugin for the Apache Ignite data grid framework.
     // Online location of the plugin's browseable source code.
     def scm = [url: "https://github.com/dstieglitz/grails-ignite"]
 
-    def dependsOn = ['hibernate4': '* > 4.3.8.1']
+    //def dependsOn = ['hibernate4': '* > 4.3.8.1']
 
     def loadAfter = ['logging', 'shiro', 'springSecurityCore', 'cors']
 

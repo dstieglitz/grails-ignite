@@ -15,6 +15,9 @@ hibernate {
     cache.region.factory_class = 'org.grails.ignite.HibernateRegionFactory'
     org.apache.ignite.hibernate.grid_name = 'grid'
     org.apache.ignite.hibernate.default_access_type = 'READ_ONLY' // see Ignite docs
+
+    generate_statistics=true
+    use_structured_entries=true
 }
 
 // environment specific settings

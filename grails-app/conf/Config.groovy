@@ -1,8 +1,11 @@
 // configuration for plugin testing - will not be included in the plugin zip
 
 ignite.enabled = true
-ignite.config.locations = ['ignite/conf/*.groovy']
+ignite.gridName = 'grid'
+ignite.config.locations = ['file:ignite/conf/IgniteResources.groovy','file:ignite/conf/IgniteCacheResources.groovy']
 ignite.l2CacheEnabled = true
+ignite.discoverySpi.multicastDiscovery = true
+ignite.peerClassLoadingEnabled = true
 
 log4j = {
     // Example of changing the log pattern for the default console
@@ -23,8 +26,8 @@ log4j = {
            'org.codehaus.groovy.grails.commons', // core / classloading
            'org.codehaus.groovy.grails.plugins', // plugins
            'org.codehaus.groovy.grails.orm.hibernate', // hibernate integration
-           'org.springframework',
-           'org.hibernate',
+           'org.springframework'
+    trace  'org.hibernate',
            'net.sf.ehcache.hibernate'
 
     info 'org.apache.ignite'

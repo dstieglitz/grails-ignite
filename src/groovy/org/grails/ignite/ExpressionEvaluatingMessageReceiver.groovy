@@ -17,7 +17,8 @@ class ExpressionEvaluatingMessageReceiver implements MessageReceiver {
         this.expression = expression;
     }
 
-    public void receive(Object data) {
+    @Override
+    public void receive(Object destination, Object data) {
         log.debug "receive(${data})"
         "${this.expression}"(data);
     }

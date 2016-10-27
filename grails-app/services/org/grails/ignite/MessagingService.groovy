@@ -18,6 +18,9 @@ class MessagingService implements InitializingBean {
     static transactional = false
 
     def grid
+    // a local cache of receivers that will be assigned messages upon arrival at this node. It's
+    // not always feasable to serialize message receivers
+    //private Map localReceiverCache = new HashMap<String, MessageReceiver>()
 
     @Override
     public void afterPropertiesSet() {
@@ -27,6 +30,7 @@ class MessagingService implements InitializingBean {
         cacheConf.setAtomicityMode(CacheAtomicityMode.ATOMIC)
         cacheConf.setBackups(1)
         grid.createCache(cacheConf)
+        log.debug "afterPropertiesSet --> configured cache ${cacheConf}"
     }
 
     /**
@@ -53,12 +57,13 @@ class MessagingService implements InitializingBean {
                         throw new RuntimeException("No receiver configured for queue ${destination.queue}")
                     }
                     // somehow execute the listener
-                    receiver.receive(message)
+                    receiver.receive(destination, message)
                 }
             });
         }
 
         if (destination.topic) {
+            log.debug "sending to topic: ${destination.topic}, ${message}, with timeout=${TIMEOUT}"
             IgniteMessaging rmtMsg = grid.message();
             rmtMsg.sendOrdered(destination.topic, message, TIMEOUT)
         }
@@ -77,10 +82,11 @@ class MessagingService implements InitializingBean {
         if (destination.topic) {
             IgniteMessaging rmtMsg = grid.message();
             def topicName = destination.topic
-            rmtMsg.remoteListen(topicName, new IgniteBiPredicate<UUID, String>() {
+            rmtMsg.remoteListen(topicName, new IgniteBiPredicate<UUID, Object>() {
                 @Override
-                public boolean apply(UUID nodeId, String msg) {
-                    receiver.receive(msg)
+                public boolean apply(UUID nodeId, Object msg) {
+                    log.debug "received ${msg} at ${nodeId}"
+                    receiver.receive(destination, msg)
                 }
             });
         }

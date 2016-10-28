@@ -7,7 +7,7 @@ import groovy.util.logging.Log4j
  * Created by dstieglitz on 10/27/16.
  */
 @Log4j
-class SpringBeanRefMessageReceiver implements MessageReceiver {
+class SpringBeanRefMessageReceiver implements MessageReceiver, Serializable {
 
     def messageReceiverBeanName
 

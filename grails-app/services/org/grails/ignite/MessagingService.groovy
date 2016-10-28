@@ -33,8 +33,8 @@ class MessagingService implements InitializingBean {
             cacheConf.setName(QUEUE_DESTINATION_CACHE_NAME)
             cacheConf.setCacheMode(CacheMode.PARTITIONED)
             cacheConf.setAtomicityMode(CacheAtomicityMode.ATOMIC)
-            cacheConf.setBackups(1)
-            grid.createCache(cacheConf)
+            cacheConf.setBackups(0)
+            grid.getOrCreateCache(cacheConf)
             log.debug "afterPropertiesSet --> configured cache ${cacheConf}"
         }
     }

@@ -24,13 +24,19 @@ class MessagingService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        CacheConfiguration<String, MessageReceiver> cacheConf = new CacheConfiguration<>();
-        cacheConf.setName(QUEUE_DESTINATION_CACHE_NAME)
-        cacheConf.setCacheMode(CacheMode.PARTITIONED)
-        cacheConf.setAtomicityMode(CacheAtomicityMode.ATOMIC)
-        cacheConf.setBackups(1)
-        grid.createCache(cacheConf)
-        log.debug "afterPropertiesSet --> configured cache ${cacheConf}"
+        // for testing where no grid is available, need to be able to initialize this bean
+        if (grid == null) {
+            //           throw new RuntimeException("Can't configure messaging, no grid is configured")
+            log.warn "Can't configure messaging, no grid is configured"
+        } else {
+            CacheConfiguration<String, MessageReceiver> cacheConf = new CacheConfiguration<>();
+            cacheConf.setName(QUEUE_DESTINATION_CACHE_NAME)
+            cacheConf.setCacheMode(CacheMode.PARTITIONED)
+            cacheConf.setAtomicityMode(CacheAtomicityMode.ATOMIC)
+            cacheConf.setBackups(1)
+            grid.createCache(cacheConf)
+            log.debug "afterPropertiesSet --> configured cache ${cacheConf}"
+        }
     }
 
     /**
@@ -69,7 +75,7 @@ class MessagingService implements InitializingBean {
         }
     }
 
-    def registerListener(destination, MessageReceiver receiver) {
+    def registerReceiver(destination, MessageReceiver receiver) {
         log.debug "registerListener(${destination},${receiver})"
         if (!(destination instanceof Map)) {
             throw new RuntimeException("Message destination must be of the form [type:name], e.g., [queue:'myQueue']")

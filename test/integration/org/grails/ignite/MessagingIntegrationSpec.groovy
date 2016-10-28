@@ -17,11 +17,11 @@ class MessagingIntegrationSpec extends IntegrationSpec {
         def exceptionThrown = false
 
         when:
-        messagingService.registerListener(queue: 'hello', new ExpressionEvaluatingMessageReceiver('println'))
+        messagingService.registerReceiver(queue: 'hello', new ExpressionEvaluatingMessageReceiver('println'))
         messagingService.sendMessage(queue: 'hello', "world")
         messagingService.sendMessage(queue: 'hello', "goodbye")
 
-        messagingService.registerListener(topic: 'hello', new ExpressionEvaluatingMessageReceiver('iGotTheMessage'))
+        messagingService.registerReceiver(topic: 'hello', new ExpressionEvaluatingMessageReceiver('iGotTheMessage'))
         messagingService.sendMessage(topic: 'hello', "world")
 
         try {// will throw exception

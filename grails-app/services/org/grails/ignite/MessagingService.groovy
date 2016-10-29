@@ -60,10 +60,12 @@ class MessagingService implements InitializingBean {
                     // get a listener for this destination
                     def receiver = (MessageReceiver) grid.cache(QUEUE_DESTINATION_CACHE_NAME).get(queueName)
                     if (receiver == null) {
-                        throw new RuntimeException("No receiver configured for queue ${destination.queue}")
+//                        throw new RuntimeException("No receiver configured for queue ${destination.queue}")
+                        // suppress warnings?
+                        log.warn "No receiver configured for queue ${destination.queue}"
+                    } else {
+                        receiver.receive(destination, message)
                     }
-                    // somehow execute the listener
-                    receiver.receive(destination, message)
                 }
             });
         }

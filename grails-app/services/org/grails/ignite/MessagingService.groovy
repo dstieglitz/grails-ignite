@@ -4,7 +4,6 @@ import org.apache.ignite.IgniteMessaging
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.configuration.CacheConfiguration
-import org.apache.ignite.lang.IgniteBiPredicate
 import org.apache.ignite.lang.IgniteCallable
 import org.springframework.beans.factory.InitializingBean
 
@@ -90,13 +89,7 @@ class MessagingService implements InitializingBean {
         if (destination.topic) {
             IgniteMessaging rmtMsg = grid.message();
             def topicName = destination.topic
-            rmtMsg.remoteListen(topicName, new IgniteBiPredicate<UUID, Object>() {
-                @Override
-                public boolean apply(UUID nodeId, Object msg) {
-                    log.debug "received ${msg} at ${nodeId}"
-                    receiver.receive(destination, msg)
-                }
-            });
+            rmtMsg.remoteListen(topicName, new IgniteMessagingRemoteListener(receiver, destination));
         }
     }
 }

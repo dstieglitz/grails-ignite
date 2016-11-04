@@ -4,7 +4,6 @@ import org.apache.ignite.IgniteMessaging
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.configuration.CacheConfiguration
-import org.apache.ignite.lang.IgniteCallable
 import org.springframework.beans.factory.InitializingBean
 
 /**
@@ -39,7 +38,7 @@ class MessagingService implements InitializingBean {
     }
 
     /**
-     * Send a message to a destination. This method emulates the old Grails JMS method of sending messages, e.g.,
+     * Send a message to a destination synchronously. This method emulates the old Grails JMS method of sending messages, e.g.,
      * <pre> sendMessage(queue:'queue_name', message) </pre>
      * <p>or</p>
      * <pre> sendMessage(topic: 'topic_name', message)
@@ -53,26 +52,47 @@ class MessagingService implements InitializingBean {
         if (destination.queue) {
             def queueName = destination.queue
             // execute the listener on the receiving node
-            grid.compute().call(new IgniteCallable<Object>() {
-                @Override
-                public Object call() throws Exception {
-                    // get a listener for this destination
-                    def receiver = (MessageReceiver) grid.cache(QUEUE_DESTINATION_CACHE_NAME).get(queueName)
-                    if (receiver == null) {
-//                        throw new RuntimeException("No receiver configured for queue ${destination.queue}")
-                        // suppress warnings?
-                        log.warn "No receiver configured for queue ${destination.queue}"
-                    } else {
-                        receiver.receive(destination, message)
-                    }
-                }
-            });
+            grid.compute().call(new IgniteMessagingQueueReceiverWrapper(grid, queueName, destination, message));
         }
 
         if (destination.topic) {
             log.debug "sending to topic: ${destination.topic}, ${message}, with timeout=${TIMEOUT}"
             IgniteMessaging rmtMsg = grid.message();
             rmtMsg.sendOrdered(destination.topic, message, TIMEOUT)
+        }
+    }
+
+    /**
+     * Send a message to a destination asnychronously. This method emulates the old Grails JMS method of sending messages, e.g.,
+     * <pre> sendMessage(queue:'queue_name', message) </pre>
+     * <p>or</p>
+     * <pre> sendMessage(topic: 'topic_name', message)
+     * Returns an object you can listen to:
+     * <pre>
+     * // Get the future for the above invocation.
+     * IgniteFuture<String> fut = asyncCompute.future();
+     *
+     * // Asynchronously listen for completion and print out the result.
+     * fut.listen(f -> System.out.println("Job result: " + f.get()))
+     </pre>
+     @see http://apacheignite.gridgain.org/docs/async-support
+     */
+    def sendMessageAsync(destination, message) {
+        log.debug "sendMessage(${destination},${message})"
+        if (!(destination instanceof Map)) {
+            throw new RuntimeException("Message destination must be of the form [type:name], e.g., [queue:'myQueue']")
+        }
+
+        if (destination.queue) {
+            def queueName = destination.queue
+            // execute the listener on the receiving node
+            return grid.compute().withAsync().call(new IgniteMessagingQueueReceiverWrapper(grid, queueName, destination, message));
+        }
+
+        if (destination.topic) {
+            log.debug "sending to topic: ${destination.topic}, ${message}, with timeout=${TIMEOUT}"
+            IgniteMessaging rmtMsg = grid.message().withAsync();
+            return rmtMsg.sendOrdered(destination.topic, message, TIMEOUT)
         }
     }
 

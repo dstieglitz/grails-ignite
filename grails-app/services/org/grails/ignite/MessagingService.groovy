@@ -78,7 +78,7 @@ class MessagingService implements InitializingBean {
      @see http://apacheignite.gridgain.org/docs/async-support
      */
     def sendMessageAsync(destination, message) {
-        log.debug "sendMessage(${destination},${message})"
+        log.debug "sendMessageAsync(${destination},${message})"
         if (!(destination instanceof Map)) {
             throw new RuntimeException("Message destination must be of the form [type:name], e.g., [queue:'myQueue']")
         }
@@ -92,7 +92,9 @@ class MessagingService implements InitializingBean {
         if (destination.topic) {
             log.debug "sending to topic: ${destination.topic}, ${message}, with timeout=${TIMEOUT}"
             IgniteMessaging rmtMsg = grid.message().withAsync();
-            return rmtMsg.sendOrdered(destination.topic, message, TIMEOUT)
+            def future = rmtMsg.send(destination.topic, message)
+            log.debug("got future ${future}")
+            return future
         }
     }
 

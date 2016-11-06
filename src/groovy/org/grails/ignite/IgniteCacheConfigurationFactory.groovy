@@ -20,7 +20,7 @@ class IgniteCacheConfigurationFactory {
         def memoryMode = getConfigValueOrThrowException("ignite.defaultCache.memoryMode", Holders.config.ignite.defaultCache.memoryMode)
         def atomicityMode = getConfigValueOrThrowException("ignite.defaultCache.atomicityMode", Holders.config.ignite.defaultCache.atomicityMode)
         def writeSynchronizationMode = getConfigValueOrThrowException("ignite.defaultCache.writeSynchronizationMode", Holders.config.ignite.defaultCache.writeSynchronizationMode)
-        def maxOffHeapMemory = getConfigValueOrThrowException("ignite.defaultCache.maxOffHeapMemory", Holders.config.ignite.defaultCache.maxOffHeapMemory)
+        def offHeapMaxMemory = getConfigValueOrThrowException("ignite.defaultCache.offHeapMaxMemory", Holders.config.ignite.defaultCache.offHeapMaxMemory)
         def maxElements = getConfigValueOrThrowException("ignite.defaultCache.maxElements", Holders.config.ignite.defaultCache.maxElements)
         def swapEnabled = getConfigValueOrThrowException("ignite.defaultCache.swapEnabled", Holders.config.ignite.defaultCache.swapEnabled)
         def evictionPolicy = getConfigValueOrThrowException("ignite.defaultCache.evictionPolicy", Holders.config.ignite.defaultCache.evictionPolicy)
@@ -36,7 +36,7 @@ class IgniteCacheConfigurationFactory {
                 memoryMode,
                 atomicityMode,
                 writeSynchronizationMode,
-                (long) maxOffHeapMemory,
+                (long) offHeapMaxMemory,
                 maxElements,
                 swapEnabled,
                 statisticsEnabled,
@@ -73,7 +73,7 @@ class IgniteCacheConfigurationFactory {
                                                        CacheMemoryMode cacheMemoryMode,
                                                        CacheAtomicityMode cacheAtomicityMode,
                                                        CacheWriteSynchronizationMode synchronizationMode,
-                                                       long maxOffHeapMem,
+                                                       long offHeapMaxMemory,
                                                        int maxElements,
                                                        boolean swapEnabled,
                                                        boolean statisticsEnabled,
@@ -83,7 +83,7 @@ class IgniteCacheConfigurationFactory {
         config.setMemoryMode(cacheMemoryMode)
         config.setWriteSynchronizationMode(synchronizationMode)
         config.setAtomicityMode(cacheAtomicityMode)
-        config.setOffHeapMaxMemory(maxOffHeapMem);
+        config.setOffHeapMaxMemory(offHeapMaxMemory);
         config.setEvictionPolicy(new LruEvictionPolicy(maxElements));
         config.setSwapEnabled(swapEnabled)
         config.setStatisticsEnabled(statisticsEnabled)

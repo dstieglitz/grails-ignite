@@ -1,13 +1,9 @@
 package org.grails.ignite
 
 import grails.util.Holders
-import org.apache.ignite.cache.CacheAtomicityMode
-import org.apache.ignite.cache.CacheMemoryMode
-import org.apache.ignite.cache.CacheWriteSynchronizationMode
 import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
 import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.log4j.Logger
-import org.codehaus.groovy.grails.orm.hibernate.cfg.GrailsDomainBinder
 import org.hibernate.cache.CacheException
 import org.hibernate.cache.spi.*
 import org.hibernate.cache.spi.access.AccessType
@@ -21,18 +17,6 @@ import org.hibernate.cfg.Settings
  * To change this template use File | Settings | File Templates.
  */
 public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFactory {
-
-    private static final String ASSOCIATION_CACHE_MEMORY_MODE_KEY = 'ignite.l2cache.associationMemoryMode'
-    private static final String ASSOCIATION_CACHE_ATOMICITY_MODE_KEY = 'ignite.l2cache.associationAtomicityMode'
-    private static
-    final String ASSOCIATION_CACHE_WRITE_SYNC_MODE_KEY = 'ignite.l2cache.associationWriteSynchronizationMode'
-    private static final String ASSOCIATION_CACHE_MAX_SIZE = 'ignite.l2cache.associationMaxSize'
-    private static final String ASSOCIATION_CACHE_EVICT_SYNCHRONIZED = 'ignite.l2cache.associationEvictSynchronized'
-    private static final String ENTITY_CACHE_MEMORY_MODE_KEY = 'ignite.l2cache.entityMemoryMode'
-    private static final String ENTITY_CACHE_ATOMICITY_MODE_KEY = 'ignite.l2cache.entityAtomicityMode'
-    private static final String ENTITY_CACHE_WRITE_SYNC_MODE_KEY = 'ignite.l2cache.entityWriteSynchronizationMode'
-    private static final String ENTITY_CACHE_MAX_SIZE = 'ignite.l2cache.entityMaxSize'
-    private static final String ENTITY_CACHE_EVICT_SYNCHRONIZED = 'ignite.l2cache.entityEvictSynchronized'
 
     private static final Logger log = Logger.getLogger(HibernateRegionFactory.class.getName());
     private org.apache.ignite.cache.hibernate.HibernateRegionFactory underlyingRegionFactory;
@@ -165,32 +149,21 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
             log.debug "interrogating grails domain class ${entityName} for cache information"
             log.debug "creating default cache for ${entityName}"
 
-            CacheConfiguration cc = new CacheConfiguration(entityName);
-            def binder = new GrailsDomainBinder()
-            def mapping = binder.getMapping(grailsDomainClass);
-            log.debug "found mapping ${mapping} for ${grailsDomainClass}"
+            CacheConfiguration cc = IgniteCacheConfigurationFactory.getCacheConfiguration("ignite.l2Cache.entity", entityName)
 
-            def atomicityMode = valueOrDefault(ENTITY_CACHE_ATOMICITY_MODE_KEY, CacheAtomicityMode.TRANSACTIONAL)
-            log.debug "setting atomicity mode for ${entityName} cache to ${atomicityMode}"
-            cc.setAtomicityMode(atomicityMode);
+//            def binder = new GrailsDomainBinder()
+//            def mapping = binder.getMapping(grailsDomainClass);
+//            log.debug "found mapping ${mapping} for ${grailsDomainClass}"
 
-            def memoryMode = valueOrDefault(ENTITY_CACHE_MEMORY_MODE_KEY, CacheMemoryMode.OFFHEAP_TIERED)
-            log.debug "setting memory mode for ${entityName} cache to ${memoryMode}"
-            cc.setMemoryMode(memoryMode);
-
-            def syncMode = valueOrDefault(ENTITY_CACHE_WRITE_SYNC_MODE_KEY, CacheWriteSynchronizationMode.FULL_SYNC)
-            log.debug "setting sync mode for ${entityName} cache to ${syncMode}"
-            cc.setWriteSynchronizationMode(syncMode);
-
-            cc.setEvictSynchronized(valueOrDefault(ENTITY_CACHE_EVICT_SYNCHRONIZED, false));
+//            cc.setEvictSynchronized(valueOrDefault(ENTITY_CACHE_EVICT_SYNCHRONIZED, false));
 
             // @see http://apacheignite.gridgain.org/docs/performance-tips
-            cc.setBackups(0);
-            cc.setOffHeapMaxMemory(0);
-            LruEvictionPolicy evictionPolicy = new LruEvictionPolicy();
-            evictionPolicy.setMaxSize(valueOrDefault(ENTITY_CACHE_MAX_SIZE, 1000000));
-            cc.setEvictionPolicy(evictionPolicy);
-            cc.setSwapEnabled(false);
+//            cc.setBackups(0);
+//            cc.setOffHeapMaxMemory(0);
+//            LruEvictionPolicy evictionPolicy = new LruEvictionPolicy();
+//            evictionPolicy.setMaxSize(valueOrDefault(ENTITY_CACHE_MAX_SIZE, 1000000));
+//            cc.setEvictionPolicy(evictionPolicy);
+//            cc.setSwapEnabled(false);
 
 //            if (mapping?.cache?.usage?.equalsIgnoreCase("read-write")) {
 //
@@ -213,36 +186,36 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
 //                IgniteStartupHelper.grid.addCacheConfiguration(springConfiguration);
 //            } else {
             def grailsDomainClassName = associationName.substring(0, associationName.lastIndexOf('.'));
-            def grailsDomainClass = Holders.grailsApplication.getDomainClass(grailsDomainClassName);
+//            def grailsDomainClass = Holders.grailsApplication.getDomainClass(grailsDomainClassName);
             log.debug "interrogating grails domain class ${grailsDomainClassName} for cache information"
             log.debug "creating default cache for ${associationName}"
 
-            CacheConfiguration cc = new CacheConfiguration(associationName);
-            def binder = new GrailsDomainBinder()
-            def mapping = binder.getMapping(grailsDomainClass);
-            log.debug "found mapping ${mapping} for ${grailsDomainClass}"
+            CacheConfiguration cc = IgniteCacheConfigurationFactory.getCacheConfiguration("ignite.l2Cache.association", associationName)
+//            def binder = new GrailsDomainBinder()
+//            def mapping = binder.getMapping(grailsDomainClass);
+//            log.debug "found mapping ${mapping} for ${grailsDomainClass}"
 
-            def atomicityMode = valueOrDefault(ASSOCIATION_CACHE_ATOMICITY_MODE_KEY, CacheAtomicityMode.TRANSACTIONAL)
-            log.debug "setting atomicity mode for ${associationName} cache to ${atomicityMode}"
-            cc.setAtomicityMode(atomicityMode);
-
-            def memoryMode = valueOrDefault(ASSOCIATION_CACHE_MEMORY_MODE_KEY, CacheMemoryMode.OFFHEAP_TIERED)
-            log.debug "setting memory mode for ${associationName} cache to ${memoryMode}"
-            cc.setMemoryMode(memoryMode);
-
-            def syncMode = valueOrDefault(ASSOCIATION_CACHE_WRITE_SYNC_MODE_KEY, CacheWriteSynchronizationMode.FULL_SYNC)
-            log.debug "setting sync mode for ${associationName} cache to ${syncMode}"
-            cc.setWriteSynchronizationMode(syncMode);
-
-            cc.setEvictSynchronized(valueOrDefault(ASSOCIATION_CACHE_EVICT_SYNCHRONIZED, false));
+//            def atomicityMode = valueOrDefault(ASSOCIATION_CACHE_ATOMICITY_MODE_KEY, CacheAtomicityMode.TRANSACTIONAL)
+//            log.debug "setting atomicity mode for ${associationName} cache to ${atomicityMode}"
+//            cc.setAtomicityMode(atomicityMode);
+//
+//            def memoryMode = valueOrDefault(ASSOCIATION_CACHE_MEMORY_MODE_KEY, CacheMemoryMode.OFFHEAP_TIERED)
+//            log.debug "setting memory mode for ${associationName} cache to ${memoryMode}"
+//            cc.setMemoryMode(memoryMode);
+//
+//            def syncMode = valueOrDefault(ASSOCIATION_CACHE_WRITE_SYNC_MODE_KEY, CacheWriteSynchronizationMode.FULL_SYNC)
+//            log.debug "setting sync mode for ${associationName} cache to ${syncMode}"
+//            cc.setWriteSynchronizationMode(syncMode);
+//
+//            cc.setEvictSynchronized(valueOrDefault(ASSOCIATION_CACHE_EVICT_SYNCHRONIZED, false));
 
             // @see http://apacheignite.gridgain.org/docs/performance-tips
-            cc.setBackups(0);
-            cc.setOffHeapMaxMemory(0);
-            LruEvictionPolicy evictionPolicy = new LruEvictionPolicy();
-            evictionPolicy.setMaxSize(valueOrDefault(ASSOCIATION_CACHE_MAX_SIZE, 1000000));
-            cc.setEvictionPolicy(evictionPolicy);
-            cc.setSwapEnabled(false);
+//            cc.setBackups(0);
+//            cc.setOffHeapMaxMemory(0);
+//            LruEvictionPolicy evictionPolicy = new LruEvictionPolicy();
+//            evictionPolicy.setMaxSize(valueOrDefault(ASSOCIATION_CACHE_MAX_SIZE, 1000000));
+//            cc.setEvictionPolicy(evictionPolicy);
+//            cc.setSwapEnabled(false);
 
 //            if (mapping?.cache?.usage?.equalsIgnoreCase("read-write")) {
 //
@@ -253,15 +226,15 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
         }
     }
 
-    def valueOrDefault(configValue, defaultValue = null) {
-        log.debug "valueOrDefault(${configValue}, ${defaultValue})"
-        def value = Holders.flatConfig."${configValue}"
-        log.debug "got value=${value}"
-
-        if (value instanceof ConfigObject || value == null) {
-            return defaultValue
-        }
-
-        return value
-    }
+//    def valueOrDefault(configValue, defaultValue = null) {
+//        log.debug "valueOrDefault(${configValue}, ${defaultValue})"
+//        def value = Holders.flatConfig."${configValue}"
+//        log.debug "got value=${value}"
+//
+//        if (value instanceof ConfigObject || value == null) {
+//            return defaultValue
+//        }
+//
+//        return value
+//    }
 }

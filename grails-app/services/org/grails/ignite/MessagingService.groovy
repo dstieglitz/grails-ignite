@@ -86,13 +86,18 @@ class MessagingService implements InitializingBean {
         if (destination.queue) {
             def queueName = destination.queue
             // execute the listener on the receiving node
-            return grid.compute().withAsync().call(new IgniteMessagingQueueReceiverWrapper(grid, queueName, destination, message));
+            def asyncCompute = grid.compute().withAsync()
+            asyncCompute.call(new IgniteMessagingQueueReceiverWrapper(grid, queueName, destination, message))
+            def future = asyncCompute.future();
+            log.debug("got future ${future}")
+            return future;
         }
 
         if (destination.topic) {
             log.debug "sending to topic: ${destination.topic}, ${message}, with timeout=${TIMEOUT}"
             IgniteMessaging rmtMsg = grid.message().withAsync();
-            def future = rmtMsg.send(destination.topic, message)
+            rmtMsg.send(destination.topic, message)
+            def future = rmtMsg.future()
             log.debug("got future ${future}")
             return future
         }

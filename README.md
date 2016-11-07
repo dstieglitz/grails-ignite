@@ -54,17 +54,31 @@ ignite {
     /**
      * DEFAULTS; you can also configure individual caches as spring beans 
      */
-    l2cache { 
-        associationMemoryMode =  CacheMemoryMode.OFFHEAP_TIERED
-        associationAtomicityMode = CacheAtomicityMode.TRANSACTIONAL
-        associationWriteSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC
-        associationMaxSize = 1000
-        associationEvictSynchronized=true
-        entityMemoryMode = CacheMemoryMode.OFFHEAP_TIERED
-        entityAtomicityMode = CacheAtomicityMode.TRANSACTIONAL
-        entityWriteSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC
-        entityMaxSize = 1000
-        entityEvictSynchronized=true
+    l2Cache {
+        entity {
+            evictionPolicy = 'lru'
+            cacheMode = CacheMode.PARTITIONED
+            memoryMode = CacheMemoryMode.OFFHEAP_TIERED
+            atomicityMode = CacheAtomicityMode.TRANSACTIONAL
+            writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC
+            offHeapMaxMemory = (1024L * 1024L * 1024L) * 0.25;
+            maxElements = 1000
+            swapEnabled = false
+            statisticsEnabled = true
+            managementEnabled = true
+        }
+        association {
+            evictionPolicy = 'lru'
+            cacheMode = CacheMode.PARTITIONED
+            memoryMode = CacheMemoryMode.OFFHEAP_TIERED
+            atomicityMode = CacheAtomicityMode.TRANSACTIONAL
+            writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC
+            offHeapMaxMemory = (1024L * 1024L * 1024L) * 0.25;
+            maxElements = 1000
+            swapEnabled = false
+            statisticsEnabled = true
+            managementEnabled = true
+        }
     }
     
     peerClassLoadingEnabled=false

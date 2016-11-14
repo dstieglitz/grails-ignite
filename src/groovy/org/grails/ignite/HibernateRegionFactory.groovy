@@ -1,7 +1,6 @@
 package org.grails.ignite
 
 import grails.util.Holders
-import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
 import org.apache.ignite.configuration.CacheConfiguration
 import org.apache.log4j.Logger
 import org.hibernate.cache.CacheException

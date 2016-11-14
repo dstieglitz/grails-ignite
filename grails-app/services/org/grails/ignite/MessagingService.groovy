@@ -1,6 +1,7 @@
 package org.grails.ignite
 
 import org.apache.ignite.IgniteMessaging
+import static grails.async.Promises.*
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.configuration.CacheConfiguration
@@ -95,8 +96,10 @@ class MessagingService implements InitializingBean {
 
         if (destination.topic) {
             log.debug "sending to topic: ${destination.topic}, ${message}, with timeout=${TIMEOUT}"
-            IgniteMessaging rmtMsg = grid.message().withAsync();
-            rmtMsg.send(destination.topic, message)
+            task {
+                IgniteMessaging rmtMsg = grid.message();
+                rmtMsg.send(destination.topic, message)
+            }
             def future = rmtMsg.future()
             log.debug("got future ${future}")
             return future

@@ -91,9 +91,15 @@ class IgniteCacheConfigurationFactory {
 
         def copyOnReadEnabled = getConfigValueOrNull("${prefix}.copyOnRead", flatConfig.get("${prefix}.copyOnRead".toString()))
         if (copyOnReadEnabled == null) {
-            managementEnabled = getDefaultCacheConfiguration(name).copyOnRead
+            copyOnReadEnabled = getDefaultCacheConfiguration(name).copyOnRead
         }
         log.debug "copyOnReadEnabled=${copyOnReadEnabled}"
+
+        def evictSynchronizedEnabled = getConfigValueOrNull("${prefix}.evictSynchronized", flatConfig.get("${prefix}.evictSynchronized".toString()))
+        if (evictSynchronizedEnabled == null) {
+            evictSynchronizedEnabled = getDefaultCacheConfiguration(name).evictSynchronized
+        }
+        log.debug "evictSynchronizedEnabled=${evictSynchronizedEnabled}"
 
         if (evictionPolicy != 'lru') {
             throw new IllegalArgumentException("Eviction policy ${evictionPolicy} not supported")
@@ -110,7 +116,8 @@ class IgniteCacheConfigurationFactory {
                 swapEnabled,
                 statisticsEnabled,
                 managementEnabled,
-                copyOnReadEnabled)
+                copyOnReadEnabled,
+                evictSynchronizedEnabled)
 
         // TODO get this from configuration
         //return getDefaultCacheConfiguration(name)
@@ -134,6 +141,7 @@ class IgniteCacheConfigurationFactory {
         config.setStatisticsEnabled(false)
         config.setManagementEnabled(false)
         config.setCopyOnRead(false)
+        config.setEvictSynchronized(true)
 
         return config
     }
@@ -154,7 +162,8 @@ class IgniteCacheConfigurationFactory {
                                                        boolean swapEnabled,
                                                        boolean statisticsEnabled,
                                                        boolean managementEnabled,
-                                                       boolean copyOnRead) {
+                                                       boolean copyOnRead,
+                                                       boolean evictSynchronized) {
         def config = new CacheConfiguration(name);
         config.setCacheMode(cacheMode)
         config.setMemoryMode(cacheMemoryMode)
@@ -167,6 +176,7 @@ class IgniteCacheConfigurationFactory {
         config.setManagementEnabled(managementEnabled)
         config.setBackups(backups)
         config.setCopyOnRead(copyOnRead)
+        config.setEvictSynchronized(evictSynchronized)
 
         return config
     }

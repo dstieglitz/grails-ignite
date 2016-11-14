@@ -1,11 +1,12 @@
 package org.grails.ignite
 
 import org.apache.ignite.IgniteMessaging
-import static grails.async.Promises.*
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.configuration.CacheConfiguration
 import org.springframework.beans.factory.InitializingBean
+
+import static grails.async.Promises.task
 
 /**
  * Support point-to-point and topic-based messaging throughout the cluster
@@ -96,11 +97,10 @@ class MessagingService implements InitializingBean {
 
         if (destination.topic) {
             log.debug "sending to topic: ${destination.topic}, ${message}, with timeout=${TIMEOUT}"
-            task {
+            def future = task {
                 IgniteMessaging rmtMsg = grid.message();
                 rmtMsg.send(destination.topic, message)
             }
-            def future = rmtMsg.future()
             log.debug("got future ${future}")
             return future
         }

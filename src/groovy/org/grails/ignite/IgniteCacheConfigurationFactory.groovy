@@ -166,7 +166,7 @@ class IgniteCacheConfigurationFactory {
         config.setStatisticsEnabled(statisticsEnabled)
         config.setManagementEnabled(managementEnabled)
         config.setBackups(backups)
-        config.copyOnRead(copyOnRead)
+        config.setCopyOnRead(copyOnRead)
 
         return config
     }

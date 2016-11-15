@@ -42,6 +42,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     private DistributedScheduledThreadPoolExecutor executor;
     // to allow cancellation
     private Map<String, ScheduledFuture<?>> nameFutureMap = new HashMap<String, ScheduledFuture<?>>();
+    private long timeout = 60000;
 
     public DistributedSchedulerServiceImpl() {
         // default constructor
@@ -102,7 +103,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
         log.debug("schedule returned " + future);
 
-        ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
+        ignite.compute().withName(scheduledRunnable.getName()).withTimeout(timeout).run(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
 
         log.info("added " + scheduledRunnable + " to schedule");
         log.debug("scheduledRunnable: " + schedule);
@@ -128,7 +129,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
         log.debug("schedule returned " + future);
 
-        ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
+        ignite.compute().withName(scheduledRunnable.getName()).withTimeout(timeout).run(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
 
         log.info("added " + scheduledRunnable + " to schedule");
         log.debug("scheduledRunnable: " + schedule);
@@ -154,7 +155,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
             log.debug("schedule returned " + future);
 
-            ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
+            ignite.compute().withName(scheduledRunnable.getName()).withTimeout(timeout).run(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
             log.info("added " + scheduledRunnable + " to schedule");
             log.debug("scheduledRunnable: " + schedule);
 
@@ -178,7 +179,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
         log.debug("schedule returned " + future);
 
-        ignite.compute().broadcast(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
+        ignite.compute().withName(scheduledRunnable.getName()).withTimeout(timeout).run(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
         log.info("added " + scheduledRunnable + " to schedule");
         log.debug("scheduledRunnable: " + schedule);
 
@@ -274,6 +275,14 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     @Override
     public void cancel(ServiceContext serviceContext) {
         log.info("service " + this + "cancelled!");
+    }
+
+    public long getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
     }
 
     @Override

@@ -20,7 +20,7 @@ import static org.apache.ignite.cache.CacheAtomicityMode.TRANSACTIONAL;
 import static org.apache.ignite.cache.CacheMode.REPLICATED;
 
 /**
- * <p>An implementation of a simple distributed scheduled executor service that mimics the interface of the
+ * <p>An implementation of a simple distributed scheduler service that mimics the interface of the
  * ScheduledThreadPoolExector (at least some of the methods), but executes the actual jobs on the grid instead
  * of in a local ThreadPool.</p>
  * <p>Each job has a ScheduledRunnable record saved to the cluster in a REDUNDANT cluster-wide data structure. If the node
@@ -43,9 +43,19 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     // to allow cancellation
     private Map<String, ScheduledFuture<?>> nameFutureMap = new HashMap<String, ScheduledFuture<?>>();
     private long timeout = 60000;
+    private int poolSize = 10;
 
     public DistributedSchedulerServiceImpl() {
         // default constructor
+    }
+
+    public DistributedSchedulerServiceImpl(int poolSize) {
+        this.poolSize = poolSize;
+    }
+
+    public DistributedSchedulerServiceImpl(long timeout, int poolSize) {
+        this.timeout = timeout;
+        this.poolSize = poolSize;
     }
 
     public DistributedSchedulerServiceImpl(Ignite ignite) {
@@ -55,7 +65,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     @Override
     public void init(ServiceContext serviceContext) throws Exception {
         log.debug("init [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
-        this.executor = new DistributedScheduledThreadPoolExecutor(this.ignite, 1);
+        this.executor = new DistributedScheduledThreadPoolExecutor(this.ignite, this.poolSize);
         schedule = initializeSet(ignite);
 
         log.info("scheduling cron jobs...");
@@ -102,6 +112,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                 scheduledRunnable.getTimeUnit());
 
         log.debug("schedule returned " + future);
+        log.debug("scheduling with timeout=" + timeout);
 
         ignite.compute().withName(scheduledRunnable.getName()).withTimeout(timeout).run(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
 
@@ -128,6 +139,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                 scheduledRunnable.getTimeUnit());
 
         log.debug("schedule returned " + future);
+        log.debug("scheduling with timeout=" + timeout);
 
         ignite.compute().withName(scheduledRunnable.getName()).withTimeout(timeout).run(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
 
@@ -154,6 +166,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
             ScheduledFuture future = executor.scheduleWithCron(scheduledRunnable, scheduledRunnable.getCronString());
 
             log.debug("schedule returned " + future);
+            log.debug("scheduling with timeout=" + timeout);
 
             ignite.compute().withName(scheduledRunnable.getName()).withTimeout(timeout).run(new SetClosure(ignite.name(), JOB_SCHEDULE_DATA_SET_NAME, scheduledRunnable));
             log.info("added " + scheduledRunnable + " to schedule");
@@ -173,7 +186,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         log.debug("schedule [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
         log.debug("schedule '" + scheduledRunnable + "'," + scheduledRunnable.getDelay() + "," + scheduledRunnable.getTimeUnit());
 
-        ScheduledFuture future = executor.schedule(scheduledRunnable,
+        ScheduledFuture future = executor.schedule((Runnable) scheduledRunnable,
                 scheduledRunnable.getDelay(),
                 scheduledRunnable.getTimeUnit());
 
@@ -185,6 +198,18 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
         log.debug("added " + scheduledRunnable.getName() + ", " + future + " to namedFutureMap");
         nameFutureMap.put(scheduledRunnable.getName(), future);
+
+        return future;
+    }
+
+    @Override
+    public Future executeNow(ScheduledRunnable scheduledRunnable) {
+        log.debug("schedule [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
+        log.debug("schedule '" + scheduledRunnable + "'," + scheduledRunnable.getDelay() + "," + scheduledRunnable.getTimeUnit());
+
+        Future future = executor.submit((Runnable) scheduledRunnable);
+
+        log.debug("submit returned " + future);
 
         return future;
     }
@@ -283,6 +308,14 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
 
     public void setTimeout(long timeout) {
         this.timeout = timeout;
+    }
+
+    public void setPoolSize(int poolSize) {
+        this.poolSize = poolSize;
+    }
+
+    public int getPoolSize() {
+        return this.poolSize;
     }
 
     @Override

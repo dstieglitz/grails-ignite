@@ -171,7 +171,9 @@ class IgniteStartupHelper {
                 }
             }
             if (!schedulerServiceDeployed) {
-                grid.services().deployClusterSingleton(SCHEDULER_SERVICE_NAME, new DistributedSchedulerServiceImpl());
+                def poolSize = Holders.grailsApplication.config.ignite.config.executorThreadPoolSize
+                if (poolSize instanceof ConfigObject) poolSize = 10
+                grid.services().deployClusterSingleton(SCHEDULER_SERVICE_NAME, new DistributedSchedulerServiceImpl(poolSize));
             }
 
         } catch (NoSuchBeanDefinitionException e) {

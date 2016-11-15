@@ -2,6 +2,7 @@ package org.grails.ignite;
 
 import java.io.Serializable;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -9,12 +10,13 @@ import java.util.concurrent.TimeUnit;
  * set which is distributed across the grid so that if the singleton scheduler node goes down, whichever nodes takes
  * over can retrieve the current schedule from the grid and pick up the scheduling.
  */
-public class ScheduledRunnable implements NamedRunnable, Serializable {
+public class ScheduledRunnable implements Callable, NamedRunnable, Serializable {
     private String name;
     private Runnable underlyingRunnable;
     private long initialDelay = -1;
     private long period = -1;
     private long delay = -1;
+    private long timeout = 60000;
     private TimeUnit timeUnit;
     private String cronString;
 
@@ -107,6 +109,14 @@ public class ScheduledRunnable implements NamedRunnable, Serializable {
         this.cronString = cronString;
     }
 
+    public long getTimeout() {
+        return this.timeout;
+    }
+
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof ScheduledRunnable)) return false;
@@ -118,4 +128,9 @@ public class ScheduledRunnable implements NamedRunnable, Serializable {
         return name.hashCode();
     }
 
+    @Override
+    public Object call() throws Exception {
+        underlyingRunnable.run();
+        return null;
+    }
 }

@@ -4,6 +4,8 @@ import it.sauronsoftware.cron4j.Scheduler;
 import org.apache.ignite.Ignite;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -18,22 +20,11 @@ import java.util.concurrent.*;
  */
 public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
-    private final Logger log = Logger.getLogger(getClass().getName());
+    private static final Logger log = Logger.getLogger(DistributedScheduledThreadPoolExecutor.class.getName());
     private Ignite ignite;
     private boolean running = true;
     private Scheduler cronScheduler;
-
-//    public DistributedScheduledThreadPoolExecutor() {
-//        super(5);
-//        this.cronScheduler = new Scheduler();
-//        this.cronScheduler.start();
-//    }
-//
-//    public DistributedScheduledThreadPoolExecutor(int corePoolSize) {
-//        super(corePoolSize);
-//        this.cronScheduler = new Scheduler();
-//        this.cronScheduler.start();
-//    }
+    private long timeout = 60000;
 
     public DistributedScheduledThreadPoolExecutor(Ignite ignite, int corePoolSize) {
         super(corePoolSize);
@@ -52,6 +43,12 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
     public ScheduledFuture scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
         log.debug("scheduleWithFixedDelay " + command + "," + initialDelay + "," + delay + "," + unit);
         return super.scheduleWithFixedDelay(new IgniteDistributedRunnable(this, command), initialDelay, delay, unit);
+    }
+
+    @Override
+    public ScheduledFuture schedule(Runnable command, long delay, TimeUnit timeUnit) {
+        log.debug("scheduling NOW " + command + "," + delay + "," + timeUnit);
+        return super.schedule(new IgniteDistributedRunnable(this, command), delay, timeUnit);
     }
 
     public ScheduledFuture scheduleWithCron(Runnable command, String cronString) {
@@ -82,7 +79,7 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
 //                log.debug("found queued runnable: " + r);
 //            }
 
-            log.debug("super.remove "+runnable);
+            log.debug("super.remove " + runnable);
             cancelled = super.remove(runnable);
         }
 
@@ -99,22 +96,56 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
         this.running = trueOrFalse;
     }
 
+    /*
+     * IgniteDistributedRunnable will call the methods below with its underlying Runnable
+     */
+
     @Override
     public Future submit(Runnable runnable) {
-        log.debug("submitting " + runnable + " to ignite executor service");
-        return ignite.executorService().submit(runnable);
+        log.debug("submitting Runnable " + runnable + " to ignite executor service with timeout=" + timeout);
+        //        return ignite.executorService().submit(runnable);
+        try {
+            ScheduledRunnable sr = (ScheduledRunnable) runnable;
+            List tasks = new ArrayList();
+            tasks.add(runnable);
+            return (Future) ignite.executorService().invokeAll(tasks, sr.getTimeout(), TimeUnit.MILLISECONDS).get(0);
+        } catch (InterruptedException e) {
+            log.error(e.getMessage(), e);
+//            throw new RuntimeException(e);
+            return null;
+        }
     }
 
     @Override
     public <T> Future<T> submit(Runnable task, T result) {
         log.debug("submitting " + task + "," + result + " to ignite executor service");
-        return ignite.executorService().submit(task, result);
+//        return ignite.executorService().submit(task, result);
+        try {
+            ScheduledRunnable sr = (ScheduledRunnable) task;
+            List tasks = new ArrayList();
+            tasks.add(task);
+            return (Future<T>) ignite.executorService().invokeAll(tasks, sr.getTimeout(), TimeUnit.MILLISECONDS).get(0);
+        } catch (InterruptedException e) {
+            log.error(e.getMessage(), e);
+//            throw new RuntimeException(e);
+            return null;
+        }
     }
 
     @Override
     public <T> Future<T> submit(Callable<T> task) {
-        log.debug("submitting " + task + " to ignite executor service");
-        return ignite.executorService().submit(task);
+        log.debug("submitting Callable<T> " + task + " to ignite executor service with timeout=" + timeout);
+//        return ignite.executorService().submit(task);
+        try {
+            ScheduledRunnable sr = (ScheduledRunnable) task;
+            List<Callable<T>> tasks = new ArrayList<Callable<T>>();
+            tasks.add(task);
+            return (Future<T>) ignite.executorService().invokeAll(tasks, sr.getTimeout(), TimeUnit.MILLISECONDS).get(0);
+        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+            log.error(e.getMessage(), e);
+            return null;
+        }
     }
 
     public void deschedule(String cronTaskId) {

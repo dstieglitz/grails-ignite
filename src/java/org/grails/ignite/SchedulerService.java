@@ -3,6 +3,7 @@ package org.grails.ignite;
 import org.apache.ignite.IgniteException;
 
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -22,6 +23,8 @@ public interface SchedulerService {
     public ScheduledFuture scheduleWithCron(ScheduledRunnable command) throws DistributedRunnableException;
 
     public ScheduledFuture schedule(ScheduledRunnable command);
+
+    public Future executeNow(ScheduledRunnable command);
 
     public void stopScheduler();
 

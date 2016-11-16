@@ -1,6 +1,8 @@
 package org.grails.ignite;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -132,5 +134,16 @@ public class ScheduledRunnable implements Callable, NamedRunnable, Serializable 
     public Object call() throws Exception {
         underlyingRunnable.run();
         return null;
+    }
+
+    public Map toDataMap() {
+        Map result = new HashMap();
+        result.put("name", this.name);
+        result.put("initialDelay", this.initialDelay);
+        result.put("delay", this.delay);
+        result.put("timeout", this.timeout);
+        result.put("timeUnit", this.timeUnit);
+        result.put("cronString", this.cronString);
+        return result;
     }
 }

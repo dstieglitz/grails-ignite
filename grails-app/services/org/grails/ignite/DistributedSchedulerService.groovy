@@ -43,7 +43,7 @@ class DistributedSchedulerService {
         scheduledRunnable.setInitialDelay(initialDelay);
         scheduledRunnable.setPeriod(period);
         scheduledRunnable.setTimeUnit(unit);
-        if (timeout == null) timeout = getConfiguredTimeout()
+        if (timeout == null || timeout < 0) timeout = getConfiguredTimeout()
         scheduledRunnable.setTimeout(timeout);
 
         if (getServiceProxy().isScheduled(scheduledRunnable.getName())) {
@@ -76,7 +76,7 @@ class DistributedSchedulerService {
         scheduledRunnable.setInitialDelay(initialDelay);
         scheduledRunnable.setDelay(delay);
         scheduledRunnable.setTimeUnit(unit);
-        if (timeout == null) timeout = getConfiguredTimeout()
+        if (timeout == null || timeout < 0) timeout = getConfiguredTimeout()
         scheduledRunnable.setTimeout(timeout)
 
         if (getServiceProxy().isScheduled(scheduledRunnable.getName())) {
@@ -107,7 +107,7 @@ class DistributedSchedulerService {
 
         scheduledRunnable.setInitialDelay(delay);
         scheduledRunnable.setTimeUnit(unit);
-        if (timeout == null) timeout = getConfiguredTimeout()
+        if (timeout == null || timeout < 0) timeout = getConfiguredTimeout()
         scheduledRunnable.setTimeout(timeout)
 
         if (getServiceProxy().isScheduled(scheduledRunnable)) {

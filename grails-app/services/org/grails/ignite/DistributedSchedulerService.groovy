@@ -110,7 +110,7 @@ class DistributedSchedulerService {
         if (timeout == null || timeout < 0) timeout = getConfiguredTimeout()
         scheduledRunnable.setTimeout(timeout)
 
-        if (getServiceProxy().isScheduled(scheduledRunnable)) {
+        if (getServiceProxy().isScheduled(scheduledRunnable.getName())) {
 //            throw new ComputeExecutionRejectedException("Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName());
             log.warn "Won't schedule underlyingRunnable that's already scheduled: " + scheduledRunnable.getName()
             return null

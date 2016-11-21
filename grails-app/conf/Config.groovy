@@ -2,9 +2,10 @@
 
 ignite.enabled = true
 ignite.gridName = 'grid'
-ignite.config.locations = ['file:ignite/conf/IgniteResources.groovy','file:ignite/conf/IgniteCacheResources.groovy']
+ignite.config.locations = ['file:ignite/conf/IgniteResources.groovy', 'file:ignite/conf/IgniteCacheResources.groovy']
 ignite.l2CacheEnabled = true
-ignite.discoverySpi.multicastDiscovery = true
+ignite.discoverySpi.multicastDiscovery = false
+ignite.discoverySpi.addresses = ['127.0.0.1']
 ignite.peerClassLoadingEnabled = true
 
 log4j = {
@@ -18,17 +19,17 @@ log4j = {
     trace 'groovy.lang.GroovyClassLoader'
     debug 'grails.app.services'
 
-    error  'org.codehaus.groovy.grails.web.servlet',  //  controllers
-           'org.codehaus.groovy.grails.web.pages', //  GSP
-           'org.codehaus.groovy.grails.web.sitemesh', //  layouts
-           'org.codehaus.groovy.grails.web.mapping.filter', // URL mapping
-           'org.codehaus.groovy.grails.web.mapping', // URL mapping
-           'org.codehaus.groovy.grails.commons', // core / classloading
-           'org.codehaus.groovy.grails.plugins', // plugins
-           'org.codehaus.groovy.grails.orm.hibernate', // hibernate integration
-           'org.springframework'
-    error  'org.hibernate',
-           'net.sf.ehcache.hibernate'
+    error 'org.codehaus.groovy.grails.web.servlet',  //  controllers
+            'org.codehaus.groovy.grails.web.pages', //  GSP
+            'org.codehaus.groovy.grails.web.sitemesh', //  layouts
+            'org.codehaus.groovy.grails.web.mapping.filter', // URL mapping
+            'org.codehaus.groovy.grails.web.mapping', // URL mapping
+            'org.codehaus.groovy.grails.commons', // core / classloading
+            'org.codehaus.groovy.grails.plugins', // plugins
+            'org.codehaus.groovy.grails.orm.hibernate', // hibernate integration
+            'org.springframework'
+    error 'org.hibernate',
+            'net.sf.ehcache.hibernate'
 
     info 'org.apache.ignite'
     debug 'org.grails.ignite'

@@ -137,7 +137,7 @@ class IgniteCacheConfigurationFactory {
         config.setOffHeapMaxMemory(1L * 1024L * 1024L * 1024L); // 1 GIG
         config.setEvictionPolicy(new LruEvictionPolicy(10000));
         config.setBackups(0)
-        config.setSwapEnabled(true)
+        config.setSwapEnabled(false)
         config.setStatisticsEnabled(false)
         config.setManagementEnabled(false)
         config.setCopyOnRead(false)

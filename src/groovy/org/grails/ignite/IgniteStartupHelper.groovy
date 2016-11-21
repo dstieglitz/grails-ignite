@@ -187,8 +187,6 @@ class IgniteStartupHelper {
             return false;
         }
 
-//        ctx.getBean('distributedSchedulerService').grid = grid
-        ctx.getBean(QUERY_ENTITY_SERVICE_NAME).init();
         return true;
     }
 

@@ -1,6 +1,7 @@
 import grails.plugin.webxml.FilterManager
 import org.grails.ignite.IgniteContextBridge
 import org.grails.ignite.IgniteStartupHelper
+import org.grails.ignite.IgniteClassMappingConfigurator
 
 class IgniteGrailsPlugin {
     // the plugin version
@@ -10,7 +11,7 @@ class IgniteGrailsPlugin {
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
             "grails-app/views/error.gsp",
-            "grails-app/domain"
+            "grails-app/domain/org/grails/ignite/Widget.groovy"
     ]
 
     def title = "Grails Ignite Plugin" // Headline display name of the plugin
@@ -105,6 +106,11 @@ A plugin for the Apache Ignite data grid framework.
         if (!(application.config.ignite.enabled instanceof ConfigObject)
                 && application.config.ignite.enabled.toBoolean().equals(true)) {
             grid(IgniteContextBridge)
+        }
+        igniteClassMappingConfigurator(IgniteClassMappingConfigurator) { bean ->
+            grid = ref('grid')
+            grailsApplication = ref('grailsApplication')
+            bean.initMethod = 'configureAndInstallMappings'
         }
     }
 

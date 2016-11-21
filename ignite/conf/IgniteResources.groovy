@@ -43,9 +43,9 @@ beans {
             gridName = configuredGridName
             peerClassLoadingEnabled = peerClassLoadingEnabledInConfig
 
-            marshaller = { OptimizedMarshaller marshaller ->
-                requireSerializable = false
-            }
+//            marshaller = { OptimizedMarshaller marshaller ->
+//                requireSerializable = false
+//            }
 
             //            marshaller = { JdkMarshaller marshaller ->
             ////                requireSerializable = false

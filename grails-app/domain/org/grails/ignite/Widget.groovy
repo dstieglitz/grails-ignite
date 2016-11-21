@@ -10,4 +10,6 @@ class Widget {
 
     static constraints = {
     }
+
+    static ignite = true
 }

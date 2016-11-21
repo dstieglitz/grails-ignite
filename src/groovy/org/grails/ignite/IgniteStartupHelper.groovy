@@ -24,6 +24,7 @@ class IgniteStartupHelper {
     static def DEFAULT_GRID_NAME = 'grid'
     static def IGNITE_CONFIG_DIRECTORY_NAME = 'ignite'
     static String SCHEDULER_SERVICE_NAME = 'distributedSchedulerService'
+    static String QUERY_ENTITY_SERVICE_NAME = 'queryEntityService'
 
     private static ApplicationContext igniteApplicationContext
     public static Ignite grid
@@ -176,6 +177,8 @@ class IgniteStartupHelper {
                 grid.services().deployClusterSingleton(SCHEDULER_SERVICE_NAME, new DistributedSchedulerServiceImpl(poolSize));
             }
 
+
+
         } catch (NoSuchBeanDefinitionException e) {
             log.warn e.message
             return false;
@@ -185,6 +188,7 @@ class IgniteStartupHelper {
         }
 
 //        ctx.getBean('distributedSchedulerService').grid = grid
+        ctx.getBean(QUERY_ENTITY_SERVICE_NAME).init();
         return true;
     }
 

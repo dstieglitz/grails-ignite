@@ -95,6 +95,16 @@ class DistributedSchedulerService {
         return scheduleWithFixedDelay(command, initialDelay, delay, unit, getConfiguredTimeout(), name)
     }
 
+    /**
+     * @deprecated use executeNow instead
+     * @param command
+     * @param delay
+     * @param unit
+     * @param timeout
+     * @param name
+     * @return
+     * @throws Exception
+     */
     public ScheduledFuture schedule(Runnable command, long delay, TimeUnit unit, long timeout, String name = null) throws Exception {
         log.debug "schedule ${command}, ${delay}, ${unit}, ${name}"
 
@@ -121,6 +131,15 @@ class DistributedSchedulerService {
         }
     }
 
+    /**
+     * @deprecated use executeNow instead
+     * @param command
+     * @param delay
+     * @param unit
+     * @param name
+     * @return
+     * @throws Exception
+     */
     public ScheduledFuture schedule(Runnable command, long delay, TimeUnit unit, String name = null)
             throws Exception {
         return schedule(command, delay, unit, getConfiguredTimeout(), name)

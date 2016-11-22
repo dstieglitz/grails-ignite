@@ -48,47 +48,53 @@ class QueryEntityServiceSpec extends Specification {
         grid.cacheNames().contains('QE_Widget')
 
         when:
-        def widget = new Widget(name: 'Harry Potter')
-        if (!widget.save()) {
-            widget.errors.each {
+        def widget1 = new Widget(name: 'Harry Potter')
+        widget1.name = 'Harry Potter'
+        if (!widget1.save()) {
+            widget1.errors.each {
                 println it
             }
         }
-        grid.cache('QE_Widget').put(1l, widget)
+        println "created widget ${widget1}"
+        grid.cache('QE_Widget').put(widget1.id, widget1)
 
         then:
         grid.cache('QE_Widget').size() == 1
 
         when:
-        widget = new Widget(name: 'Harry Potter')
-        if (!widget.save()) {
-            widget.errors.each {
+        def widget2 = new Widget()
+        widget2.name = 'Harry Potter'
+        if (!widget2.save()) {
+            widget2.errors.each {
                 println it
             }
         }
-        grid.cache('QE_Widget').put(1l, widget)
-
-        then:
-        grid.cache('QE_Widget').size() == 1
-
-        when:
-        widget = new Widget(name: 'Hermione Grainger')
-        if (!widget.save()) {
-            widget.errors.each {
-                println it
-            }
-        }
-        grid.cache('QE_Widget').put(2l, widget)
+        println "created widget ${widget2}"
+        grid.cache('QE_Widget').put(widget2.id, widget2)
 
         then:
         grid.cache('QE_Widget').size() == 2
+
+        when:
+        def widget3 = new Widget()
+        widget3.name = 'Hermione Grainger'
+        if (!widget3.save()) {
+            widget3.errors.each {
+                println it
+            }
+        }
+        println "created widget ${widget3}"
+        grid.cache('QE_Widget').put(widget3.id, widget3)
+
+        then:
+        grid.cache('QE_Widget').size() == 3
 
         when: "i'm testing scan queries"
         IgniteCache<Long, Widget> cache = grid.cache("QE_Widget");
         IgniteBiPredicate<Long, Widget> filter = new IgniteBiPredicate<Long, Widget>() {
             @Override
             public boolean apply(Long key, Widget p) {
-                println p.name
+                println "${key},${p}"
                 return p.name.equals('Harry Potter')
             }
         };
@@ -96,7 +102,7 @@ class QueryEntityServiceSpec extends Specification {
         QueryCursor cursor = cache.query(new ScanQuery(filter));
 
         then:
-        cursor.size() == 1
+        cursor.size() == 2
 
         when: "i'm testing text queries"
         cache = grid.cache("QE_Widget");
@@ -111,9 +117,10 @@ class QueryEntityServiceSpec extends Specification {
         when: "i'm testing text queries"
         cache = grid.cache("QE_Widget");
 
-        // Query for all people with "Master Degree" in their resumes.
-        txt = new TextQuery(Widget.class, "Harry Potter");
+        txt = new TextQuery(Widget.class, 'Hermione Grainger');
         results = cache.query(txt);
+//        println results.all
+//        println cache.get(widget3.id).name
 
         then:
         results.size() == 1

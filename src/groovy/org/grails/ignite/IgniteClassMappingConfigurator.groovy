@@ -1,11 +1,11 @@
 package org.grails.ignite
 
 import groovy.util.logging.Log4j
-import org.apache.ignite.cache.QueryEntity
 import org.codehaus.groovy.grails.commons.GrailsDomainClass
 import org.codehaus.groovy.grails.commons.GrailsDomainClassProperty
 
 /**
+ * This class introspects domain classes and
  * Created by dstieglitz on 11/21/16.
  */
 @Log4j
@@ -38,25 +38,29 @@ class IgniteClassMappingConfigurator {
         }
     }
 
-    def buildDefaultMapping(domainClass) {
+    def buildDefaultMapping(grailsDomainClass) {
         // get cache configuration from config (if exists)
-        def cacheName = "$queryEntityPrefix$domainClass.name"
+        def cacheName = "$queryEntityPrefix$grailsDomainClass.name"
         log.info "building cache mapping for ${cacheName}"
         if (!grid.cache(cacheName)) {
             def cc = IgniteCacheConfigurationFactory.getCacheConfiguration(cacheName)
+            def keyType = grailsDomainClass.getPropertyByName('id').type
+            def valueType = Class.forName(grailsDomainClass.fullName)
+            cc.setIndexedTypes(keyType, valueType)
+
             // FIXME configure later
 //            cc.setWriteThrough(false)
 //            cc.setReadThrough(true)
-            log.info "configuring query entity $domainClass.name"
-            def queryEntity = new QueryEntity(keyType: 'java.lang.Long', valueType: domainClass.name)
-            // get mapped properties
-
-            getDomainProperties(domainClass).each { prop ->
-                log.info "configuring property $prop.name, $prop.type, null"
-                queryEntity.addQueryField(prop.name, prop.typePropertyName, null)
-            }
-
-            cc.setQueryEntities([queryEntity])
+//            log.info "configuring query entity $domainClass.name"
+//            def queryEntity = new QueryEntity(keyType: 'java.lang.Long', valueType: domainClass.name)
+//            // get mapped properties
+//
+//            getDomainProperties(domainClass).each { prop ->
+//                log.info "configuring property $prop.name, $prop.type, null"
+//                queryEntity.addQueryField(prop.name, prop.typePropertyName, null)
+//            }
+//
+//            cc.setQueryEntities([queryEntity])
 
             def cache = grid.getOrCreateCache(cc)
             log.info "configured cache ${cache}"

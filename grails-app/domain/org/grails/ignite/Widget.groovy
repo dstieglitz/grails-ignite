@@ -14,12 +14,13 @@ class Widget {
     static constraints = {
     }
 
-    static ignite = true
+//    static ignite = true
 
 //     TODO Index the name field as text
-//    static ignite = {
-//        name type:'text'
-//    }
+    static ignite = {
+        cacheStore enabled: true, readThrough: true, writeThrough: true
+        name type: 'text'
+    }
 
     String toString() {
         return "id=$id,name=$name"

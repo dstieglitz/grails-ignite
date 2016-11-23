@@ -17,11 +17,41 @@ import java.util.Map.Entry
 class QueryEntityServiceSpec extends Specification {
 
     def grid
+    def widget1, widget2, widget3
 
     def setup() {
     }
 
     def cleanup() {
+    }
+
+    def createSomeWidgets() {
+        widget1 = new Widget(name: 'Harry Potter')
+        widget1.name = 'Harry Potter'
+        if (!widget1.save()) {
+            widget1.errors.each {
+                println it
+            }
+        }
+        println "created widget ${widget1}"
+
+        widget2 = new Widget()
+        widget2.name = 'Harry Potter'
+        if (!widget2.save()) {
+            widget2.errors.each {
+                println it
+            }
+        }
+        println "created widget ${widget2}"
+
+        widget3 = new Widget()
+        widget3.name = 'Hermione Grainger'
+        if (!widget3.save()) {
+            widget3.errors.each {
+                println it
+            }
+        }
+        println "created widget ${widget3}"
     }
 
     void "test query entity configuration"() {
@@ -40,6 +70,7 @@ class QueryEntityServiceSpec extends Specification {
         setup:
         assert grid.name() != null // force creation of grid
         assert grid.underlyingIgnite != null
+        createSomeWidgets()
 
         when:
         true
@@ -48,42 +79,18 @@ class QueryEntityServiceSpec extends Specification {
         grid.cacheNames().contains('QE_Widget')
 
         when:
-        def widget1 = new Widget(name: 'Harry Potter')
-        widget1.name = 'Harry Potter'
-        if (!widget1.save()) {
-            widget1.errors.each {
-                println it
-            }
-        }
-        println "created widget ${widget1}"
         grid.cache('QE_Widget').put(widget1.id, widget1)
 
         then:
         grid.cache('QE_Widget').size() == 1
 
         when:
-        def widget2 = new Widget()
-        widget2.name = 'Harry Potter'
-        if (!widget2.save()) {
-            widget2.errors.each {
-                println it
-            }
-        }
-        println "created widget ${widget2}"
         grid.cache('QE_Widget').put(widget2.id, widget2)
 
         then:
         grid.cache('QE_Widget').size() == 2
 
         when:
-        def widget3 = new Widget()
-        widget3.name = 'Hermione Grainger'
-        if (!widget3.save()) {
-            widget3.errors.each {
-                println it
-            }
-        }
-        println "created widget ${widget3}"
         grid.cache('QE_Widget').put(widget3.id, widget3)
 
         then:
@@ -124,6 +131,51 @@ class QueryEntityServiceSpec extends Specification {
 
         then:
         results.size() == 1
+    }
 
+    void "test loadCache"() {
+        setup:
+        grid.cache('QE_Widget').clear()
+
+        when:
+        createSomeWidgets()
+
+        then:
+        grid.cache('QE_Widget').size() == 0
+
+        when:
+        grid.cache('QE_Widget').loadCache(null)
+
+        then:
+        grid.cache('QE_Widget').size() == 3
+    }
+
+    void "test writeBehind"() {
+        setup:
+        grid.cache('QE_Widget').clear()
+
+        when:
+        createSomeWidgets()
+
+        then:
+        grid.cache('QE_Widget').size() == 0
+
+        when: "I try to write an entity through"
+        def widget4 = new Widget()
+        widget4.name = 'Ron Weasley'
+        println "created widget ${widget4}"
+
+        // FIXME don't know ID yet!
+        grid.cache('QE_Widget').put(-1, widget4)
+
+        then:
+        grid.cache('QE_Widget').size() == 1
+
+        when: "i try to read and entity through"
+        def gotWidget = grid.cache('QE_Widget').get(widget2.id)
+
+        then:
+        grid.cache('QE_Widget').size() == 2
+        gotWidget.name == 'Harry Potter'
     }
 }

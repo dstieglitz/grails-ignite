@@ -129,15 +129,15 @@ class IgniteCacheConfigurationFactory {
      * @return
      */
     static CacheConfiguration getDefaultCacheConfiguration(String name) {
-        def config = new CacheConfiguration(name);
+        def config = new CacheConfiguration(name)
         config.setCacheMode(CacheMode.PARTITIONED)
-        config.setMemoryMode(CacheMemoryMode.OFFHEAP_TIERED)
+        config.setMemoryMode(CacheMemoryMode.ONHEAP_TIERED)
         config.setWriteSynchronizationMode(CacheWriteSynchronizationMode.FULL_ASYNC)
         config.setAtomicityMode(CacheAtomicityMode.ATOMIC)
-        config.setOffHeapMaxMemory(1L * 1024L * 1024L * 1024L); // 1 GIG
-        config.setEvictionPolicy(new LruEvictionPolicy(10000));
+        config.setOffHeapMaxMemory(0)
+        config.setEvictionPolicy(new LruEvictionPolicy(10000))
         config.setBackups(0)
-        config.setSwapEnabled(true)
+        config.setSwapEnabled(false)
         config.setStatisticsEnabled(false)
         config.setManagementEnabled(false)
         config.setCopyOnRead(false)

@@ -1,6 +1,7 @@
 package org.grails.ignite
 
 import grails.util.Holders
+import groovy.util.logging.Log4j
 import org.codehaus.groovy.grails.web.util.WebUtils
 import org.springframework.util.AntPathMatcher
 
@@ -10,6 +11,7 @@ import javax.servlet.http.HttpServletRequest
 /**
  * Created by dstieglitz on 9/1/15.
  */
+@Log4j
 class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilter {
 
     def excludes
@@ -35,9 +37,9 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
             this.excludes = []
         }
 
-        log.info "excluding the following URIs from web session clustering by configuration: ${this.excludes}"
-
         if (webSessionClusteringEnabled) {
+            log.info "excluding the following URIs from web session clustering by configuration: ${this.excludes}"
+
             if (IgniteStartupHelper.grid == null) {
                 log.info "web session clustering is enabled but grid is not started, starting now"
                 IgniteStartupHelper.startIgnite();
@@ -77,9 +79,12 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
             log.debug "flash.${it}=${flashScope.get(it)}"
         }
 
-        httpReq.session.attributeNames.each {
-            log.trace "request attribute ${it}=${httpReq.session.getAttribute(it)}"
-        }
+        // if Shiro sessions disabled, this will throw an error
+//        if (log.traceEnabled) {
+//            httpReq.session.attributeNames.each {
+//                log.trace "request attribute ${it}=${httpReq.session.getAttribute(it)}"
+//            }
+//        }
 
         def application = Holders.grailsApplication
         def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)

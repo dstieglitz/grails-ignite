@@ -79,7 +79,7 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
                 log.debug "flash.${it}=${flashScope.get(it)}"
             }
         } catch (java.lang.IllegalStateException e) {
-            log.warn e.message
+            log.debug e.message
         }
 
         // if Shiro sessions disabled, this will throw an error

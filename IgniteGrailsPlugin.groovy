@@ -1,4 +1,3 @@
-import grails.plugin.webxml.FilterManager
 import org.grails.ignite.IgniteContextBridge
 import org.grails.ignite.IgniteStartupHelper
 
@@ -48,9 +47,9 @@ A plugin for the Apache Ignite data grid framework.
 
 //    def LOG = LoggerFactory.getLogger('grails.plugin.ignite.IgniteGrailsPlugin')
 
-    def getWebXmlFilterOrder() {
-        [IgniteWebSessionsFilter: FilterManager.CHAR_ENCODING_POSITION + 1]
-    }
+//    def getWebXmlFilterOrder() {
+//        [IgniteWebSessionsFilter: FilterManager.CHAR_ENCODING_POSITION + 1]
+//    }
 
     def doWithWebDescriptor = { xml ->
         def configuredGridName = IgniteStartupHelper.DEFAULT_GRID_NAME
@@ -99,6 +98,34 @@ A plugin for the Apache Ignite data grid framework.
             }
         }
 //        }
+
+        int i = 0
+        int shiroFilterIndex = -1
+        xml.'filter-mapping'.each {
+            if (it.'filter-name'.text().equalsIgnoreCase("shiroFilter")) {
+                shiroFilterIndex = i
+            }
+            i++
+        }
+
+        println "shiroFilterIndex=${shiroFilterIndex}"
+
+        def filter
+        if (shiroFilterIndex < 0) {
+            // shiro not installed
+            filter = xml.'filter-mapping'.find { it.'filter-name'.text() == "charEncodingFilter" }
+        } else {
+            filter = xml.'filter-mapping'[shiroFilterIndex - 1]
+        }
+
+        filter + {
+            'filter-mapping' {
+                'filter-name'('IgniteWebSessionsFilter')
+                'url-pattern'("/*")
+                dispatcher('REQUEST')
+                dispatcher('ERROR')
+            }
+        }
     }
 
     def doWithSpring = {

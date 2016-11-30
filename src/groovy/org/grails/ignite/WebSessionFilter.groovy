@@ -2,7 +2,7 @@ package org.grails.ignite
 
 import grails.util.Holders
 import groovy.util.logging.Log4j
-import org.codehaus.groovy.grails.web.util.WebUtils
+import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes
 import org.springframework.util.AntPathMatcher
 
 import javax.servlet.*
@@ -72,32 +72,35 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
         String path = httpReq.getServletPath();
         log.debug "doFilter ${path}"
 
-        try {
-            def flashScope = WebUtils.retrieveGrailsWebRequest().flashScope
-            log.trace "flashScope=${flashScope} (type=${flashScope?.class?.name})"
-            flashScope.keySet().each {
-                log.debug "flash.${it}=${flashScope.get(it)}"
-            }
-        } catch (java.lang.IllegalStateException e) {
-            log.debug e.message
-        }
-
-        // if Shiro sessions disabled, this will throw an error
-//        if (log.traceEnabled) {
-//            httpReq.session.attributeNames.each {
-//                log.trace "request attribute ${it}=${httpReq.session.getAttribute(it)}"
-//            }
-//        }
-
-        def application = Holders.grailsApplication
-        def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
-                && application.config.ignite.webSessionClusteringEnabled.equals(true))
+        def webSessionClusteringEnabled = (!(Holders.grailsApplication.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
+                && Holders.grailsApplication.config.ignite.webSessionClusteringEnabled.equals(true))
 
         log.trace "webSessionClusteringEnabled=${webSessionClusteringEnabled}"
 
         if (webSessionClusteringEnabled && !shouldExclude(path)) {
             log.debug "invoking Ignite WebSessionFilter"
             super.doFilter(req, res, chain)
+
+            if (log.traceEnabled) {
+                try {
+                    log.trace "request --> $req"
+                    def cm = req.cookies?.collectEntries { [(it.name): it.value] }
+                    log.trace "cookies --> $cm"
+                    log.trace "request parameterMap --> $req.parameterMap"
+                    log.trace "session --> ${req.getSession(false)}"
+                    req.getSession(false)?.attributeNames.each {
+                        log.trace "session attribute --> ${it}=${req.getSession(false)?.getAttribute(it)}"
+                    }
+                    def flashScope = req.getSession(false)?.getAttribute(GrailsApplicationAttributes.FLASH_SCOPE)
+                    log.trace "flashScope=${flashScope} (type=${flashScope?.class?.name})"
+                    flashScope?.keySet().each {
+                        log.trace "flash.${it}=${flashScope.get(it)}"
+                    }
+                } catch (java.lang.IllegalStateException e) {
+                    log.debug e.message
+                }
+            }
+
         } else {
             log.trace "chain.doFilter..."
             chain.doFilter(req, res)

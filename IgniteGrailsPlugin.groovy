@@ -83,13 +83,13 @@ A plugin for the Apache Ignite data grid framework.
             }
         }
 
-        def filterMappingNode = xml.'filter-mapping'
-        filterMappingNode[filterMappingNode.size() - 1] + {
-            'filter-mapping' {
-                'filter-name'('IgniteWebSessionsFilter')
-                'url-pattern'('/*')
-            }
-        }
+//        def filterMappingNode = xml.'filter-mapping'
+//        filterMappingNode[filterMappingNode.size() - 1] + {
+//            'filter-mapping' {
+//                'filter-name'('IgniteWebSessionsFilter')
+//                'url-pattern'('/*')
+//            }
+//        }
 
         contextParam[contextParam.size() - 1] + {
             'context-param' {

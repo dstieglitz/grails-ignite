@@ -72,11 +72,14 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
         String path = httpReq.getServletPath();
         log.debug "doFilter ${path}"
 
-        def flashScope = WebUtils.retrieveGrailsWebRequest().flashScope
-        log.trace "flashScope=${flashScope} (type=${flashScope?.class?.name})"
-
-        flashScope.keySet().each {
-            log.debug "flash.${it}=${flashScope.get(it)}"
+        try {
+            def flashScope = WebUtils.retrieveGrailsWebRequest().flashScope
+            log.trace "flashScope=${flashScope} (type=${flashScope?.class?.name})"
+            flashScope.keySet().each {
+                log.debug "flash.${it}=${flashScope.get(it)}"
+            }
+        } catch (java.lang.IllegalStateException e) {
+            log.warn e.message
         }
 
         // if Shiro sessions disabled, this will throw an error

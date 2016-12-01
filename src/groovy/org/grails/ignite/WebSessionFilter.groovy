@@ -81,20 +81,17 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
             log.debug "invoking Ignite WebSessionFilter"
             super.doFilter(req, res, chain)
 
-            if (log.traceEnabled) {
+            if (log.debugEnabled) {
                 try {
-                    log.trace "request --> $req"
-                    def cm = req.cookies?.collectEntries { [(it.name): it.value] }
-                    log.trace "cookies --> $cm"
-                    log.trace "request parameterMap --> $req.parameterMap"
-                    log.trace "session --> ${req.getSession(false)}"
+                    log.debug "request parameterMap --> $req.parameterMap"
+                    log.debug "session --> ${req.getSession(false)}"
                     req.getSession(false)?.attributeNames.each {
-                        log.trace "session attribute --> ${it}=${req.getSession(false)?.getAttribute(it)}"
+                        log.debug "session attribute --> ${it}=${req.getSession(false)?.getAttribute(it)}"
                     }
                     def flashScope = req.getSession(false)?.getAttribute(GrailsApplicationAttributes.FLASH_SCOPE)
-                    log.trace "flashScope=${flashScope} (type=${flashScope?.class?.name})"
+                    log.debug "flashScope=${flashScope} (type=${flashScope?.class?.name})"
                     flashScope?.keySet().each {
-                        log.trace "flash.${it}=${flashScope.get(it)}"
+                        log.debug "flash.${it}=${flashScope.get(it)}"
                     }
                 } catch (java.lang.IllegalStateException e) {
                     log.debug e.message

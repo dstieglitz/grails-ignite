@@ -1,3 +1,4 @@
+import org.codehaus.groovy.grails.web.servlet.DefaultGrailsApplicationAttributes
 import org.grails.ignite.IgniteContextBridge
 import org.grails.ignite.IgniteStartupHelper
 
@@ -107,8 +108,6 @@ A plugin for the Apache Ignite data grid framework.
             }
             i++
         }
-
-        println "shiroFilterIndex=${shiroFilterIndex}"
 
         def filter
         if (shiroFilterIndex < 0) {

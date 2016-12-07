@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 
@@ -207,7 +208,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         log.debug("schedule [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
         log.debug("schedule '" + scheduledRunnable + "'," + scheduledRunnable.getDelay() + "," + scheduledRunnable.getTimeUnit());
 
-        Future future = executor.submit((Runnable) scheduledRunnable);
+        Future future = executor.submit((Callable) scheduledRunnable);
 
         log.debug("submit returned " + future);
 

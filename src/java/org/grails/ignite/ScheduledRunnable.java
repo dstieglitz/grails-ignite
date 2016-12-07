@@ -132,8 +132,12 @@ public class ScheduledRunnable implements Callable, NamedRunnable, Serializable 
 
     @Override
     public Object call() throws Exception {
-        underlyingRunnable.run();
-        return null;
+        if (underlyingRunnable instanceof Callable) {
+            return ((Callable) underlyingRunnable).call();
+        } else {
+            underlyingRunnable.run();
+            return null;
+        }
     }
 
     public Map toDataMap() {

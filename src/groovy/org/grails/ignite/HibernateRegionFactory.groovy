@@ -15,7 +15,7 @@ import org.hibernate.cfg.Settings
  * Time: 3:30 PM
  * To change this template use File | Settings | File Templates.
  */
-public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFactory {
+public class HibernateRegionFactory implements RegionFactory {
 
     private static final Logger log = Logger.getLogger(HibernateRegionFactory.class.getName());
     private org.apache.ignite.cache.hibernate.HibernateRegionFactory underlyingRegionFactory;
@@ -139,37 +139,13 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
         }.size()
 
         if (configuredCaches == 0) {
-//            def springConfiguration = IgniteStartupHelper.getSpringConfiguredCache(entityName)
-//            if (springConfiguration != null) {
-//                log.info "found a manually-configured cache for ${entityName}, will configure from external configuration"
-//                IgniteStartupHelper.grid.addCacheConfiguration(springConfiguration);
-//            } else {
-            def grailsDomainClass = Holders.grailsApplication.getDomainClass(entityName);
-            log.debug "interrogating grails domain class ${entityName} for cache information"
-            log.debug "creating default cache for ${entityName}"
+//            def grailsDomainClass = Holders.grailsApplication.getDomainClass(entityName);
+//            log.debug "interrogating grails domain class ${entityName} for cache information"
+//            log.debug "creating default cache for ${entityName}"
 
             CacheConfiguration cc = IgniteCacheConfigurationFactory.getCacheConfiguration("ignite.l2Cache.entity", entityName)
 
-//            def binder = new GrailsDomainBinder()
-//            def mapping = binder.getMapping(grailsDomainClass);
-//            log.debug "found mapping ${mapping} for ${grailsDomainClass}"
-
-//            cc.setEvictSynchronized(valueOrDefault(ENTITY_CACHE_EVICT_SYNCHRONIZED, false));
-
-            // @see http://apacheignite.gridgain.org/docs/performance-tips
-//            cc.setBackups(0);
-//            cc.setOffHeapMaxMemory(0);
-//            LruEvictionPolicy evictionPolicy = new LruEvictionPolicy();
-//            evictionPolicy.setMaxSize(valueOrDefault(ENTITY_CACHE_MAX_SIZE, 1000000));
-//            cc.setEvictionPolicy(evictionPolicy);
-//            cc.setSwapEnabled(false);
-
-//            if (mapping?.cache?.usage?.equalsIgnoreCase("read-write")) {
-//
-//            }
-
             IgniteStartupHelper.grid.getOrCreateCache(cc);
-//            }
         }
     }
 
@@ -179,61 +155,14 @@ public class HibernateRegionFactory implements org.hibernate.cache.spi.RegionFac
         }.size()
 
         if (configuredCaches == 0) {
-//            def springConfiguration = IgniteStartupHelper.getSpringConfiguredCache(associationName);
-//            if (springConfiguration != null) {
-//                log.info "found a manually-configured cache for ${associationName}, will configure from external configuration"
-//                IgniteStartupHelper.grid.addCacheConfiguration(springConfiguration);
-//            } else {
             def grailsDomainClassName = associationName.substring(0, associationName.lastIndexOf('.'));
-//            def grailsDomainClass = Holders.grailsApplication.getDomainClass(grailsDomainClassName);
             log.debug "interrogating grails domain class ${grailsDomainClassName} for cache information"
             log.debug "creating default cache for ${associationName}"
 
             CacheConfiguration cc = IgniteCacheConfigurationFactory.getCacheConfiguration("ignite.l2Cache.association", associationName)
-//            def binder = new GrailsDomainBinder()
-//            def mapping = binder.getMapping(grailsDomainClass);
-//            log.debug "found mapping ${mapping} for ${grailsDomainClass}"
-
-//            def atomicityMode = valueOrDefault(ASSOCIATION_CACHE_ATOMICITY_MODE_KEY, CacheAtomicityMode.TRANSACTIONAL)
-//            log.debug "setting atomicity mode for ${associationName} cache to ${atomicityMode}"
-//            cc.setAtomicityMode(atomicityMode);
-//
-//            def memoryMode = valueOrDefault(ASSOCIATION_CACHE_MEMORY_MODE_KEY, CacheMemoryMode.OFFHEAP_TIERED)
-//            log.debug "setting memory mode for ${associationName} cache to ${memoryMode}"
-//            cc.setMemoryMode(memoryMode);
-//
-//            def syncMode = valueOrDefault(ASSOCIATION_CACHE_WRITE_SYNC_MODE_KEY, CacheWriteSynchronizationMode.FULL_SYNC)
-//            log.debug "setting sync mode for ${associationName} cache to ${syncMode}"
-//            cc.setWriteSynchronizationMode(syncMode);
-//
-//            cc.setEvictSynchronized(valueOrDefault(ASSOCIATION_CACHE_EVICT_SYNCHRONIZED, false));
-
-            // @see http://apacheignite.gridgain.org/docs/performance-tips
-//            cc.setBackups(0);
-//            cc.setOffHeapMaxMemory(0);
-//            LruEvictionPolicy evictionPolicy = new LruEvictionPolicy();
-//            evictionPolicy.setMaxSize(valueOrDefault(ASSOCIATION_CACHE_MAX_SIZE, 1000000));
-//            cc.setEvictionPolicy(evictionPolicy);
-//            cc.setSwapEnabled(false);
-
-//            if (mapping?.cache?.usage?.equalsIgnoreCase("read-write")) {
-//
-//            }
 
             IgniteStartupHelper.grid.getOrCreateCache(cc);
-//            }
         }
     }
 
-//    def valueOrDefault(configValue, defaultValue = null) {
-//        log.debug "valueOrDefault(${configValue}, ${defaultValue})"
-//        def value = Holders.flatConfig."${configValue}"
-//        log.debug "got value=${value}"
-//
-//        if (value instanceof ConfigObject || value == null) {
-//            return defaultValue
-//        }
-//
-//        return value
-//    }
 }

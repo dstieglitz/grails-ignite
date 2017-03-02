@@ -13,12 +13,14 @@ import java.util.concurrent.TimeUnit;
  * over can retrieve the current schedule from the grid and pick up the scheduling.
  */
 public class ScheduledRunnable implements Callable, NamedRunnable, Serializable {
+    public static long DEFAULT_TIMEOUT = 60000;
+
     private String name;
     private Runnable underlyingRunnable;
     private long initialDelay = -1;
     private long period = -1;
     private long delay = -1;
-    private long timeout = 60000;
+    private long timeout = DEFAULT_TIMEOUT;
     private TimeUnit timeUnit;
     private String cronString;
 
@@ -116,6 +118,10 @@ public class ScheduledRunnable implements Callable, NamedRunnable, Serializable 
     }
 
     public void setTimeout(long timeout) {
+//        if (timeout <= 0) {
+//            Thread.dumpStack();
+//            throw new IllegalArgumentException("Timeout (" + timeout + ") can't be less than or equal to zero.");
+//        }
         this.timeout = timeout;
     }
 

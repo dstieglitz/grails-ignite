@@ -171,7 +171,7 @@ class DistributedSchedulerService {
     }
 
     public ScheduledFuture scheduleWithCron(Runnable command, String cronExpression, long timeout, String name = null) throws Exception {
-        log.debug "scheduleWithCron ${command}, ${cronExpression}, ${name}"
+        log.debug "scheduleWithCron ${command}, ${cronExpression}, ${timeout}, ${name}"
 
         ScheduledRunnable scheduledRunnable;
         if (name != null) {
@@ -196,7 +196,7 @@ class DistributedSchedulerService {
     }
 
     public ScheduledFuture scheduleWithCron(Runnable command, String cronExpression, String name = null) throws Exception {
-        return scheduleWithCron(command, cronExpression, name)
+        return scheduleWithCron(command, cronExpression, ScheduledRunnable.DEFAULT_TIMEOUT, name)
     }
 
     public Map<IgniteUuid, ComputeTaskFuture> getFutures() {

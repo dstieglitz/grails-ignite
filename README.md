@@ -40,6 +40,11 @@ ignite {
      */
     webSessionClusteringEnabled=true
     
+    /*
+     * Configure timeouts for long-running jobs. If not specified, defaults to 60000
+     */
+    defaultJobTimeout = 60000
+    
     /**
      * Set of Ant paths to exclude from web session clustering logic
      */

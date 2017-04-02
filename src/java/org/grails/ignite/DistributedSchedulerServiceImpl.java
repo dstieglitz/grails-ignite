@@ -257,7 +257,16 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                 return true;
             }
             log.warn("tried to cancel, but no Future found for '" + name + "'");
-            boolean removed = schedule.remove(findScheduleDataByName(name));
+            ScheduledRunnable sr = findScheduleDataByName(name);
+            log.debug("found ScheduledRunnable "+sr+" in schedule");
+            log.trace("before remove schedule size is "+schedule.size());
+            boolean removed = true;
+            schedule.remove(sr); // can't rely on the return value
+            if (schedule.contains(sr)) {
+                log.warn("could not cancel: job not removed from schedule");
+                removed = false;
+            }
+            log.trace("after remove schedule size is "+schedule.size());
             log.debug("remove from schedule " + name + " returned " + removed);
             return removed;
         } else {
@@ -275,7 +284,17 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                     log.debug("job is not scheduled, returning...");
                     return true;
                 }
-                removed = schedule.remove(findScheduleDataByName(name));
+                ScheduledRunnable sr = findScheduleDataByName(name);
+                log.debug("found ScheduledRunnable "+sr+" in schedule");
+                log.trace("before remove schedule size is "+schedule.size());
+                schedule.remove(sr); // can't rely on the return value
+                if (schedule.contains(sr)) {
+                    log.warn("could not cancel: job not removed from schedule");
+                    removed = false;
+                } else {
+                    removed = true;
+                }
+                log.trace("after remove schedule size is "+schedule.size());
                 log.debug("remove from schedule " + name + " returned " + removed);
             }
 

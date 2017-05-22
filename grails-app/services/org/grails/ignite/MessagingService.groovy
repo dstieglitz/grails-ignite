@@ -119,7 +119,8 @@ class MessagingService implements InitializingBean {
         if (destination.topic) {
             IgniteMessaging rmtMsg = grid.message();
             def topicName = destination.topic
-            rmtMsg.remoteListen(topicName, new IgniteMessagingRemoteListener(receiver, destination));
+            rmtMsg.localListen(topicName, new IgniteMessagingRemoteListener(receiver, destination));
+//            rmtMsg.remoteListen(topicName, new IgniteMessagingRemoteListener(receiver, destination));
         }
     }
 }

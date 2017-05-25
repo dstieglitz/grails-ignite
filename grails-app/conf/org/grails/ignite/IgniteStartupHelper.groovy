@@ -173,7 +173,16 @@ class IgniteStartupHelper {
             if (!schedulerServiceDeployed) {
                 def poolSize = Holders.grailsApplication.config.ignite.config.executorThreadPoolSize
                 if (poolSize instanceof ConfigObject) poolSize = 10
-                grid.services().deployClusterSingleton(SCHEDULER_SERVICE_NAME, new DistributedSchedulerServiceImpl(poolSize));
+
+                //
+                // Allow server startup to continue if running a plugin script, e.g., dbm-generate-changelog
+                //
+                try {
+                    grid.services().deployClusterSingleton(SCHEDULER_SERVICE_NAME, new DistributedSchedulerServiceImpl(poolSize));
+                } catch (Throwable t) {
+                    log.error "DistributedSchedulerServiceImpl FAILED TO DEPLOY"
+                    log.error t.message, t
+                }
             }
 
         } catch (NoSuchBeanDefinitionException e) {

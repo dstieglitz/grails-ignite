@@ -42,9 +42,9 @@ A plugin for the Apache Ignite data grid framework.
 
     //def dependsOn = ['hibernate4': '* > 4.3.8.1']
 
-    def loadAfter = ['logging', 'shiro', 'springSecurityCore', 'cors']
-
-    def loadBefore = ['hibernate', 'hibernate4']
+//    def loadAfter = ['logging', 'shiro', 'springSecurityCore', 'cors']
+//
+//    def loadBefore = ['hibernate', 'hibernate4']
 
 //    def LOG = LoggerFactory.getLogger('grails.plugin.ignite.IgniteGrailsPlugin')
 

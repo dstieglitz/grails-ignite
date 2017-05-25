@@ -43,7 +43,7 @@ grails.project.dependency.resolution = {
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
         // runtime 'mysql:mysql-connector-java:5.1.27'
-        compile "com.h2database:h2:1.4.192"
+//        compile "com.h2database:h2:1.4.192"
         compile "org.apache.ignite:ignite-core:${igniteVer}"
         compile ("org.apache.ignite:ignite-spring:${igniteVer}") {
             excludes 'spring-core', 'spring-aop', 'spring-beans', 'spring-context', 'spring-expression', 'spring-tx'

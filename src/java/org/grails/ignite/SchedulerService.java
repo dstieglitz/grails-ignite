@@ -1,11 +1,8 @@
 package org.grails.ignite;
 
-import org.apache.ignite.IgniteException;
-
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Interface for a distributed scheduler service. The service can schedule objects of type NamedRunnable, which
@@ -26,6 +23,8 @@ public interface SchedulerService {
 
     public Future executeNow(ScheduledRunnable command);
 
+    public Future executeNowOnThisNode(ScheduledRunnable command);
+
     public void stopScheduler();
 
     public void startScheduler();
@@ -39,6 +38,7 @@ public interface SchedulerService {
     /**
      * Cancel the task with the specified ID. Returns true if the task was found and the cancel was successful,
      * false otherwise.
+     *
      * @param name
      * @param mayInterruptIfRunning
      * @return

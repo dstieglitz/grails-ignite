@@ -148,6 +148,21 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
         }
     }
 
+    public Future submitToThisNode(Callable scheduledRunnable) {
+        log.debug("submitting Runnable " + scheduledRunnable + " to ignite executor service on local node with timeout=" + timeout);
+        //        return ignite.executorService().submit(runnable);
+        try {
+            ScheduledRunnable sr = (ScheduledRunnable) scheduledRunnable;
+            List tasks = new ArrayList();
+            tasks.add(scheduledRunnable);
+            return (Future) ignite.executorService(ignite.cluster().forLocal()).invokeAll(tasks, sr.getTimeout(), TimeUnit.MILLISECONDS).get(0);
+        } catch (InterruptedException e) {
+            log.error(e.getMessage(), e);
+//            throw new RuntimeException(e);
+            return null;
+        }
+    }
+
     public void deschedule(String cronTaskId) {
         cronScheduler.deschedule(cronTaskId);
     }
@@ -155,4 +170,5 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
     public Scheduler getCronScheduler() {
         return cronScheduler;
     }
+
 }

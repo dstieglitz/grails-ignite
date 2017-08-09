@@ -215,6 +215,18 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
         return future;
     }
 
+    @Override
+    public Future executeNowOnThisNode(ScheduledRunnable scheduledRunnable) {
+        log.debug("schedule [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
+        log.debug("schedule '" + scheduledRunnable + "'," + scheduledRunnable.getDelay() + "," + scheduledRunnable.getTimeUnit());
+
+        Future future = executor.submitToThisNode((Callable) scheduledRunnable);
+
+        log.debug("submit returned " + future);
+
+        return future;
+    }
+
     /**
      * Query the state of the scheduled jobs to determine if a job with the supplied ID is scheduled.
      *

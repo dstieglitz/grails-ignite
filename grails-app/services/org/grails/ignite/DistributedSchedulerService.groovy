@@ -145,7 +145,7 @@ class DistributedSchedulerService {
         return schedule(command, delay, unit, getConfiguredTimeout(), name)
     }
 
-    public Future executeNow(Runnable command, long timeout, String name = null) throws Exception {
+    public Future executeNow(Runnable command, long timeout, boolean onThisNode, String name = null) throws Exception {
         log.debug "schedule ${command}"
 
         ScheduledRunnable scheduledRunnable;
@@ -161,13 +161,23 @@ class DistributedSchedulerService {
         if (timeout == null) timeout = getConfiguredTimeout()
         scheduledRunnable.setTimeout(timeout)
 
-        def future = getServiceProxy().executeNow(scheduledRunnable)
-        log.debug "getServiceProxy().schedule returned future ${future}"
-        return future
+        if (onThisNode) {
+            def future = getServiceProxy().executeNowOnThisNode(scheduledRunnable)
+            log.debug "getServiceProxy().schedule returned future ${future}"
+            return future
+        } else {
+            def future = getServiceProxy().executeNow(scheduledRunnable)
+            log.debug "getServiceProxy().schedule returned future ${future}"
+            return future
+        }
     }
 
     public Future executeNow(Runnable command, String name = null) throws Exception {
-        return executeNow(command, getConfiguredTimeout(), name)
+        return executeNow(command, getConfiguredTimeout(), false, name)
+    }
+
+    public Future executeNowOnThisNode(Runnable command, String name = null) throws Exception {
+        return executeNow(command, getConfiguredTimeout(), true, name)
     }
 
     public ScheduledFuture scheduleWithCron(Runnable command, String cronExpression, long timeout, String name = null) throws Exception {

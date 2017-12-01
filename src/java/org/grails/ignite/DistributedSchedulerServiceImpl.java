@@ -134,7 +134,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                 + scheduledRunnable.getDelay() + ","
                 + scheduledRunnable.getTimeUnit());
 
-        ScheduledFuture future = executor.scheduleWithFixedDelay(scheduledRunnable.getUnderlyingRunnable(),
+        ScheduledFuture future = executor.scheduleWithFixedDelay(scheduledRunnable,
                 scheduledRunnable.getInitialDelay(),
                 scheduledRunnable.getDelay(),
                 scheduledRunnable.getTimeUnit());

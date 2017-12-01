@@ -3,6 +3,8 @@ package org.grails.ignite;
 import org.apache.ignite.lang.IgniteRunnable;
 import org.apache.log4j.Logger;
 
+import java.util.concurrent.Future;
+
 /**
  * Created by dstieglitz on 3/30/16.
  */
@@ -31,7 +33,8 @@ public class IgniteDistributedRunnable implements IgniteRunnable {
 //            try {
         if (executor.isRunning()) {
             log.trace("run " + underlyingRunnable);
-            executor.submit(underlyingRunnable);
+            Future f = executor.submit(underlyingRunnable);
+            log.debug("got future " + f);
         } else {
             log.debug("scheduler is disabled, will not run " + underlyingRunnable);
         }

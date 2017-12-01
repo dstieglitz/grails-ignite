@@ -36,12 +36,16 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
     @Override
     public ScheduledFuture scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
         log.debug("scheduleAtFixedRate " + command + "," + initialDelay + "," + period + "," + unit);
+//        if (!(command instanceof ScheduledRunnable))
+//            throw new IllegalArgumentException("Runnable must be of type ScheduledRunnable for this executor");
         return super.scheduleAtFixedRate(new IgniteDistributedRunnable(this, command), initialDelay, period, unit);
     }
 
     @Override
     public ScheduledFuture scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
         log.debug("scheduleWithFixedDelay " + command + "," + initialDelay + "," + delay + "," + unit);
+//        if (!(command instanceof ScheduledRunnable))
+//            throw new IllegalArgumentException("Runnable must be of type ScheduledRunnable for this executor");
         return super.scheduleWithFixedDelay(new IgniteDistributedRunnable(this, command), initialDelay, delay, unit);
     }
 
@@ -74,11 +78,6 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
             ((IgniteCronDistributedRunnableScheduledFuture) runnable).cancel(mayInterruptIfRunning);
             cancelled = true;
         } else {
-            // these are ScheduledFutureTasks
-//            for (Runnable r : getQueue()) {
-//                log.debug("found queued runnable: " + r);
-//            }
-
             log.debug("super.remove " + runnable);
             cancelled = super.remove(runnable);
         }
@@ -103,7 +102,6 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
     @Override
     public Future submit(Runnable runnable) {
         log.debug("submitting Runnable " + runnable + " to ignite executor service with timeout=" + timeout);
-        //        return ignite.executorService().submit(runnable);
         try {
             ScheduledRunnable sr = (ScheduledRunnable) runnable;
             List tasks = new ArrayList();
@@ -111,7 +109,9 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
             return (Future) ignite.executorService().invokeAll(tasks, sr.getTimeout(), TimeUnit.MILLISECONDS).get(0);
         } catch (InterruptedException e) {
             log.error(e.getMessage(), e);
-//            throw new RuntimeException(e);
+            return null;
+        } catch (Throwable t) {
+            log.error(t.getMessage(), t);
             return null;
         }
     }
@@ -119,7 +119,6 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
     @Override
     public <T> Future<T> submit(Runnable task, T result) {
         log.debug("submitting " + task + "," + result + " to ignite executor service");
-//        return ignite.executorService().submit(task, result);
         try {
             ScheduledRunnable sr = (ScheduledRunnable) task;
             List tasks = new ArrayList();
@@ -127,7 +126,9 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
             return (Future<T>) ignite.executorService().invokeAll(tasks, sr.getTimeout(), TimeUnit.MILLISECONDS).get(0);
         } catch (InterruptedException e) {
             log.error(e.getMessage(), e);
-//            throw new RuntimeException(e);
+            return null;
+        } catch (Throwable t) {
+            log.error(t.getMessage(), t);
             return null;
         }
     }
@@ -135,22 +136,22 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
     @Override
     public <T> Future<T> submit(Callable<T> task) {
         log.debug("submitting Callable<T> " + task + " to ignite executor service with timeout=" + timeout);
-//        return ignite.executorService().submit(task);
         try {
             ScheduledRunnable sr = (ScheduledRunnable) task;
             List<Callable<T>> tasks = new ArrayList<Callable<T>>();
             tasks.add(task);
             return (Future<T>) ignite.executorService().invokeAll(tasks, sr.getTimeout(), TimeUnit.MILLISECONDS).get(0);
         } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
             log.error(e.getMessage(), e);
+            return null;
+        } catch (Throwable t) {
+            log.error(t.getMessage(), t);
             return null;
         }
     }
 
     public Future submitToThisNode(Callable scheduledRunnable) {
         log.debug("submitting Runnable " + scheduledRunnable + " to ignite executor service on local node with timeout=" + timeout);
-        //        return ignite.executorService().submit(runnable);
         try {
             ScheduledRunnable sr = (ScheduledRunnable) scheduledRunnable;
             List tasks = new ArrayList();
@@ -158,7 +159,9 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
             return (Future) ignite.executorService(ignite.cluster().forLocal()).invokeAll(tasks, sr.getTimeout(), TimeUnit.MILLISECONDS).get(0);
         } catch (InterruptedException e) {
             log.error(e.getMessage(), e);
-//            throw new RuntimeException(e);
+            return null;
+        } catch (Throwable t) {
+            log.error(t.getMessage(), t);
             return null;
         }
     }

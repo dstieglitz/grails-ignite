@@ -50,8 +50,12 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     public DistributedSchedulerServiceImpl() {
         // default constructor
     }
+
     public void setTaskDecorator(TaskDecorator taskDecorator) {
         this.taskDecorator = taskDecorator;
+        if (executor != null) {
+            executor.setTaskDecorator(taskDecorator);
+        }
     }
 
     public DistributedSchedulerServiceImpl(int poolSize) {
@@ -277,15 +281,15 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
             }
             log.warn("tried to cancel, but no Future found for '" + name + "'");
             ScheduledRunnable sr = findScheduleDataByName(name);
-            log.debug("found ScheduledRunnable "+sr+" in schedule");
-            log.trace("before remove schedule size is "+schedule.size());
+            log.debug("found ScheduledRunnable " + sr + " in schedule");
+            log.trace("before remove schedule size is " + schedule.size());
             boolean removed = true;
             schedule.remove(sr); // can't rely on the return value
             if (schedule.contains(sr)) {
                 log.warn("could not cancel: job not removed from schedule");
                 removed = false;
             }
-            log.trace("after remove schedule size is "+schedule.size());
+            log.trace("after remove schedule size is " + schedule.size());
             log.debug("remove from schedule " + name + " returned " + removed);
             return removed;
         } else {
@@ -304,8 +308,8 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                     return true;
                 }
                 ScheduledRunnable sr = findScheduleDataByName(name);
-                log.debug("found ScheduledRunnable "+sr+" in schedule");
-                log.trace("before remove schedule size is "+schedule.size());
+                log.debug("found ScheduledRunnable " + sr + " in schedule");
+                log.trace("before remove schedule size is " + schedule.size());
                 schedule.remove(sr); // can't rely on the return value
                 if (schedule.contains(sr)) {
                     log.warn("could not cancel: job not removed from schedule");
@@ -313,7 +317,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                 } else {
                     removed = true;
                 }
-                log.trace("after remove schedule size is "+schedule.size());
+                log.trace("after remove schedule size is " + schedule.size());
                 log.debug("remove from schedule " + name + " returned " + removed);
             }
 

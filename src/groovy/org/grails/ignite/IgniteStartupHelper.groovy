@@ -159,7 +159,7 @@ class IgniteStartupHelper {
 
             grid.configuration().setCacheConfiguration(cacheConfigurationBeans.toArray() as CacheConfiguration[])
 
-            log.info "Starting Ignite grid..."
+            log.info "[grails-ignite 1.1] Starting Ignite grid..."
             grid.start()
 
             // don't re-deploy the scheduler service
@@ -178,7 +178,10 @@ class IgniteStartupHelper {
                 // Allow server startup to continue if running a plugin script, e.g., dbm-generate-changelog
                 //
                 try {
-                    grid.services().deployClusterSingleton(SCHEDULER_SERVICE_NAME, new DistributedSchedulerServiceImpl(poolSize));
+                    DistributedSchedulerServiceImpl distributedSchedulerServiceImpl = igniteApplicationContext.getBean("distributedSchedulerServiceImpl")
+                    distributedSchedulerServiceImpl.setPoolSize(poolSize)
+                    grid.services().deployClusterSingleton(SCHEDULER_SERVICE_NAME, distributedSchedulerServiceImpl);
+                    log.info "DistributedSchedulerServiceImpl deployed with bean $distributedSchedulerServiceImpl and poolSize=$poolSize"
                 } catch (Throwable t) {
                     log.error "DistributedSchedulerServiceImpl FAILED TO DEPLOY"
                     log.error t.message, t

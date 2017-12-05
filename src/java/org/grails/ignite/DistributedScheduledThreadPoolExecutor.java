@@ -25,12 +25,39 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
     private boolean running = true;
     private Scheduler cronScheduler;
     private long timeout = 60000;
+    private TaskDecorator taskDecorator;
 
     public DistributedScheduledThreadPoolExecutor(Ignite ignite, int corePoolSize) {
         super(corePoolSize);
         this.ignite = ignite;
         this.cronScheduler = new Scheduler();
         this.cronScheduler.start();
+    }
+
+    public void setTaskDecorator(TaskDecorator taskDecorator) {
+        this.taskDecorator = taskDecorator;
+    }
+
+    /**
+     * Modifies or replaces the task used to execute a runnable.
+     * This method can be used to override the concrete
+     * class used for managing internal tasks.
+     * The default implementation simply returns the given task.
+     *
+     * @param runnable the submitted Runnable
+     * @param task     the task created to execute the runnable
+     * @return a task that can execute the runnable
+     * @since 1.6
+     */
+    @Override
+    protected <V> RunnableScheduledFuture<V> decorateTask(
+            Runnable runnable, RunnableScheduledFuture<V> task) {
+        RunnableScheduledFuture<V> r_task;
+        if (taskDecorator != null) {
+            return taskDecorator.decorateTask(runnable, task);
+        }
+
+        return task;
     }
 
     @Override

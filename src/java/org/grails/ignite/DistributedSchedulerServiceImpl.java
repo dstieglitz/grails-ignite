@@ -45,9 +45,13 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     private Map<String, ScheduledFuture<?>> nameFutureMap = new HashMap<String, ScheduledFuture<?>>();
     private long timeout = 60000;
     private int poolSize = 10;
+    private TaskDecorator taskDecorator;
 
     public DistributedSchedulerServiceImpl() {
         // default constructor
+    }
+    public void setTaskDecorator(TaskDecorator taskDecorator) {
+        this.taskDecorator = taskDecorator;
     }
 
     public DistributedSchedulerServiceImpl(int poolSize) {
@@ -67,6 +71,7 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
     public void init(ServiceContext serviceContext) throws Exception {
         log.debug("init [thread=\"" + Thread.currentThread().getName() + "\", hash=\"" + System.identityHashCode(this) + "\"]");
         this.executor = new DistributedScheduledThreadPoolExecutor(this.ignite, this.poolSize);
+        this.executor.setTaskDecorator(taskDecorator);
         schedule = initializeSet(ignite);
 
         log.info("scheduling cron jobs...");
@@ -86,6 +91,8 @@ public class DistributedSchedulerServiceImpl implements Service, SchedulerServic
                 }
             }
         }
+
+        // FIXME set TaskDecorator?
 
         log.info("service " + this + " initialized");
     }

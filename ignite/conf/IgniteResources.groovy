@@ -1,5 +1,6 @@
 import org.apache.ignite.configuration.IgniteConfiguration
 import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
+import org.grails.ignite.DistributedSchedulerServiceImpl
 import org.grails.ignite.IgniteGrailsLogger
 import org.grails.ignite.IgniteStartupHelper
 
@@ -103,20 +104,11 @@ beans {
                     }
                 }
             }
-
-//                deploymentSpi = { LowcalDeploymentSpi impl ->
-//
-//                }
-
-//                serviceConfiguration = [{ ServiceConfiguration serviceConfiguration ->
-//                    name = "distributedSchedulerService"
-//                    maxPerNodeCount = 1
-//                    totalCount = 1
-//                    service = { DistributedSchedulerServiceImpl impl -> }
-//                }]
-
+            
             gridLogger = ref('gridLogger')
         }
+
+        distributedSchedulerServiceImpl(DistributedSchedulerServiceImpl)
 
         grid(org.grails.ignite.DeferredStartIgniteSpringBean) { bean ->
             bean.lazyInit = true

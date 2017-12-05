@@ -1,6 +1,7 @@
 import org.codehaus.groovy.grails.web.servlet.DefaultGrailsApplicationAttributes
 import org.grails.ignite.IgniteContextBridge
 import org.grails.ignite.IgniteStartupHelper
+import org.grails.ignite.TaskDecorator
 
 class IgniteGrailsPlugin {
     // the plugin version

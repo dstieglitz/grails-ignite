@@ -96,7 +96,6 @@ class DistributedSchedulerService {
     }
 
     /**
-     * @deprecated use executeNow instead
      * @param command
      * @param delay
      * @param unit
@@ -132,7 +131,6 @@ class DistributedSchedulerService {
     }
 
     /**
-     * @deprecated use executeNow instead
      * @param command
      * @param delay
      * @param unit
@@ -145,6 +143,15 @@ class DistributedSchedulerService {
         return schedule(command, delay, unit, getConfiguredTimeout(), name)
     }
 
+    /**
+     * FIXME This method is SYNCHRONOUS despite returning a Future
+     * @param command
+     * @param timeout
+     * @param onThisNode
+     * @param name
+     * @return
+     * @throws Exception
+     */
     public Future executeNow(Runnable command, long timeout, boolean onThisNode, String name = null) throws Exception {
         log.debug "schedule ${command}"
 
@@ -172,10 +179,24 @@ class DistributedSchedulerService {
         }
     }
 
+    /**
+     * FIXME This method is SYNCHRONOUS despite returning a Future
+     * @param command
+     * @param name
+     * @return
+     * @throws Exception
+     */
     public Future executeNow(Runnable command, String name = null) throws Exception {
         return executeNow(command, getConfiguredTimeout(), false, name)
     }
 
+    /**
+     * FIXME This method is SYNCHRONOUS despite returning a Future
+     * @param command
+     * @param name
+     * @return
+     * @throws Exception
+     */
     public Future executeNowOnThisNode(Runnable command, String name = null) throws Exception {
         return executeNow(command, getConfiguredTimeout(), true, name)
     }

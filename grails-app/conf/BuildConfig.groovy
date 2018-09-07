@@ -18,7 +18,7 @@ grails.project.fork = [
     console: [maxMemory: 768, minMemory: 64, debug: false, maxPerm: 256]
 ]
 
-def igniteVer = '1.7.0'
+def igniteVer = '1.9.0'
 def igniteHibernateVer = '1.2.0-incubating'
 
 grails.project.dependency.resolver = "maven" // or ivy
@@ -46,7 +46,7 @@ grails.project.dependency.resolution = {
 //        compile "com.h2database:h2:1.4.192"
         compile "org.apache.ignite:ignite-core:${igniteVer}"
         compile ("org.apache.ignite:ignite-spring:${igniteVer}") {
-            excludes 'spring-core', 'spring-aop', 'spring-beans', 'spring-context', 'spring-expression', 'spring-tx'
+//            excludes 'spring-core', 'spring-aop', 'spring-beans', 'spring-context', 'spring-expression', 'spring-tx'
         }
         compile "org.apache.ignite:ignite-indexing:${igniteVer}"
         compile("org.apache.ignite:ignite-hibernate:${igniteHibernateVer}") {

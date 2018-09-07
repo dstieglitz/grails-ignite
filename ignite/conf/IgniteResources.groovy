@@ -19,6 +19,11 @@ beans {
         configuredNetworkTimeout = application.config.ignite.discoverySpi.networkTimeout
     }
 
+    def configuredAckTimeout = 10000
+    if (!(application.config.ignite.discoverySpi.ackTimeout instanceof ConfigObject)) {
+        configuredAckTimeout = application.config.ignite.discoverySpi.ackTimeout
+    }
+
     def configuredAddresses = []
     if (!(application.config.ignite.discoverySpi.addresses instanceof ConfigObject)) {
         configuredAddresses = application.config.ignite.discoverySpi.addresses
@@ -104,7 +109,7 @@ beans {
                     }
                 }
             }
-            
+
             gridLogger = ref('gridLogger')
         }
 

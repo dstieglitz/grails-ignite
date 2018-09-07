@@ -36,6 +36,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 import javax.annotation.Nullable;
+import javax.cache.CacheException;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -361,6 +362,13 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
         return g.createCache(cacheCfg);
     }
 
+    @Override
+    public Collection<IgniteCache> createCaches(Collection<CacheConfiguration> collection) throws CacheException {
+        checkIgnite();
+
+        return g.createCaches(collection);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -422,6 +430,13 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
         return g.getOrCreateCache(cacheName);
     }
 
+    @Override
+    public Collection<IgniteCache> getOrCreateCaches(Collection<CacheConfiguration> collection) throws CacheException {
+        checkIgnite();
+
+        return g.getOrCreateCaches(collection);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -450,6 +465,13 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
         checkIgnite();
 
         g.destroyCache(cacheName);
+    }
+
+    @Override
+    public void destroyCaches(Collection<String> collection) throws CacheException {
+        checkIgnite();
+
+        destroyCaches(collection);
     }
 
     /**

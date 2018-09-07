@@ -12,6 +12,7 @@ import org.apache.ignite.plugin.IgnitePlugin;
 import org.apache.ignite.plugin.PluginNotFoundException;
 import org.jetbrains.annotations.Nullable;
 
+import javax.cache.CacheException;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
@@ -120,6 +121,11 @@ public class IgniteContextBridge implements Ignite {
     }
 
     @Override
+    public Collection<IgniteCache> createCaches(Collection<CacheConfiguration> collection) throws CacheException {
+        return getOrCreateIgnite().createCaches(collection);
+    }
+
+    @Override
     public <K, V> IgniteCache<K, V> createCache(String s) {
         return getOrCreateIgnite().createCache(s);
     }
@@ -132,6 +138,11 @@ public class IgniteContextBridge implements Ignite {
     @Override
     public <K, V> IgniteCache<K, V> getOrCreateCache(String s) {
         return getOrCreateIgnite().getOrCreateCache(s);
+    }
+
+    @Override
+    public Collection<IgniteCache> getOrCreateCaches(Collection<CacheConfiguration> collection) throws CacheException {
+        return getOrCreateIgnite().getOrCreateCaches(collection);
     }
 
     @Override
@@ -162,6 +173,11 @@ public class IgniteContextBridge implements Ignite {
     @Override
     public void destroyCache(String s) {
         getOrCreateIgnite().destroyCache(s);
+    }
+
+    @Override
+    public void destroyCaches(Collection<String> collection) throws CacheException {
+        getOrCreateIgnite().destroyCaches(collection);
     }
 
     @Override

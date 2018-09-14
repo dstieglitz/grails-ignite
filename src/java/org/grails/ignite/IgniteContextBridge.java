@@ -274,4 +274,24 @@ public class IgniteContextBridge implements Ignite {
     public <K> Affinity<K> affinity(String s) {
         return getOrCreateIgnite().affinity(s);
     }
+
+    @Override
+    public boolean active() {
+        return getOrCreateIgnite().active();
+    }
+
+    @Override
+    public void active(boolean b) {
+        getOrCreateIgnite().active(b);
+    }
+
+    @Override
+    public void resetLostPartitions(Collection<String> collection) {
+        getOrCreateIgnite().resetLostPartitions(collection);
+    }
+
+    @Override
+    public Collection<MemoryMetrics> memoryMetrics() {
+        return getOrCreateIgnite().memoryMetrics();
+    }
 }

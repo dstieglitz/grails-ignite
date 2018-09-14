@@ -667,6 +667,26 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
         return g.affinity(cacheName);
     }
 
+    @Override
+    public boolean active() {
+        return g.active();
+    }
+
+    @Override
+    public void active(boolean b) {
+        g.active(b);
+    }
+
+    @Override
+    public void resetLostPartitions(Collection<String> collection) {
+        g.resetLostPartitions(collection);
+    }
+
+    @Override
+    public Collection<MemoryMetrics> memoryMetrics() {
+        return g.memoryMetrics();
+    }
+
     /**
      * {@inheritDoc}
      */

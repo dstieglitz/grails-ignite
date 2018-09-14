@@ -3,7 +3,6 @@ package org.grails.ignite
 import grails.util.Holders
 import groovy.util.logging.Log4j
 import org.apache.ignite.cache.CacheAtomicityMode
-import org.apache.ignite.cache.CacheMemoryMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.cache.CacheWriteSynchronizationMode
 import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
@@ -11,6 +10,11 @@ import org.apache.ignite.configuration.CacheConfiguration
 
 /**
  * Created by dstieglitz on 2/21/16.
+ *
+ * Adjusted for Ignite 2.0 where many properties have been removed/changed.
+ * @see https://cwiki.apache.org/confluence/display/IGNITE/Apache+Ignite+2.0+Migration+Guide#ApacheIgnite2.0MigrationGuide-IgniteConfiguration
+ *
+ *
  */
 @Log4j
 class IgniteCacheConfigurationFactory {
@@ -29,11 +33,11 @@ class IgniteCacheConfigurationFactory {
         }
         log.debug "cacheMode=${cacheMode}"
 
-        def memoryMode = getConfigValueOrNull("${prefix}.memoryMode", flatConfig.get("${prefix}.memoryMode".toString()))
-        if (memoryMode == null) {
-            memoryMode = getDefaultCacheConfiguration(name).memoryMode
-        }
-        log.debug "memoryMode=${memoryMode}"
+//        def memoryMode = getConfigValueOrNull("${prefix}.memoryMode", flatConfig.get("${prefix}.memoryMode".toString()))
+//        if (memoryMode == null) {
+//            memoryMode = getDefaultCacheConfiguration(name).memoryMode
+//        }
+//        log.debug "memoryMode=${memoryMode}"
 
         def atomicityMode = getConfigValueOrNull("${prefix}.atomicityMode", flatConfig.get("${prefix}.atomicityMode".toString()))
         if (atomicityMode == null) {
@@ -47,11 +51,11 @@ class IgniteCacheConfigurationFactory {
         }
         log.debug "writeSynchronizationMode=${writeSynchronizationMode}"
 
-        def offHeapMaxMemory = getConfigValueOrZero("${prefix}.offHeapMaxMemory", flatConfig.get("${prefix}.offHeapMaxMemory".toString()))
-        if (offHeapMaxMemory == null) {
-            offHeapMaxMemory = getDefaultCacheConfiguration(name).offHeapMaxMemory
-        }
-        log.debug "offHeapMaxMemory=${offHeapMaxMemory}"
+//        def offHeapMaxMemory = getConfigValueOrZero("${prefix}.offHeapMaxMemory", flatConfig.get("${prefix}.offHeapMaxMemory".toString()))
+//        if (offHeapMaxMemory == null) {
+//            offHeapMaxMemory = getDefaultCacheConfiguration(name).offHeapMaxMemory
+//        }
+//        log.debug "offHeapMaxMemory=${offHeapMaxMemory}"
 
         def maxElements = getConfigValueOrNull("${prefix}.maxElements", flatConfig.get("${prefix}.maxElements".toString()))
         if (maxElements == null) {
@@ -59,16 +63,16 @@ class IgniteCacheConfigurationFactory {
         }
         log.debug "maxElements=${maxElements}"
 
-        def swapEnabled = getConfigValueOrNull("${prefix}.swapEnabled", flatConfig.get("${prefix}.swapEnabled".toString()))
-        if (swapEnabled == null) {
-            swapEnabled = getDefaultCacheConfiguration(name).swapEnabled
-        }
-        log.debug "swapEnabled=${swapEnabled}"
+//        def swapEnabled = getConfigValueOrNull("${prefix}.swapEnabled", flatConfig.get("${prefix}.swapEnabled".toString()))
+//        if (swapEnabled == null) {
+//            swapEnabled = getDefaultCacheConfiguration(name).swapEnabled
+//        }
+//        log.debug "swapEnabled=${swapEnabled}"
 
         def evictionPolicy = getConfigValueOrNull("${prefix}.evictionPolicy", flatConfig.get("${prefix}.evictionPolicy".toString()))
-        if (evictionPolicy == null) {
-            evictionPolicy = 'lru'
-        }
+//        if (evictionPolicy == null) {
+//            evictionPolicy = 'lru'
+//        }
         log.debug "evictionPolicy=${evictionPolicy}"
 
         def statisticsEnabled = getConfigValueOrNull("${prefix}.statisticsEnabled", flatConfig.get("${prefix}.statisticsEnabled".toString()))
@@ -95,29 +99,29 @@ class IgniteCacheConfigurationFactory {
         }
         log.debug "copyOnReadEnabled=${copyOnReadEnabled}"
 
-        def evictSynchronizedEnabled = getConfigValueOrNull("${prefix}.evictSynchronized", flatConfig.get("${prefix}.evictSynchronized".toString()))
-        if (evictSynchronizedEnabled == null) {
-            evictSynchronizedEnabled = getDefaultCacheConfiguration(name).evictSynchronized
-        }
-        log.debug "evictSynchronizedEnabled=${evictSynchronizedEnabled}"
+//        def evictSynchronizedEnabled = getConfigValueOrNull("${prefix}.evictSynchronized", flatConfig.get("${prefix}.evictSynchronized".toString()))
+//        if (evictSynchronizedEnabled == null) {
+//            evictSynchronizedEnabled = getDefaultCacheConfiguration(name).evictSynchronized
+//        }
+//        log.debug "evictSynchronizedEnabled=${evictSynchronizedEnabled}"
 
-        if (evictionPolicy != 'lru') {
+        if (evictionPolicy && evictionPolicy != 'lru') {
             throw new IllegalArgumentException("Eviction policy ${evictionPolicy} not supported")
         }
 
         return getCacheConfigurationLru(name,
                 cacheMode,
-                memoryMode,
+//                memoryMode,
                 atomicityMode,
                 writeSynchronizationMode,
-                (long) offHeapMaxMemory,
+//                (long) offHeapMaxMemory,
                 maxElements,
                 backups,
-                swapEnabled,
+//                swapEnabled,
                 statisticsEnabled,
                 managementEnabled,
-                copyOnReadEnabled,
-                evictSynchronizedEnabled)
+                copyOnReadEnabled)
+//                evictSynchronizedEnabled)
 
         // TODO get this from configuration
         //return getDefaultCacheConfiguration(name)
@@ -131,17 +135,17 @@ class IgniteCacheConfigurationFactory {
     static CacheConfiguration getDefaultCacheConfiguration(String name) {
         def config = new CacheConfiguration(name)
         config.setCacheMode(CacheMode.PARTITIONED)
-        config.setMemoryMode(CacheMemoryMode.ONHEAP_TIERED)
+//        config.setMemoryMode(CacheMemoryMode.ONHEAP_TIERED)
         config.setWriteSynchronizationMode(CacheWriteSynchronizationMode.FULL_ASYNC)
         config.setAtomicityMode(CacheAtomicityMode.ATOMIC)
-        config.setOffHeapMaxMemory(0)
-        config.setEvictionPolicy(new LruEvictionPolicy(10000))
+//        config.setOffHeapMaxMemory(0)
+//        config.setEvictionPolicy(new LruEvictionPolicy(10000))
         config.setBackups(0)
-        config.setSwapEnabled(false)
+//        config.setSwapEnabled(false)
         config.setStatisticsEnabled(false)
         config.setManagementEnabled(false)
         config.setCopyOnRead(false)
-        config.setEvictSynchronized(true)
+//        config.setEvictSynchronized(true)
 
         return config
     }
@@ -153,30 +157,30 @@ class IgniteCacheConfigurationFactory {
      */
     static CacheConfiguration getCacheConfigurationLru(String name,
                                                        CacheMode cacheMode,
-                                                       CacheMemoryMode cacheMemoryMode,
+//                                                       CacheMemoryMode cacheMemoryMode,
                                                        CacheAtomicityMode cacheAtomicityMode,
                                                        CacheWriteSynchronizationMode synchronizationMode,
-                                                       long offHeapMaxMemory,
+//                                                       long offHeapMaxMemory,
                                                        int maxElements,
                                                        int backups,
-                                                       boolean swapEnabled,
+//                                                       boolean swapEnabled,
                                                        boolean statisticsEnabled,
                                                        boolean managementEnabled,
-                                                       boolean copyOnRead,
-                                                       boolean evictSynchronized) {
+                                                       boolean copyOnRead) {
+//                                                       boolean evictSynchronized) {
         def config = new CacheConfiguration(name);
         config.setCacheMode(cacheMode)
-        config.setMemoryMode(cacheMemoryMode)
+//        config.setMemoryMode(cacheMemoryMode)
         config.setWriteSynchronizationMode(synchronizationMode)
         config.setAtomicityMode(cacheAtomicityMode)
-        config.setOffHeapMaxMemory(offHeapMaxMemory);
-        config.setEvictionPolicy(new LruEvictionPolicy(maxElements));
-        config.setSwapEnabled(swapEnabled)
+//        config.setOffHeapMaxMemory(offHeapMaxMemory);
+//        config.setEvictionPolicy(new LruEvictionPolicy(maxElements));
+//        config.setSwapEnabled(swapEnabled)
         config.setStatisticsEnabled(statisticsEnabled)
         config.setManagementEnabled(managementEnabled)
         config.setBackups(backups)
         config.setCopyOnRead(copyOnRead)
-        config.setEvictSynchronized(evictSynchronized)
+//        config.setEvictSynchronized(evictSynchronized)
 
         return config
     }

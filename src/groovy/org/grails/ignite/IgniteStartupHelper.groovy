@@ -2,6 +2,7 @@ package org.grails.ignite
 
 import grails.spring.BeanBuilder
 import grails.util.Holders
+import groovy.transform.Synchronized
 import groovy.util.logging.Log4j
 import org.apache.ignite.Ignite
 import org.apache.ignite.IgniteCheckedException
@@ -28,6 +29,7 @@ class IgniteStartupHelper {
     private static ApplicationContext igniteApplicationContext
     public static Ignite grid
     private static BeanBuilder igniteBeans = new BeanBuilder()
+    private static boolean initialized = false
 
     public static BeanBuilder getBeans(String resourcePattern, BeanBuilder bb = null) {
         if (bb == null) {
@@ -60,10 +62,12 @@ class IgniteStartupHelper {
         return bb
     }
 
+    @Synchronized
     public static boolean startIgnite() {
         // look for a IgniteResources.groovy file on the classpath
         // load it into an igniteApplicationContext and start ignite
         // merge the application context
+        if (initialized) return true
 
         def igniteEnabled = (!(Holders.grailsApplication.config.ignite.enabled instanceof ConfigObject)
                 && Holders.grailsApplication.config.ignite.enabled.equals(true))
@@ -105,7 +109,9 @@ class IgniteStartupHelper {
         }
     }
 
+    @Synchronized
     public static boolean startIgniteFromSpring() {
+        if (initialized) return true
         def application = Holders.grailsApplication
         def ctx = igniteApplicationContext
 
@@ -159,7 +165,7 @@ class IgniteStartupHelper {
 
             grid.configuration().setCacheConfiguration(cacheConfigurationBeans.toArray() as CacheConfiguration[])
 
-            log.info "[grails-ignite 1.1] Starting Ignite grid..."
+            log.info "[grails-ignite] Starting Ignite grid..."
             grid.start()
 
             // don't re-deploy the scheduler service
@@ -173,7 +179,7 @@ class IgniteStartupHelper {
             if (!schedulerServiceDeployed) {
                 def poolSize = Holders.grailsApplication.config.ignite.config.executorThreadPoolSize
                 if (poolSize instanceof ConfigObject) poolSize = 10
-                
+
                 DistributedSchedulerServiceImpl distributedSchedulerServiceImpl = null;
 
                 try {
@@ -198,6 +204,8 @@ class IgniteStartupHelper {
                     log.error t.message, t
                 }
             }
+
+            initialized = true
 
         } catch (NoSuchBeanDefinitionException e) {
             log.warn e.message

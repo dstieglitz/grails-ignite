@@ -94,6 +94,9 @@ beans {
                 awsCredentials(com.amazonaws.auth.BasicAWSCredentials) { bean ->
                     bean.constructorArgs = [accessKey, secretKey]
                 }
+                awsCredentialsProvider(com.amazonaws.auth.AWSStaticCredentialsProvider) { bean ->
+                    bean.constructorArgs = [ref('awsCredentials')]
+                }
             } else if (multicastDiscoveryEnabled) {
                 discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
                     networkTimeout = configuredNetworkTimeout

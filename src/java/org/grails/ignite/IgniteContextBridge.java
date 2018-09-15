@@ -3,10 +3,7 @@ package org.grails.ignite;
 import org.apache.ignite.*;
 import org.apache.ignite.cache.affinity.Affinity;
 import org.apache.ignite.cluster.ClusterGroup;
-import org.apache.ignite.configuration.CacheConfiguration;
-import org.apache.ignite.configuration.CollectionConfiguration;
-import org.apache.ignite.configuration.IgniteConfiguration;
-import org.apache.ignite.configuration.NearCacheConfiguration;
+import org.apache.ignite.configuration.*;
 import org.apache.ignite.lang.IgniteProductVersion;
 import org.apache.ignite.plugin.IgnitePlugin;
 import org.apache.ignite.plugin.PluginNotFoundException;
@@ -216,8 +213,18 @@ public class IgniteContextBridge implements Ignite {
     }
 
     @Override
+    public IgniteAtomicSequence atomicSequence(String s, AtomicConfiguration atomicConfiguration, long l, boolean b) throws IgniteException {
+        return getOrCreateIgnite().atomicSequence(s, atomicConfiguration, l, b);
+    }
+
+    @Override
     public IgniteAtomicLong atomicLong(String s, long l, boolean b) throws IgniteException {
         return getOrCreateIgnite().atomicLong(s, l, b);
+    }
+
+    @Override
+    public IgniteAtomicLong atomicLong(String s, AtomicConfiguration atomicConfiguration, long l, boolean b) throws IgniteException {
+        return getOrCreateIgnite().atomicLong(s, atomicConfiguration, l, b);
     }
 
     @Override
@@ -226,8 +233,18 @@ public class IgniteContextBridge implements Ignite {
     }
 
     @Override
+    public <T> IgniteAtomicReference<T> atomicReference(String s, AtomicConfiguration atomicConfiguration, @Nullable T t, boolean b) throws IgniteException {
+        return getOrCreateIgnite().atomicReference(s, atomicConfiguration, t, b);
+    }
+
+    @Override
     public <T, S> IgniteAtomicStamped<T, S> atomicStamped(String s, @Nullable T t, @Nullable S s2, boolean b) throws IgniteException {
         return getOrCreateIgnite().atomicStamped(s, t, s2, b);
+    }
+
+    @Override
+    public <T, S> IgniteAtomicStamped<T, S> atomicStamped(String s, AtomicConfiguration atomicConfiguration, @Nullable T t, @Nullable S s1, boolean b) throws IgniteException {
+        return getOrCreateIgnite().atomicStamped(s, atomicConfiguration, t, s1, b);
     }
 
     @Override
@@ -293,5 +310,16 @@ public class IgniteContextBridge implements Ignite {
     @Override
     public Collection<MemoryMetrics> memoryMetrics() {
         return getOrCreateIgnite().memoryMetrics();
+    }
+
+    @Nullable
+    @Override
+    public MemoryMetrics memoryMetrics(String s) {
+        return null;
+    }
+
+    @Override
+    public PersistenceMetrics persistentStoreMetrics() {
+        return null;
     }
 }

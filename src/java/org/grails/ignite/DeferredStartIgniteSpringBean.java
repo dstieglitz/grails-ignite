@@ -20,10 +20,7 @@ package org.grails.ignite;
 import org.apache.ignite.*;
 import org.apache.ignite.cache.affinity.Affinity;
 import org.apache.ignite.cluster.ClusterGroup;
-import org.apache.ignite.configuration.CacheConfiguration;
-import org.apache.ignite.configuration.CollectionConfiguration;
-import org.apache.ignite.configuration.IgniteConfiguration;
-import org.apache.ignite.configuration.NearCacheConfiguration;
+import org.apache.ignite.configuration.*;
 import org.apache.ignite.internal.util.typedef.G;
 import org.apache.ignite.internal.util.typedef.internal.S;
 import org.apache.ignite.lang.IgniteProductVersion;
@@ -539,6 +536,8 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public void close() throws IgniteException {
+        checkIgnite();
+        
         g.close();
     }
 
@@ -553,6 +552,13 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
         return g.atomicSequence(name, initVal, create);
     }
 
+    @Override
+    public IgniteAtomicSequence atomicSequence(String s, AtomicConfiguration atomicConfiguration, long l, boolean b) throws IgniteException {
+        checkIgnite();
+
+        return g.atomicSequence(s, atomicConfiguration, l, b);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -562,6 +568,13 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
         checkIgnite();
 
         return g.atomicLong(name, initVal, create);
+    }
+
+    @Override
+    public IgniteAtomicLong atomicLong(String s, AtomicConfiguration atomicConfiguration, long l, boolean b) throws IgniteException {
+        checkIgnite();
+
+        return g.atomicLong(s, atomicConfiguration, l, b);
     }
 
     /**
@@ -577,6 +590,13 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
         return g.atomicReference(name, initVal, create);
     }
 
+    @Override
+    public <T> IgniteAtomicReference<T> atomicReference(String s, AtomicConfiguration atomicConfiguration, @org.jetbrains.annotations.Nullable T t, boolean b) throws IgniteException {
+        checkIgnite();
+
+        return g.atomicReference(s, atomicConfiguration, t, b);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -589,6 +609,13 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
         checkIgnite();
 
         return g.atomicStamped(name, initVal, initStamp, create);
+    }
+
+    @Override
+    public <T, S> IgniteAtomicStamped<T, S> atomicStamped(String s, AtomicConfiguration atomicConfiguration, @org.jetbrains.annotations.Nullable T t, @org.jetbrains.annotations.Nullable S s1, boolean b) throws IgniteException {
+        checkIgnite();
+
+        return g.atomicStamped(s, atomicConfiguration, t, s1, b);
     }
 
     /**
@@ -669,22 +696,45 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
 
     @Override
     public boolean active() {
+        checkIgnite();
+        
         return g.active();
     }
 
     @Override
     public void active(boolean b) {
+        checkIgnite();
+        
         g.active(b);
     }
 
     @Override
     public void resetLostPartitions(Collection<String> collection) {
+        checkIgnite();
+        
         g.resetLostPartitions(collection);
     }
 
     @Override
     public Collection<MemoryMetrics> memoryMetrics() {
+        checkIgnite();
+        
         return g.memoryMetrics();
+    }
+
+    @org.jetbrains.annotations.Nullable
+    @Override
+    public MemoryMetrics memoryMetrics(String s) {
+        checkIgnite();
+
+        return g.memoryMetrics(s);
+    }
+
+    @Override
+    public PersistenceMetrics persistentStoreMetrics() {
+        checkIgnite();
+
+        return g.persistentStoreMetrics();
     }
 
     /**
@@ -692,6 +742,8 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
+        checkIgnite();
+        
         out.writeObject(g);
     }
 
@@ -700,6 +752,8 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      */
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        checkIgnite();
+        
         g = (Ignite) in.readObject();
 
         cfg = g.configuration();

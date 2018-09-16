@@ -17,23 +17,6 @@
 
 package org.grails.ignite;
 
-import org.apache.ignite.*;
-import org.apache.ignite.cache.affinity.Affinity;
-import org.apache.ignite.cluster.ClusterGroup;
-import org.apache.ignite.configuration.*;
-import org.apache.ignite.internal.util.typedef.G;
-import org.apache.ignite.internal.util.typedef.internal.S;
-import org.apache.ignite.lang.IgniteProductVersion;
-import org.apache.ignite.plugin.IgnitePlugin;
-import org.apache.ignite.plugin.PluginNotFoundException;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-
-import javax.annotation.Nullable;
-import javax.cache.CacheException;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -41,44 +24,76 @@ import java.io.ObjectOutput;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.ignite.*;
+import org.apache.ignite.cache.affinity.Affinity;
+import org.apache.ignite.cluster.ClusterGroup;
+import org.apache.ignite.configuration.AtomicConfiguration;
+import org.apache.ignite.configuration.CacheConfiguration;
+import org.apache.ignite.configuration.CollectionConfiguration;
+import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.configuration.NearCacheConfiguration;
+import org.apache.ignite.internal.util.typedef.G;
+import org.apache.ignite.internal.util.typedef.internal.S;
+import org.apache.ignite.lang.IgniteProductVersion;
+import org.apache.ignite.plugin.IgnitePlugin;
+import org.apache.ignite.plugin.PluginNotFoundException;
+import org.jetbrains.annotations.Nullable;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.SmartInitializingSingleton;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.event.ContextRefreshedEvent;
+
 /**
- * Grid Spring bean allows to bypass {@link Ignition} methods.
+ * Ignite Spring bean allows to bypass {@link Ignition} methods.
  * In other words, this bean class allows to inject new grid instance from
  * Spring configuration file directly without invoking static
  * {@link Ignition} methods. This class can be wired directly from
  * Spring and can be referenced from within other Spring beans.
- * By virtue of implementing {@link DisposableBean} and {@link InitializingBean}
- * interfaces, {@code GridSpringBean} automatically starts and stops underlying
+ * By virtue of implementing {@link DisposableBean} and {@link SmartInitializingSingleton}
+ * interfaces, {@code IgniteSpringBean} automatically starts and stops underlying
  * grid instance.
+ *
+ * <p>
+ * A note should be taken that Ignite instance is started after all other
+ * Spring beans have been initialized and right before Spring context is refreshed.
+ * That implies that it's not valid to reference IgniteSpringBean from
+ * any kind of Spring bean init methods like {@link javax.annotation.PostConstruct}.
+ * If it's required to reference IgniteSpringBean for other bean
+ * initialization purposes, it should be done from a {@link ContextRefreshedEvent}
+ * listener method declared in that bean.
+ * </p>
+ *
  * <p>
  * <h1 class="header">Spring Configuration Example</h1>
  * Here is a typical example of describing it in Spring file:
  * <pre name="code" class="xml">
- * &lt;bean id="mySpringBean" class="org.apache.ignite.GridSpringBean"&gt;
- * &lt;property name="configuration"&gt;
- * &lt;bean id="grid.cfg" class="org.apache.ignite.configuration.IgniteConfiguration"&gt;
- * &lt;property name="gridName" value="mySpringGrid"/&gt;
- * &lt;/bean&gt;
- * &lt;/property&gt;
+ * &lt;bean id="mySpringBean" class="org.apache.ignite.IgniteSpringBean"&gt;
+ *     &lt;property name="configuration"&gt;
+ *         &lt;bean id="grid.cfg" class="org.apache.ignite.configuration.IgniteConfiguration"&gt;
+ *             &lt;property name="igniteInstanceName" value="mySpringGrid"/&gt;
+ *         &lt;/bean&gt;
+ *     &lt;/property&gt;
  * &lt;/bean&gt;
  * </pre>
  * Or use default configuration:
  * <pre name="code" class="xml">
- * &lt;bean id="mySpringBean" class="org.apache.ignite.GridSpringBean"/&gt;
+ * &lt;bean id="mySpringBean" class="org.apache.ignite.IgniteSpringBean"/&gt;
  * </pre>
  * <h1 class="header">Java Example</h1>
  * Here is how you may access this bean from code:
  * <pre name="code" class="java">
  * AbstractApplicationContext ctx = new FileSystemXmlApplicationContext("/path/to/spring/file");
- * <p>
+ *
  * // Register Spring hook to destroy bean automatically.
  * ctx.registerShutdownHook();
- * <p>
- * Grid grid = (Grid)ctx.getBean("mySpringBean");
+ *
+ * Ignite ignite = (Ignite)ctx.getBean("mySpringBean");
  * </pre>
  * <p>
  */
-public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, InitializingBean,
+public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, SmartInitializingSingleton,
         ApplicationContextAware, Externalizable {
     /** */
     private static final long serialVersionUID = 0L;
@@ -92,11 +107,16 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
     /** */
     private ApplicationContext appCtx;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteConfiguration configuration() {
+    public void start() throws IgniteCheckedException {
+        if (cfg == null) {
+            cfg = new IgniteConfiguration();
+        }
+
+        g = IgniteSpring.start(cfg, appCtx);
+    }
+
+    /** {@inheritDoc} */
+     public IgniteConfiguration configuration() {
         return cfg;
     }
 
@@ -140,621 +160,479 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
         return appCtx;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setApplicationContext(ApplicationContext ctx) throws BeansException {
+    /** {@inheritDoc} */
+     public void setApplicationContext(ApplicationContext ctx) throws BeansException {
         appCtx = ctx;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void destroy() throws Exception {
-        // If there were some errors when afterPropertiesSet() was called.
+    /** {@inheritDoc} */
+     public void destroy() throws Exception {
         if (g != null) {
             // Do not cancel started tasks, wait for them.
             G.stop(g.name(), false);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void afterPropertiesSet() throws Exception {
-//        if (cfg == null)
-//            cfg = new IgniteConfiguration();
-//
-//        g = IgniteSpring.start(cfg, appCtx);
-    }
-
-    public void start() throws IgniteCheckedException {
+    /** {@inheritDoc} */
+     public void afterSingletonsInstantiated() {
         if (cfg == null)
             cfg = new IgniteConfiguration();
 
-        g = IgniteSpring.start(cfg, appCtx);
+        try {
+            g = IgniteSpring.start(cfg, appCtx);
+        }
+        catch (IgniteCheckedException e) {
+            throw new IgniteException("Failed to start IgniteSpringBean", e);
+        }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteLogger log() {
+    /** {@inheritDoc} */
+     public IgniteLogger log() {
         checkIgnite();
 
         return cfg.getGridLogger();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteProductVersion version() {
+    /** {@inheritDoc} */
+     public IgniteProductVersion version() {
         checkIgnite();
 
         return g.version();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteCompute compute() {
+    /** {@inheritDoc} */
+     public IgniteCompute compute() {
         checkIgnite();
 
         return g.compute();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteServices services() {
+    /** {@inheritDoc} */
+     public IgniteServices services() {
         checkIgnite();
 
         return g.services();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteMessaging message() {
+    /** {@inheritDoc} */
+     public IgniteMessaging message() {
         checkIgnite();
 
         return g.message();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteEvents events() {
+    /** {@inheritDoc} */
+     public IgniteEvents events() {
         checkIgnite();
 
         return g.events();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ExecutorService executorService() {
+    /** {@inheritDoc} */
+     public ExecutorService executorService() {
         checkIgnite();
 
         return g.executorService();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteCluster cluster() {
+    /** {@inheritDoc} */
+     public IgniteCluster cluster() {
         checkIgnite();
 
         return g.cluster();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteCompute compute(ClusterGroup grp) {
+    /** {@inheritDoc} */
+     public IgniteCompute compute(ClusterGroup grp) {
         checkIgnite();
 
         return g.compute(grp);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteMessaging message(ClusterGroup prj) {
+    /** {@inheritDoc} */
+     public IgniteMessaging message(ClusterGroup prj) {
         checkIgnite();
 
         return g.message(prj);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteEvents events(ClusterGroup grp) {
+    /** {@inheritDoc} */
+     public IgniteEvents events(ClusterGroup grp) {
         checkIgnite();
 
         return g.events(grp);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteServices services(ClusterGroup grp) {
+    /** {@inheritDoc} */
+     public IgniteServices services(ClusterGroup grp) {
         checkIgnite();
 
         return g.services(grp);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ExecutorService executorService(ClusterGroup grp) {
+    /** {@inheritDoc} */
+     public ExecutorService executorService(ClusterGroup grp) {
         checkIgnite();
 
         return g.executorService(grp);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteScheduler scheduler() {
+    /** {@inheritDoc} */
+     public IgniteScheduler scheduler() {
         checkIgnite();
 
         return g.scheduler();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String name() {
+    /** {@inheritDoc} */
+     public String name() {
         checkIgnite();
 
         return g.name();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <K, V> IgniteCache<K, V> cache(@Nullable String name) {
+    /** {@inheritDoc} */
+     public void resetLostPartitions(Collection<String> cacheNames) {
+        checkIgnite();
+
+        g.resetLostPartitions(cacheNames);
+    }
+
+    /** {@inheritDoc} */
+     public Collection<DataRegionMetrics> dataRegionMetrics() {
+        checkIgnite();
+
+        return g.dataRegionMetrics();
+    }
+
+    /** {@inheritDoc} */
+    @Nullable  public DataRegionMetrics dataRegionMetrics(String memPlcName) {
+        checkIgnite();
+
+        return g.dataRegionMetrics(memPlcName);
+    }
+
+    /** {@inheritDoc} */
+     public DataStorageMetrics dataStorageMetrics() {
+        checkIgnite();
+
+        return g.dataStorageMetrics();
+    }
+
+    /** {@inheritDoc} */
+     public Collection<MemoryMetrics> memoryMetrics() {
+        return DataRegionMetricsAdapter.collectionOf(dataRegionMetrics());
+    }
+
+    /** {@inheritDoc} */
+    @Nullable  public MemoryMetrics memoryMetrics(String memPlcName) {
+        return DataRegionMetricsAdapter.valueOf(dataRegionMetrics(memPlcName));
+    }
+
+    /** {@inheritDoc} */
+     public PersistenceMetrics persistentStoreMetrics() {
+        return DataStorageMetricsAdapter.valueOf(dataStorageMetrics());
+    }
+
+    /** {@inheritDoc} */
+     public <K, V> IgniteCache<K, V> cache(@Nullable String name) {
         checkIgnite();
 
         return g.cache(name);
     }
 
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<String> cacheNames() {
+    /** {@inheritDoc} */
+     public Collection<String> cacheNames() {
         checkIgnite();
 
         return g.cacheNames();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <K, V> IgniteCache<K, V> createCache(CacheConfiguration<K, V> cacheCfg) {
+    /** {@inheritDoc} */
+     public <K, V> IgniteCache<K, V> createCache(CacheConfiguration<K, V> cacheCfg) {
         checkIgnite();
 
         return g.createCache(cacheCfg);
     }
 
-    @Override
-    public Collection<IgniteCache> createCaches(Collection<CacheConfiguration> collection) throws CacheException {
-        checkIgnite();
-
-        return g.createCaches(collection);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <K, V> IgniteCache<K, V> getOrCreateCache(CacheConfiguration<K, V> cacheCfg) {
+    /** {@inheritDoc} */
+     public <K, V> IgniteCache<K, V> getOrCreateCache(CacheConfiguration<K, V> cacheCfg) {
         checkIgnite();
 
         return g.getOrCreateCache(cacheCfg);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <K, V> IgniteCache<K, V> createCache(CacheConfiguration<K, V> cacheCfg,
-                                                NearCacheConfiguration<K, V> nearCfg) {
+    /** {@inheritDoc} */
+     public <K, V> IgniteCache<K, V> createCache(CacheConfiguration<K, V> cacheCfg,
+                                                          NearCacheConfiguration<K, V> nearCfg) {
         checkIgnite();
 
         return g.createCache(cacheCfg, nearCfg);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <K, V> IgniteCache<K, V> getOrCreateCache(CacheConfiguration<K, V> cacheCfg, NearCacheConfiguration<K, V> nearCfg) {
+    /** {@inheritDoc} */
+     public Collection<IgniteCache> createCaches(Collection<CacheConfiguration> cacheCfgs) {
+        checkIgnite();
+
+        return g.createCaches(cacheCfgs);
+    }
+
+    /** {@inheritDoc} */
+     public <K, V> IgniteCache<K, V> getOrCreateCache(CacheConfiguration<K, V> cacheCfg, NearCacheConfiguration<K, V> nearCfg) {
         checkIgnite();
 
         return g.getOrCreateCache(cacheCfg, nearCfg);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <K, V> IgniteCache<K, V> createNearCache(String cacheName, NearCacheConfiguration<K, V> nearCfg) {
+    /** {@inheritDoc} */
+     public <K, V> IgniteCache<K, V> createNearCache(String cacheName, NearCacheConfiguration<K, V> nearCfg) {
         checkIgnite();
 
         return g.createNearCache(cacheName, nearCfg);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <K, V> IgniteCache<K, V> getOrCreateNearCache(@Nullable String cacheName, NearCacheConfiguration<K, V> nearCfg) {
+    /** {@inheritDoc} */
+     public <K, V> IgniteCache<K, V> getOrCreateNearCache(@Nullable String cacheName, NearCacheConfiguration<K, V> nearCfg) {
         checkIgnite();
 
         return g.getOrCreateNearCache(cacheName, nearCfg);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <K, V> IgniteCache<K, V> getOrCreateCache(String cacheName) {
+    /** {@inheritDoc} */
+     public <K, V> IgniteCache<K, V> getOrCreateCache(String cacheName) {
         checkIgnite();
 
         return g.getOrCreateCache(cacheName);
     }
 
-    @Override
-    public Collection<IgniteCache> getOrCreateCaches(Collection<CacheConfiguration> collection) throws CacheException {
+    /** {@inheritDoc} */
+     public Collection<IgniteCache> getOrCreateCaches(Collection<CacheConfiguration> cacheCfgs) {
         checkIgnite();
 
-        return g.getOrCreateCaches(collection);
+        return g.getOrCreateCaches(cacheCfgs);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <K, V> IgniteCache<K, V> createCache(String cacheName) {
+    /** {@inheritDoc} */
+     public <K, V> IgniteCache<K, V> createCache(String cacheName) {
         checkIgnite();
 
         return g.createCache(cacheName);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <K, V> void addCacheConfiguration(CacheConfiguration<K, V> cacheCfg) {
+    /** {@inheritDoc} */
+     public <K, V> void addCacheConfiguration(CacheConfiguration<K, V> cacheCfg) {
         checkIgnite();
 
         g.addCacheConfiguration(cacheCfg);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void destroyCache(String cacheName) {
+    /** {@inheritDoc} */
+     public void destroyCache(String cacheName) {
         checkIgnite();
 
         g.destroyCache(cacheName);
     }
 
-    @Override
-    public void destroyCaches(Collection<String> collection) throws CacheException {
+    /** {@inheritDoc} */
+     public void destroyCaches(Collection<String> cacheNames) {
         checkIgnite();
 
-        destroyCaches(collection);
+        g.destroyCaches(cacheNames);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteTransactions transactions() {
+    /** {@inheritDoc} */
+     public IgniteTransactions transactions() {
         checkIgnite();
 
         return g.transactions();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <K, V> IgniteDataStreamer<K, V> dataStreamer(@Nullable String cacheName) {
+    /** {@inheritDoc} */
+     public <K, V> IgniteDataStreamer<K, V> dataStreamer(@Nullable String cacheName) {
         checkIgnite();
 
         return g.dataStreamer(cacheName);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteFileSystem fileSystem(String name) {
+    /** {@inheritDoc} */
+     public IgniteFileSystem fileSystem(String name) {
         checkIgnite();
 
         return g.fileSystem(name);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<IgniteFileSystem> fileSystems() {
+    /** {@inheritDoc} */
+     public Collection<IgniteFileSystem> fileSystems() {
         checkIgnite();
 
         return g.fileSystems();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <T extends IgnitePlugin> T plugin(String name) throws PluginNotFoundException {
+    /** {@inheritDoc} */
+     public <T extends IgnitePlugin> T plugin(String name) throws PluginNotFoundException {
         checkIgnite();
 
         return g.plugin(name);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IgniteBinary binary() {
+    /** {@inheritDoc} */
+     public IgniteBinary binary() {
         checkIgnite();
 
         return g.binary();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void close() throws IgniteException {
-        checkIgnite();
-        
+    /** {@inheritDoc} */
+     public void close() throws IgniteException {
         g.close();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Nullable
-    @Override
-    public IgniteAtomicSequence atomicSequence(String name, long initVal, boolean create) {
+    /** {@inheritDoc} */
+    @Nullable  public IgniteAtomicSequence atomicSequence(String name, long initVal, boolean create) {
         checkIgnite();
 
         return g.atomicSequence(name, initVal, create);
     }
 
-    @Override
-    public IgniteAtomicSequence atomicSequence(String s, AtomicConfiguration atomicConfiguration, long l, boolean b) throws IgniteException {
+    /** {@inheritDoc} */
+     public IgniteAtomicSequence atomicSequence(String name, AtomicConfiguration cfg, long initVal,
+                                                         boolean create) throws IgniteException {
         checkIgnite();
 
-        return g.atomicSequence(s, atomicConfiguration, l, b);
+        return g.atomicSequence(name, cfg, initVal, create);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Nullable
-    @Override
-    public IgniteAtomicLong atomicLong(String name, long initVal, boolean create) {
+    /** {@inheritDoc} */
+    @Nullable  public IgniteAtomicLong atomicLong(String name, long initVal, boolean create) {
         checkIgnite();
 
         return g.atomicLong(name, initVal, create);
     }
 
-    @Override
-    public IgniteAtomicLong atomicLong(String s, AtomicConfiguration atomicConfiguration, long l, boolean b) throws IgniteException {
+     public IgniteAtomicLong atomicLong(String name, AtomicConfiguration cfg, long initVal,
+                                                 boolean create) throws IgniteException {
         checkIgnite();
 
-        return g.atomicLong(s, atomicConfiguration, l, b);
+        return g.atomicLong(name, cfg, initVal, create);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Nullable
-    @Override
-    public <T> IgniteAtomicReference<T> atomicReference(String name,
-                                                        @Nullable T initVal,
-                                                        boolean create) {
+    /** {@inheritDoc} */
+    @Nullable  public <T> IgniteAtomicReference<T> atomicReference(String name,
+                                                                            @Nullable T initVal,
+                                                                            boolean create)
+    {
         checkIgnite();
 
         return g.atomicReference(name, initVal, create);
     }
 
-    @Override
-    public <T> IgniteAtomicReference<T> atomicReference(String s, AtomicConfiguration atomicConfiguration, @org.jetbrains.annotations.Nullable T t, boolean b) throws IgniteException {
+    /** {@inheritDoc} */
+     public <T> IgniteAtomicReference<T> atomicReference(String name, AtomicConfiguration cfg,
+                                                                  @Nullable T initVal, boolean create) throws IgniteException {
         checkIgnite();
 
-        return g.atomicReference(s, atomicConfiguration, t, b);
+        return g.atomicReference(name, cfg, initVal, create);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Nullable
-    @Override
-    public <T, S> IgniteAtomicStamped<T, S> atomicStamped(String name,
-                                                          @Nullable T initVal,
-                                                          @Nullable S initStamp,
-                                                          boolean create) {
+    /** {@inheritDoc} */
+    @Nullable  public <T, S> IgniteAtomicStamped<T, S> atomicStamped(String name,
+                                                                              @Nullable T initVal,
+                                                                              @Nullable S initStamp,
+                                                                              boolean create)
+    {
         checkIgnite();
 
         return g.atomicStamped(name, initVal, initStamp, create);
     }
 
-    @Override
-    public <T, S> IgniteAtomicStamped<T, S> atomicStamped(String s, AtomicConfiguration atomicConfiguration, @org.jetbrains.annotations.Nullable T t, @org.jetbrains.annotations.Nullable S s1, boolean b) throws IgniteException {
+     public <T, S> IgniteAtomicStamped<T, S> atomicStamped(String name, AtomicConfiguration cfg,
+                                                                    @Nullable T initVal, @Nullable S initStamp, boolean create) throws IgniteException {
         checkIgnite();
 
-        return g.atomicStamped(s, atomicConfiguration, t, s1, b);
+        return g.atomicStamped(name, cfg, initVal, initStamp, create);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Nullable
-    @Override
-    public IgniteCountDownLatch countDownLatch(String name,
-                                               int cnt,
-                                               boolean autoDel,
-                                               boolean create) {
+    /** {@inheritDoc} */
+    @Nullable  public IgniteCountDownLatch countDownLatch(String name,
+                                                                   int cnt,
+                                                                   boolean autoDel,
+                                                                   boolean create)
+    {
         checkIgnite();
 
         return g.countDownLatch(name, cnt, autoDel, create);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Nullable
-    @Override
-    public IgniteSemaphore semaphore(String name,
-                                     int cnt,
-                                     boolean failoverSafe,
-                                     boolean create) {
+    /** {@inheritDoc} */
+    @Nullable  public IgniteSemaphore semaphore(String name,
+                                                         int cnt,
+                                                         boolean failoverSafe,
+                                                         boolean create)
+    {
         checkIgnite();
 
         return g.semaphore(name, cnt,
                 failoverSafe, create);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Nullable
-    @Override
-    public IgniteLock reentrantLock(String name,
-                                    boolean failoverSafe,
-                                    boolean fair,
-                                    boolean create) {
+    /** {@inheritDoc} */
+    @Nullable  public IgniteLock reentrantLock(String name,
+                                                        boolean failoverSafe,
+                                                        boolean fair,
+                                                        boolean create)
+    {
         checkIgnite();
 
-        return g.reentrantLock(name, failoverSafe, create, fair);
+        return g.reentrantLock(name, failoverSafe, fair, create);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Nullable
-    @Override
-    public <T> IgniteQueue<T> queue(String name,
-                                    int cap,
-                                    CollectionConfiguration cfg) {
+    /** {@inheritDoc} */
+    @Nullable  public <T> IgniteQueue<T> queue(String name,
+                                                        int cap,
+                                                        CollectionConfiguration cfg)
+    {
         checkIgnite();
 
         return g.queue(name, cap, cfg);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Nullable
-    @Override
-    public <T> IgniteSet<T> set(String name,
-                                CollectionConfiguration cfg) {
+    /** {@inheritDoc} */
+    @Nullable  public <T> IgniteSet<T> set(String name,
+                                                    CollectionConfiguration cfg)
+    {
         checkIgnite();
 
         return g.set(name, cfg);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <K> Affinity<K> affinity(String cacheName) {
+    /** {@inheritDoc} */
+     public <K> Affinity<K> affinity(String cacheName) {
         return g.affinity(cacheName);
     }
 
-    @Override
-    public boolean active() {
+    /** {@inheritDoc} */
+     public boolean active() {
         checkIgnite();
-        
+
         return g.active();
     }
 
-    @Override
-    public void active(boolean b) {
+    /** {@inheritDoc} */
+     public void active(boolean active) {
         checkIgnite();
-        
-        g.active(b);
+
+        g.active(active);
     }
 
-    @Override
-    public void resetLostPartitions(Collection<String> collection) {
-        checkIgnite();
-        
-        g.resetLostPartitions(collection);
-    }
-
-    @Override
-    public Collection<MemoryMetrics> memoryMetrics() {
-        checkIgnite();
-        
-        return g.memoryMetrics();
-    }
-
-    @org.jetbrains.annotations.Nullable
-    @Override
-    public MemoryMetrics memoryMetrics(String s) {
-        checkIgnite();
-
-        return g.memoryMetrics(s);
-    }
-
-    @Override
-    public PersistenceMetrics persistentStoreMetrics() {
-        checkIgnite();
-
-        return g.persistentStoreMetrics();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void writeExternal(ObjectOutput out) throws IOException {
-        checkIgnite();
-        
+    /** {@inheritDoc} */
+     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeObject(g);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        checkIgnite();
-        
-        g = (Ignite) in.readObject();
+    /** {@inheritDoc} */
+     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        g = (Ignite)in.readObject();
 
         cfg = g.configuration();
     }
@@ -763,21 +641,20 @@ public class DeferredStartIgniteSpringBean implements Ignite, DisposableBean, In
      * Checks if this bean is valid.
      *
      * @throws IllegalStateException If bean is not valid, i.e. Ignite has already been stopped
-     *                               or has not yet been started.
+     *      or has not yet been started.
      */
     protected void checkIgnite() throws IllegalStateException {
         if (g == null) {
             throw new IllegalStateException("Ignite is in invalid state to perform this operation. " +
-                    "It either not started yet or has already being or have stopped " +
+                    "It either not started yet or has already being or have stopped.\n" +
+                    "Make sure that IgniteSpringBean is not referenced from any kind of Spring bean init methods " +
+                    "like @PostConstruct}.\n" +
                     "[ignite=" + g + ", cfg=" + cfg + ']');
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
+    /** {@inheritDoc} */
+     public String toString() {
         return S.toString(DeferredStartIgniteSpringBean.class, this);
     }
 }

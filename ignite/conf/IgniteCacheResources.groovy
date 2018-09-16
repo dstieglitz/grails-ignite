@@ -1,10 +1,8 @@
 import org.apache.ignite.cache.CacheAtomicityMode
-import org.apache.ignite.cache.CacheMemoryMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.cache.CacheWriteSynchronizationMode
 import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
 import org.apache.ignite.configuration.CacheConfiguration
-import org.codehaus.groovy.grails.orm.hibernate.cfg.GrailsDomainBinder
 import org.grails.ignite.IgniteStartupHelper
 
 beans {
@@ -19,9 +17,6 @@ beans {
             name = IgniteStartupHelper.IGNITE_WEB_SESSION_CACHE_NAME
             cacheMode = CacheMode.PARTITIONED
             backups = 1
-            evictionPolicy = { LruEvictionPolicy lruEvictionPolicy ->
-                maxSize = 10000
-            }
         }
     }
 
@@ -111,7 +106,6 @@ beans {
         atomicityMode = CacheAtomicityMode.TRANSACTIONAL
         cacheMode = CacheMode.REPLICATED
         writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC
-        memoryMode =  CacheMemoryMode.OFFHEAP_VALUES
         statisticsEnabled = true
     }
 }

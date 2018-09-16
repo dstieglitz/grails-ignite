@@ -1,5 +1,4 @@
 import org.apache.ignite.configuration.IgniteConfiguration
-import org.apache.ignite.marshaller.optimized.OptimizedMarshaller
 import org.grails.ignite.DistributedSchedulerServiceImpl
 import org.grails.ignite.IgniteGrailsLogger
 import org.grails.ignite.IgniteStartupHelper
@@ -48,20 +47,6 @@ beans {
         igniteCfg(IgniteConfiguration) {
             gridName = configuredGridName
             peerClassLoadingEnabled = peerClassLoadingEnabledInConfig
-
-            marshaller = { OptimizedMarshaller marshaller ->
-                requireSerializable = false
-            }
-
-            //            marshaller = { JdkMarshaller marshaller ->
-            ////                requireSerializable = false
-            //            }
-
-            //            marshaller = { GroovyOptimizedMarshallerDecorator dec ->
-            //                underlyingMarshaller = { OptimizedMarshaller mar ->
-            //                    requireSerializable = false
-            //                }
-            //            }
 
             includeEventTypes = [org.apache.ignite.events.EventType.EVT_TASK_STARTED,
                                  org.apache.ignite.events.EventType.EVT_TASK_FINISHED,

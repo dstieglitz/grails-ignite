@@ -312,7 +312,6 @@ public class IgniteContextBridge implements Ignite {
         return getOrCreateIgnite().memoryMetrics();
     }
 
-    @Nullable
     @Override
     public MemoryMetrics memoryMetrics(String s) {
         return null;
@@ -321,5 +320,20 @@ public class IgniteContextBridge implements Ignite {
     @Override
     public PersistenceMetrics persistentStoreMetrics() {
         return null;
+    }
+
+    @Override
+    public Collection<DataRegionMetrics> dataRegionMetrics() {
+        return getOrCreateIgnite().dataRegionMetrics();
+    }
+    
+    @Override
+    public DataRegionMetrics dataRegionMetrics(String s) {
+        return getOrCreateIgnite().dataRegionMetrics(s);
+    }
+
+    @Override
+    public DataStorageMetrics dataStorageMetrics() {
+        return getOrCreateIgnite().dataStorageMetrics();
     }
 }

@@ -8,6 +8,8 @@ import org.codehaus.groovy.grails.support.PersistenceContextInterceptor
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 /**
+ * @deprecated this class was used by the old MessagingService. The MessageBroker paradigm uses a different methodology
+ * @see MessageBroker, MessageBrokerImpl
  * Created by dstieglitz on 11/4/16.
  */
 @Log4j

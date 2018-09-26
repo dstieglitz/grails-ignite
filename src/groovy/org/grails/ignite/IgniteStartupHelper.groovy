@@ -24,6 +24,7 @@ class IgniteStartupHelper {
     static def DEFAULT_GRID_NAME = 'grid'
     static def IGNITE_CONFIG_DIRECTORY_NAME = 'ignite'
     static String SCHEDULER_SERVICE_NAME = 'distributedSchedulerService'
+    static String MESSAGE_BROKER_SERVICE_NAME = 'messageBrokerService'
 
     private static ApplicationContext igniteApplicationContext
     public static Ignite grid
@@ -38,23 +39,7 @@ class IgniteStartupHelper {
         Binding binding = new Binding()
         binding.application = Holders.grailsApplication
         bb.setBinding(binding)
-
-//        def pluginDir = GrailsPluginUtils.pluginInfos.find { it.name == 'ignite' }?.pluginDir
-//        def defaultUrl = null
-//        def url = null
-//
-//        if (pluginDir != null) {
-//            defaultUrl = "file:${pluginDir}/grails-app/conf/spring/${fileName}.groovy"
-//            url = "file:grails-app/conf/spring/${fileName}"
-//            log.info "loading default configuration from ${defaultUrl}"
-//            bb.importBeans(defaultUrl)
-//        } else {
-//            url = "classpath*:${fileName}*"
-//        }
-//
-//        log.info "attempting to load beans from ${url}"
-//        bb.importBeans(url)
-
+        
         bb.importBeans(resourcePattern)
 
         return bb
@@ -173,7 +158,7 @@ class IgniteStartupHelper {
             if (!schedulerServiceDeployed) {
                 def poolSize = Holders.grailsApplication.config.ignite.config.executorThreadPoolSize
                 if (poolSize instanceof ConfigObject) poolSize = 10
-                
+
                 DistributedSchedulerServiceImpl distributedSchedulerServiceImpl = null;
 
                 try {
@@ -199,6 +184,8 @@ class IgniteStartupHelper {
                 }
             }
 
+            grid.services().deployClusterSingleton(MESSAGE_BROKER_SERVICE_NAME, new MessageBrokerImpl());
+
         } catch (NoSuchBeanDefinitionException e) {
             log.warn e.message
             return false;
@@ -214,37 +201,5 @@ class IgniteStartupHelper {
     public static ApplicationContext getIgniteApplicationContext() {
         return igniteApplicationContext;
     }
-
-//    public static CacheConfiguration getSpringConfiguredCache(String name) {
-//        try {
-//            return igniteApplicationContext.getBean(name)
-//        } catch (NoSuchBeanDefinitionException e) {
-//            return null;
-//        }
-//    }
-//
-//    public static boolean startIgniteProgramatically() {
-//        def ctx = Holders.applicationContext
-//        def application = Holders.grailsApplication
-//
-//        def configuredAddresses = []
-//        if (!(application.config.ignite.discoverySpi.addresses instanceof ConfigObject)) {
-//            configuredAddresses = application.config.ignite.discoverySpi.addresses
-//        }
-//
-//        IgniteConfiguration config = new IgniteConfiguration();
-//        config.setMarshaller(new OptimizedMarshaller(false));
-//        def discoverySpi = new org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi();
-//        discoverySpi.setNetworkTimeout(5000);
-//        def ipFinder = new org.apache.ignite.spi.discovery.tcp.ipfinder.multicast.TcpDiscoveryMulticastIpFinder();
-//        ipFinder.setAddresses(configuredAddresses)
-//        discoverySpi.setIpFinder(ipFinder)
-//        def grid = Ignition.start(config);
-//
-//        return grid != null
-//    }
-//
-//    public static ApplicationContext getApplicationContext() {
-//        return igniteApplicationContext;
-//    }
+    
 }

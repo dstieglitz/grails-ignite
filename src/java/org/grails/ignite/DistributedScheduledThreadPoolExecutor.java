@@ -22,7 +22,7 @@ public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolE
 
     private static final Logger log = Logger.getLogger(DistributedScheduledThreadPoolExecutor.class.getName());
     private Ignite ignite;
-    private boolean running = true;
+    private boolean running = false;
     private Scheduler cronScheduler;
     private long timeout = 60000;
     private TaskDecorator taskDecorator;

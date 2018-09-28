@@ -42,7 +42,7 @@ public class MessageBrokerImpl implements Service, MessageBroker {
     public void init(ServiceContext serviceContext) throws Exception {
         CacheConfiguration<String, MessageReceiver> cacheConf = new CacheConfiguration<String, MessageReceiver>();
         cacheConf.setName(QUEUE_DESTINATION_CACHE_NAME);
-        cacheConf.setCacheMode(CacheMode.PARTITIONED);
+        cacheConf.setCacheMode(CacheMode.REPLICATED);
         cacheConf.setAtomicityMode(CacheAtomicityMode.ATOMIC);
         cacheConf.setBackups(0);
         ignite.getOrCreateCache(cacheConf);

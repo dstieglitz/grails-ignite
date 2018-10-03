@@ -138,7 +138,7 @@ public class MessageBrokerImpl implements Service, MessageBroker {
     @Override
     public Future sendMessageAsync(Map destinationData, Object message) {
 //        log.warn("All message sending is asynchronous now");
-        log.debug("sendMessage(" + destinationData + "," + message + ")");
+        log.debug("sendMessageAsync(" + destinationData + "," + message + ")");
 
         if (destinationData.containsKey("queue")) {
             String queueName = (String) destinationData.get("queue");
@@ -150,8 +150,8 @@ public class MessageBrokerImpl implements Service, MessageBroker {
         } else if (destinationData.containsKey("topic")) {
             String topicName = (String) destinationData.get("topic");
             MessageWrapperFuture f = new MessageWrapperFuture(destinationData, (Serializable) message);
-            log.debug("sending to topic: " + destinationData.get("topic") + "," + message + ", with timeout=" + TIMEOUT);
-            ignite.message().sendOrdered(destinationData, message, TIMEOUT);
+            log.debug("async sending to topic: " + destinationData.get("topic") + "," + message + ", with timeout=" + TIMEOUT);
+            ignite.message().sendOrdered(destinationData.get("topic"), message, TIMEOUT);
             f.consumed();
             return f;
         }

@@ -74,4 +74,12 @@ grails.project.dependency.resolution = {
         compile ':webxml:1.4.1'
         compile ":hibernate4:4.3.10"
     }
+
+    environments {
+        test {
+            dependencies {
+                compile "com.h2database:h2:1.4.195"
+            }
+        }
+    }
 }

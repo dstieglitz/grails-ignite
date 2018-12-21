@@ -20,11 +20,15 @@ class MessagingIntegrationSpec extends IntegrationSpec {
     void "test something"() {
         setup:
         def exceptionThrown = false
+        def testStrings = [
+            "world test 123232",
+            "goodbye test 5353535"
+        ]
 
         when:
         messagingService.registerReceiver(queue: 'hello', new ExpressionEvaluatingMessageReceiver('println'))
-        messagingService.sendMessage(queue: 'hello', "world")
-        messagingService.sendMessage(queue: 'hello', "goodbye")
+        messagingService.sendMessage(queue: 'hello', testStrings[0])
+        messagingService.sendMessage(queue: 'hello', testStrings[1])
 
         messagingService.registerReceiver(topic: 'hello', new ExpressionEvaluatingMessageReceiver('is'))
         messagingService.sendMessage(topic: 'hello', "world")
@@ -33,6 +37,7 @@ class MessagingIntegrationSpec extends IntegrationSpec {
         messagingService.sendMessage(queue: 'noreceiver', "goodbye")
 
         then:
+        testStrings.each { capture.toString().contains(it) }
         capture.toString().contains("WARN  ignite.IgniteMessagingQueueReceiverWrapper  - No receiver configured for queue noreceiver")
     }
 }

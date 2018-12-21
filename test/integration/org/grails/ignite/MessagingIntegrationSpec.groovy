@@ -1,10 +1,15 @@
 package org.grails.ignite
 
 import grails.test.spock.IntegrationSpec
+import org.junit.Rule
+import org.springframework.boot.test.rule.OutputCapture
 
 class MessagingIntegrationSpec extends IntegrationSpec {
 
     def messagingService
+
+    @Rule
+    OutputCapture capture = new OutputCapture()
 
     def setup() {
     }
@@ -24,13 +29,10 @@ class MessagingIntegrationSpec extends IntegrationSpec {
         messagingService.registerReceiver(topic: 'hello', new ExpressionEvaluatingMessageReceiver('is'))
         messagingService.sendMessage(topic: 'hello', "world")
 
-        try {// will throw exception
-            messagingService.sendMessage(queue: 'noreceiver', "goodbye")
-        } catch (RuntimeException r) {
-            exceptionThrown = true
-        }
+        //will log warning
+        messagingService.sendMessage(queue: 'noreceiver', "goodbye")
 
         then:
-        exceptionThrown
+        capture.toString().contains("WARN  ignite.IgniteMessagingQueueReceiverWrapper  - No receiver configured for queue noreceiver")
     }
 }

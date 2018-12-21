@@ -79,6 +79,7 @@ grails.project.dependency.resolution = {
         test {
             dependencies {
                 compile "com.h2database:h2:1.4.195"
+                compile "org.springframework.boot:spring-boot-test:2.1.1.RELEASE"
             }
         }
     }

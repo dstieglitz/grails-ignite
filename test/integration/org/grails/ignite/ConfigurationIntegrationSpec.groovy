@@ -1,6 +1,7 @@
 package org.grails.ignite
 
 import grails.test.spock.IntegrationSpec
+import org.apache.ignite.Ignite
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.cache.CacheWriteSynchronizationMode
@@ -10,11 +11,17 @@ class ConfigurationIntegrationSpec extends IntegrationSpec {
     def grid
     def sessionFactory
 
-    void "test cache configuration"() {
-        setup:
-        assert grid.name() != null // force creation of grid
-        assert grid.underlyingIgnite != null
+    void "test grid creation"() {
+        when:
+        grid
 
+        then:
+        grid.name() != null
+        grid.underlyingIgnite != null
+        grid instanceof Ignite
+    }
+
+    void "test cache configuration"() {
         when:
         def caches = grid.configuration().cacheConfiguration.collectEntries { [(it.name): it] }
 
@@ -31,10 +38,6 @@ class ConfigurationIntegrationSpec extends IntegrationSpec {
     }
 
     void "test l2 cache configuration"() {
-        setup:
-        assert grid.name() != null // force creation of grid
-        assert grid.underlyingIgnite != null
-
         when:
         def caches = grid.configuration().cacheConfiguration.collectEntries { [(it.name): it] }
 

@@ -146,7 +146,7 @@ The example below shows how to configure discovery via the Grails configuration:
 The project contains an implementation of `IgniteLogger` for use with Grails. This class allows you to use the Grails log4j DSL to configure logging for the embedded Ignite node. The logger can be configured from the Ignite spring bean:
 
 ```
-        gridLogger(org.grails.ignite.IgniteGrailsLogger)
+        gridLogger(IgniteGrailsLogger)
         
         igniteCfg(IgniteConfiguration) {
         	gridLogger = ref('gridLogger')
@@ -162,7 +162,7 @@ A basic functional version of distributed Hibernate L2 caching can be utilized b
 
 ```
 hibernate {
-    cache.region.factory_class = 'org.grails.ignite.HibernateRegionFactory'
+    cache.region.factory_class = 'HibernateRegionFactory'
     org.apache.ignite.hibernate.grid_name = '<MY GRID NAME>'
     org.apache.ignite.hibernate.default_access_type = 'READ_ONLY' // see Ignite docs
 }

@@ -12,7 +12,7 @@ hibernate {
 //    cache.region.factory_class = 'org.hibernate.cache.ehcache.EhCacheRegionFactory' // Hibernate 4
     singleSession = true // configure OSIV singleSession mode
 
-    cache.region.factory_class = 'org.grails.ignite.HibernateRegionFactory'
+    cache.region.factory_class = 'grails.plugins.ignite.HibernateRegionFactory'
     org.apache.ignite.hibernate.grid_name = 'grid'
     org.apache.ignite.hibernate.default_access_type = 'READ_ONLY' // see Ignite docs
 

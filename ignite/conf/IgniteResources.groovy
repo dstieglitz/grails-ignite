@@ -1,7 +1,8 @@
+import grails.plugins.ignite.DeferredStartIgniteSpringBean
 import org.apache.ignite.configuration.IgniteConfiguration
-import org.grails.ignite.DistributedSchedulerServiceImpl
-import org.grails.ignite.IgniteGrailsLogger
-import org.grails.ignite.IgniteStartupHelper
+import grails.plugins.ignite.DistributedSchedulerServiceImpl
+import grails.plugins.ignite.IgniteGrailsLogger
+import grails.plugins.ignite.IgniteStartupHelper
 
 //import org.apache.ignite.logger.log4j.Log4JLogger
 beans {
@@ -103,7 +104,7 @@ beans {
 
         distributedSchedulerServiceImpl(DistributedSchedulerServiceImpl)
 
-        grid(org.grails.ignite.DeferredStartIgniteSpringBean) { bean ->
+        grid(DeferredStartIgniteSpringBean) { bean ->
             bean.lazyInit = true
 //            bean.dependsOn = ['persistenceInterceptor']
             configuration = ref('igniteCfg')

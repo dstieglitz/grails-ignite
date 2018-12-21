@@ -31,5 +31,5 @@ log4j = {
            'net.sf.ehcache.hibernate'
 
     debug 'org.apache.ignite'
-    debug 'org.grails.ignite'
+    debug 'grails.plugins.ignite'
 }

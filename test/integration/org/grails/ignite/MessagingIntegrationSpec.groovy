@@ -21,7 +21,7 @@ class MessagingIntegrationSpec extends IntegrationSpec {
         messagingService.sendMessage(queue: 'hello', "world")
         messagingService.sendMessage(queue: 'hello', "goodbye")
 
-        messagingService.registerReceiver(topic: 'hello', new ExpressionEvaluatingMessageReceiver('iGotTheMessage'))
+        messagingService.registerReceiver(topic: 'hello', new ExpressionEvaluatingMessageReceiver('is'))
         messagingService.sendMessage(topic: 'hello', "world")
 
         try {// will throw exception
@@ -32,9 +32,5 @@ class MessagingIntegrationSpec extends IntegrationSpec {
 
         then:
         exceptionThrown
-    }
-
-    private boolean iGotTheMessage(message) {
-        println "iGotTheMessage: ${message}"
     }
 }

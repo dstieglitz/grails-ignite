@@ -1,0 +1,137 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        maven { url "https://repo.grails.org/grails/core" }
+    }
+    dependencies {
+        classpath "org.grails:grails-gradle-plugin:$grailsVersion"
+        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:2.14.2"
+    }
+}
+
+version "2.0.0-SNAPSHOT"
+group "org.grails.plugins"
+
+def igniteVer = '2.6.0'
+def igniteHibernateVer = '2.7.1'
+
+apply plugin:"eclipse"
+apply plugin:"idea"
+apply plugin:"org.grails.grails-plugin"
+apply plugin:"org.grails.grails-plugin-publish"
+apply plugin:"asset-pipeline"
+apply plugin:"org.grails.grails-gsp"
+
+repositories {
+    //grailsCentral()
+    mavenLocal()
+    mavenCentral()
+    maven {
+        url "https://repo.grails.org/grails/core"
+    }
+    maven {
+        url "http://www.gridgainsystems.com/nexus/content/repositories/external"
+    }
+}
+
+dependencies {
+    // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
+    compile 'com.cedarsoftware:groovy-io:1.1.1'
+    compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.0'
+    //compile "com.h2database:h2:1.4.192"
+    compile "de.ruedigermoeller:fst:2.47"
+    compile 'it.sauronsoftware.cron4j:cron4j:2.2.5'
+    compile "org.apache.ignite:ignite-core:${igniteVer}"
+    compile ("org.apache.ignite:ignite-spring:${igniteVer}") {
+        //exclude 'spring-core', 'spring-aop', 'spring-beans', 'spring-context', 'spring-expression', 'spring-tx'
+    }
+    compile "org.apache.ignite:ignite-indexing:${igniteVer}"
+    compile("org.apache.ignite:ignite-hibernate_5.1:${igniteHibernateVer}") {
+        exclude group: 'org.hibernate', module: 'hibernate-core'
+    }
+    compile "org.apache.ignite:ignite-web:${igniteVer}"
+    compile "org.apache.ignite:ignite-log4j:${igniteVer}"
+    compile "org.apache.ignite:ignite-aws:${igniteVer}"
+    compile 'org.bouncycastle:bcprov-jdk15on:1.52'
+    compile "org.springframework.boot:spring-boot-starter-logging"
+    compile "org.springframework.boot:spring-boot-autoconfigure"
+    compile "org.grails:grails-core"
+    compile "org.springframework.boot:spring-boot-starter-actuator"
+    compile "org.springframework.boot:spring-boot-starter-tomcat"
+    compile "org.grails:grails-web-boot"
+    compile "org.grails:grails-logging"
+    compile "org.grails:grails-datastore-rest-client"
+    compile "org.grails:grails-plugin-rest"
+    compile "org.grails:grails-plugin-databinding"
+    compile "org.grails:grails-plugin-i18n"
+    compile "org.grails:grails-plugin-services"
+    compile "org.grails:grails-plugin-url-mappings"
+    compile "org.grails:grails-plugin-interceptors"
+    compile "org.grails.plugins:cache"
+    compile "org.grails.plugins:async"
+    //compile "org.hibernate:hibernate-core:4.3.10.Final"
+    compile "org.hibernate:hibernate-core:5.1.16.Final"
+    //compile "org.grails.plugins:hibernate:4.3.10.3"
+    /*compile ("org.grails.plugins:hibernate4:4.3.10") {
+        exclude group: "org.grails.plugins", module: "hibernate4"
+    }*/
+    //compile 'org.grails.plugins:hibernate4:6.0.13'
+    compile 'org.grails.plugins:hibernate5:7.0.0.M1'
+    compile "org.grails.plugins:scaffolding"
+    compile "org.grails.plugins:gsp"
+    console "org.grails:grails-console"
+    profile "org.grails.profiles:web-plugin"
+    provided "org.grails:grails-plugin-services"
+    provided "org.grails:grails-plugin-domain-class"
+    runtime "com.bertramlabs.plugins:asset-pipeline-grails:2.14.2"
+    //runtime 'mysql:mysql-connector-java:5.1.27'
+    testCompile "com.h2database:h2:1.4.195"
+    testCompile "org.grails:grails-gorm-testing-support"
+    testCompile "org.grails:grails-plugin-testing"
+    testCompile "org.grails.plugins:geb"
+    testCompile "org.grails:grails-test-mixins:3.3.0"
+    testCompile "org.grails:grails-web-testing-support"
+    //testCompile "org.springframework.boot:spring-boot:2.1.1.RELEASE"
+    //testCompile "org.springframework.boot:spring-boot-test:2.1.1.RELEASE"
+    //testCompile "org.springframework:spring-core:5.1.0.RELEASE"
+    testRuntime "org.seleniumhq.selenium:selenium-htmlunit-driver:2.47.1"
+    testRuntime "net.sourceforge.htmlunit:htmlunit:2.18"
+}
+
+bootRun {
+    jvmArgs('-Dspring.output.ansi.enabled=always')
+    addResources = true
+    String springProfilesActive = 'spring.profiles.active'
+    systemProperty springProfilesActive, System.getProperty(springProfilesActive)
+}
+
+// enable if you wish to package this plugin as a standalone application
+bootRepackage.enabled = false
+
+/*
+ * TODO: Publish plugin to the grails plugin portal using bintray
+ *
+grailsPublish {
+    // TODO: Provide values here
+    user = 'user'
+    key = 'key'
+    githubSlug = 'foo/bar'
+    license {
+        name = 'Apache-2.0'
+    }
+    title = "My Plugin"
+    desc = "Full plugin description"
+    developers = [johndoe:"John Doe"]
+}
+*/
+
+
+assets {
+    packagePlugin = true
+}
+
+project.publishing.publications {
+    maven(MavenPublication) {
+        artifactId "ignite"
+    }
+}

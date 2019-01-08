@@ -268,7 +268,6 @@ class DistributedSchedulerService {
     }
 
     private long getConfiguredTimeout() {
-        if (Holders.grailsApplication.config.ignite.defaultJobTimeout instanceof ConfigObject) return DEFAULT_TIMEOUT;
-        else return Holders.grailsApplication.config.ignite.defaultJobTimeout
+        return Holders.grailsApplication.config.getProperty("ignite.defaultJobTimeout", long, DEFAULT_TIMEOUT)
     }
 }

@@ -1,41 +1,27 @@
+import grails.plugins.ignite.DeferredStartIgniteSpringBean
 import org.apache.ignite.configuration.IgniteConfiguration
-import org.grails.ignite.DistributedSchedulerServiceImpl
-import org.grails.ignite.IgniteGrailsLogger
-import org.grails.ignite.IgniteStartupHelper
+import grails.plugins.ignite.DistributedSchedulerServiceImpl
+import grails.plugins.ignite.IgniteGrailsLogger
+import grails.plugins.ignite.IgniteStartupHelper
 
 //import org.apache.ignite.logger.log4j.Log4JLogger
 beans {
-    def peerClassLoadingEnabledInConfig = (!(application.config.ignite.peerClassLoadingEnabled instanceof ConfigObject)
-            && application.config.ignite.peerClassLoadingEnabled.equals(true))
 
-    def configuredGridName = IgniteStartupHelper.DEFAULT_GRID_NAME
-    if (!(application.config.ignite.gridName instanceof ConfigObject)) {
-        configuredGridName = application.config.ignite.gridName
-    }
+    def peerClassLoadingEnabledInConfig = application.config.getProperty("ignite.peerClassLoadingEnabled", Boolean, false)
 
-    def configuredNetworkTimeout = 3000
-    if (!(application.config.ignite.discoverySpi.networkTimeout instanceof ConfigObject)) {
-        configuredNetworkTimeout = application.config.ignite.discoverySpi.networkTimeout
-    }
+    def configuredGridName = application.config.getProperty("ignite.gridName", String, IgniteStartupHelper.DEFAULT_GRID_NAME)
 
-    def configuredAckTimeout = 10000
-    if (!(application.config.ignite.discoverySpi.ackTimeout instanceof ConfigObject)) {
-        configuredAckTimeout = application.config.ignite.discoverySpi.ackTimeout
-    }
+    def configuredNetworkTimeout = application.config.getProperty("ignite.discoverySpi.networkTimeout", Long, 3000)
 
-    def configuredAddresses = []
-    if (!(application.config.ignite.discoverySpi.addresses instanceof ConfigObject)) {
-        configuredAddresses = application.config.ignite.discoverySpi.addresses
-    }
+    def configuredAckTimeout = application.config.getProperty("ignite.discoverySpi.ackTimeout", Long, 10000)
 
-    def igniteEnabled = (!(application.config.ignite.enabled instanceof ConfigObject)
-            && application.config.ignite.enabled.equals(true))
+    def configuredAddresses = application.config.getProperty("ignite.discoverySpi.addresses", Collection, [])
 
-    def s3DiscoveryEnabled = (!(application.config.ignite.discoverySpi.s3Discovery instanceof ConfigObject)
-            && application.config.ignite.discoverySpi.s3Discovery.equals(true))
+    def igniteEnabled = application.config.getProperty("ignite.enabled", Boolean, false)
 
-    def multicastDiscoveryEnabled = (!(application.config.ignite.discoverySpi.multicastDiscovery instanceof ConfigObject)
-            && application.config.ignite.discoverySpi.multicastDiscovery.equals(true))
+    def s3DiscoveryEnabled = application.config.getProperty("ignite.discoverySpi.s3Discovery", Boolean, false)
+
+    def multicastDiscoveryEnabled = application.config.getProperty("ignite.discoverySpi.multicastDiscovery", Boolean, false)
 
     /*
      * Only configure Ignite if the configuration value ignite.enabled=true is defined
@@ -45,7 +31,7 @@ beans {
         gridLogger(IgniteGrailsLogger)
 
         igniteCfg(IgniteConfiguration) {
-            gridName = configuredGridName
+            igniteInstanceName = configuredGridName
             peerClassLoadingEnabled = peerClassLoadingEnabledInConfig
 
             includeEventTypes = [org.apache.ignite.events.EventType.EVT_TASK_STARTED,
@@ -58,18 +44,9 @@ beans {
                                  org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_READ]
 
             if (s3DiscoveryEnabled) {
-                def accessKey = application.config.ignite.discoverySpi.awsAccessKey
-                def secretKey = application.config.ignite.discoverySpi.awsSecretKey
-                def theBucketName = application.config.ignite.discoverySpi.s3DiscoveryBucketName
-                if (accessKey instanceof ConfigObject) {
-                    throw new IllegalArgumentException("You must provide an AWS access key for s3-based discovery");
-                }
-                if (secretKey instanceof ConfigObject) {
-                    throw new IllegalArgumentException("You must provide an AWS secret key for s3-based discovery");
-                }
-                if (theBucketName instanceof ConfigObject) {
-                    throw new IllegalArgumentException("You must provide an AWS S3 bucket name for s3-based discovery");
-                }
+                def accessKey = application.config.getRequiredProperty("ignite.discoverySpi.awsAccessKey")
+                def secretKey = application.config.getRequiredProperty("ignite.discoverySpi.awsSecretKey")
+                def theBucketName = application.config.getRequiredProperty("ignite.discoverySpi.s3DiscoveryBucketName")
                 discoverySpi = { org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi discoverySpi ->
                     ipFinder = { org.apache.ignite.spi.discovery.tcp.ipfinder.s3.TcpDiscoveryS3IpFinder tcpDiscoveryS3IpFinder ->
                         bucketName = theBucketName
@@ -103,7 +80,7 @@ beans {
 
         distributedSchedulerServiceImpl(DistributedSchedulerServiceImpl)
 
-        grid(org.grails.ignite.DeferredStartIgniteSpringBean) { bean ->
+        grid(DeferredStartIgniteSpringBean) { bean ->
             bean.lazyInit = true
 //            bean.dependsOn = ['persistenceInterceptor']
             configuration = ref('igniteCfg')

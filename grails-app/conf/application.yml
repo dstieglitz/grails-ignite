@@ -120,7 +120,7 @@ environments:
             url: "jdbc:h2:mem:devDb;MVCC=TRUE;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE"
         ignite:
             enabled: true
-            gridName: grid
+            gridName: 'grid'
             config.locations:
             - file:ignite/conf/IgniteResources.groovy
             - file:ignite/conf/IgniteCacheResources.groovy
@@ -134,7 +134,7 @@ environments:
             url: "jdbc:h2:mem:testDb;MVCC=TRUE;LOCK_TIMEOUT=10000;DB_CLOSE_DELAY=-1"
         ignite:
             enabled: true
-            gridName: grid
+            gridName: 'grid'
             config.locations:
             - file:ignite/conf/IgniteResources.groovy
             - file:ignite/conf/IgniteCacheResources.groovy

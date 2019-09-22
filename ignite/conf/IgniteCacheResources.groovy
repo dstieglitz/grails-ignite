@@ -1,16 +1,13 @@
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.cache.CacheWriteSynchronizationMode
-import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
 import org.apache.ignite.configuration.CacheConfiguration
 import org.grails.ignite.IgniteStartupHelper
 
 beans {
-    def l2CacheEnabled = (!(application.config.ignite.l2CacheEnabled instanceof ConfigObject)
-            && application.config.ignite.l2CacheEnabled.equals(true))
+    def l2CacheEnabled = application.config.getProperty("ignite.l2CacheEnabled", Boolean, false)
 
-    def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
-            && application.config.ignite.webSessionClusteringEnabled.equals(true))
+    def webSessionClusteringEnabled = application.config.getProperty("ignite.webSessionClusteringEnabled", Boolean, false)
 
     if (webSessionClusteringEnabled) {
         webSessionClusterCacheConfigurationBean(CacheConfiguration) {

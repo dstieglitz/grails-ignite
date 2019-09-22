@@ -6,7 +6,6 @@ import org.apache.ignite.Ignite
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.cache.CacheWriteSynchronizationMode
-import org.grails.ignite.Widget
 import org.junit.Rule
 import org.springframework.boot.test.rule.OutputCapture
 import spock.lang.Specification

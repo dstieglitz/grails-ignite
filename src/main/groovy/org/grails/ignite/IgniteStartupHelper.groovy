@@ -1,7 +1,6 @@
 package org.grails.ignite
 
 import grails.spring.BeanBuilder
-import grails.util.Environment
 import grails.util.Holders
 import groovy.transform.Synchronized
 import groovy.util.logging.Slf4j
@@ -41,7 +40,7 @@ class IgniteStartupHelper {
         binding.application = Holders.grailsApplication
         bb.setBinding(binding)
 
-        bb.importBeans(resourcePattern)
+        bb.loadBeans(resourcePattern)
 
         return bb
     }
@@ -87,15 +86,9 @@ class IgniteStartupHelper {
         def application = Holders.grailsApplication
         def ctx = igniteApplicationContext
 
-        def configuredGridName = DEFAULT_GRID_NAME
-        if (!(application.config.ignite.gridName instanceof ConfigObject)) {
-            configuredGridName = application.config.ignite.gridName
-        }
+        def configuredGridName = application.config.getProperty("ignite.gridName", String, DEFAULT_GRID_NAME)
 
-        def quiet = "false"
-        if (!(application.config.ignite.quiet instanceof ConfigObject)) {
-            quiet = application.config.ignite.quiet.toString()
-        }
+        def quiet = application.config.getProperty("ignite.quiet", String, "false")
 
         // FIXME this doesn't work
         log.info "quiet configured as '$quiet'"
@@ -151,13 +144,12 @@ class IgniteStartupHelper {
                 }
             }
             if (!schedulerServiceDeployed) {
-                def poolSize = Holders.config.ignite.config.executorThreadPoolSize
-                if (poolSize instanceof ConfigObject) poolSize = 10
+                def poolSize = application.config.getProperty("ignite.config.executorThreadPoolSize", Long, 10L)
 
                 DistributedSchedulerServiceImpl distributedSchedulerServiceImpl = null
 
                 try {
-                    distributedSchedulerServiceImpl = igniteApplicationContext.getBean("distributedSchedulerServiceImpl")
+                    distributedSchedulerServiceImpl = (DistributedSchedulerServiceImpl)igniteApplicationContext.getBean("distributedSchedulerServiceImpl")
                 } catch (NoSuchBeanDefinitionException nsbde) {
                     log.warn "No DistributedSchedulerServiceImpl bean is defined, using default"
                 }
@@ -170,7 +162,7 @@ class IgniteStartupHelper {
                 // Allow server startup to continue if running a plugin script, e.g., dbm-generate-changelog
                 //
                 try {
-                    distributedSchedulerServiceImpl.setPoolSize(poolSize)
+                    distributedSchedulerServiceImpl.setPoolSize(poolSize.toInteger())
                     grid.services().deployClusterSingleton(SCHEDULER_SERVICE_NAME, distributedSchedulerServiceImpl)
                     log.info "DistributedSchedulerServiceImpl deployed with bean $distributedSchedulerServiceImpl and poolSize=$poolSize"
                 } catch (Throwable t) {
@@ -188,7 +180,7 @@ class IgniteStartupHelper {
             log.error e.message, e
             return false
         }
-        
+
         return true
     }
 

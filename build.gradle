@@ -36,6 +36,8 @@ configurations {
 }
 
 dependencies {
+    compile "org.slf4j:log4j-over-slf4j:1.7.28"
+
     compile "org.apache.ignite:ignite-core:${igniteVer}"
     compile ("org.apache.ignite:ignite-spring:${igniteVer}")
     compile "org.apache.ignite:ignite-indexing:${igniteVer}"
@@ -43,7 +45,9 @@ dependencies {
         exclude group: 'org.hibernate', module: 'hibernate-core'
     }
     compile "org.apache.ignite:ignite-web:${igniteVer}"
-    compile "org.apache.ignite:ignite-log4j:${igniteVer}"
+    compile("org.apache.ignite:ignite-log4j:${igniteVer}") {
+        exclude group: 'log4j', module: 'log4j'
+    }
     compile "org.apache.ignite:ignite-aws:${igniteVer}"
 
     compile 'org.bouncycastle:bcprov-jdk15on:1.52'
@@ -52,6 +56,9 @@ dependencies {
     compile 'it.sauronsoftware.cron4j:cron4j:2.2.5'
     compile "de.ruedigermoeller:fst:2.47"
 
+    compile('com.h2database:h2:1.4.197'){ //this version is required by ignite, it cannot go higher currently
+        force = true
+    }
     compile 'org.grails.plugins:hibernate5:7.0.1'
     
     developmentOnly("org.springframework.boot:spring-boot-devtools")

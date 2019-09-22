@@ -1,6 +1,7 @@
 package org.grails.ignite
 
 import grails.util.Holders
+import groovy.util.logging.Slf4j
 import org.apache.ignite.cache.hibernate.HibernateAccessStrategyFactory
 import org.apache.ignite.configuration.CacheConfiguration
 import org.hibernate.boot.spi.SessionFactoryOptions
@@ -20,9 +21,9 @@ import org.slf4j.LoggerFactory
  * Time: 3:30 PM
  * To change this template use File | Settings | File Templates.
  */
+@Slf4j
 class HibernateRegionFactory implements RegionFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(HibernateRegionFactory.class)
     private org.apache.ignite.cache.hibernate.HibernateRegionFactory underlyingRegionFactory
     private boolean igniteNodeInitialized
 
@@ -111,6 +112,10 @@ class HibernateRegionFactory implements RegionFactory {
 
     @Override
     DomainDataRegion buildDomainDataRegion(DomainDataRegionConfig regionConfig, DomainDataRegionBuildingContext buildingContext) {
+        configureEntityCache(regionConfig.regionName)
+        regionConfig.collectionCaching.each {
+            //FIXME: How can we create association caches? There is no name to retrieve
+        }
         return underlyingRegionFactory.buildDomainDataRegion(regionConfig, buildingContext)
     }
 

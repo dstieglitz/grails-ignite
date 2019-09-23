@@ -35,5 +35,5 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
     logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
 }
 root(ERROR, ['STDOUT'])
-logger("org.apache.ignite", INFO)
-logger("org.grails.ignite", DEBUG)
+logger("org.apache.ignite", INFO, ['STDOUT'])
+logger("org.grails.ignite", DEBUG, ['STDOUT'])

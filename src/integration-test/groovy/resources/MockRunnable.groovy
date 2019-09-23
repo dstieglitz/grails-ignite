@@ -12,7 +12,7 @@ class MockRunnable implements Runnable, Serializable {
     private lastCallTime = System.currentTimeMillis()
 
     @Override
-    public void run () {
+    void run () {
         //increment call count
         callCount++
         Long callTime = System.currentTimeMillis()
@@ -21,11 +21,11 @@ class MockRunnable implements Runnable, Serializable {
         lastCallTime = callTime
     }
 
-    public Long getCallCount() {
+    Long getCallCount() {
         return callCount
     }
 
-    public ArrayList<Long> getDelayTimes() {
+    ArrayList<Long> getDelayTimes() {
         return delayTimes
     }
 }

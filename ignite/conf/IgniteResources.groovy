@@ -1,8 +1,8 @@
-import grails.plugins.ignite.DeferredStartIgniteSpringBean
+import org.grails.ignite.DeferredStartIgniteSpringBean
 import org.apache.ignite.configuration.IgniteConfiguration
-import grails.plugins.ignite.DistributedSchedulerServiceImpl
-import grails.plugins.ignite.IgniteGrailsLogger
-import grails.plugins.ignite.IgniteStartupHelper
+import org.grails.ignite.DistributedSchedulerServiceImpl
+import org.grails.ignite.IgniteGrailsLogger
+import org.grails.ignite.IgniteStartupHelper
 
 //import org.apache.ignite.logger.log4j.Log4JLogger
 beans {

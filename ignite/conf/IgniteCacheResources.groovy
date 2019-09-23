@@ -1,9 +1,8 @@
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.cache.CacheWriteSynchronizationMode
-import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy
 import org.apache.ignite.configuration.CacheConfiguration
-import grails.plugins.ignite.IgniteStartupHelper
+import org.grails.ignite.IgniteStartupHelper
 
 beans {
     def l2CacheEnabled = application.config.getProperty("ignite.l2CacheEnabled", Boolean, false)
@@ -100,7 +99,7 @@ beans {
     }
 
     testWidgetCache(CacheConfiguration) {
-        name = 'grails.plugins.ignite.Widget'
+        name = 'org.grails.ignite.Widget'
         atomicityMode = CacheAtomicityMode.TRANSACTIONAL
         cacheMode = CacheMode.REPLICATED
         writeSynchronizationMode = CacheWriteSynchronizationMode.FULL_ASYNC

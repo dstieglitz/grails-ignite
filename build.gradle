@@ -13,6 +13,7 @@ group "ignite"
 
 def igniteVer = '2.8.0-SNAPSHOT'
 def igniteHibernateVer = '2.8.0-SNAPSHOT'
+def stainless = new ConfigSlurper().parse(new File("${System.properties['user.home']}/.stainless").toURL())
 
 apply plugin:"eclipse"
 apply plugin:"idea"
@@ -26,6 +27,13 @@ repositories {
     mavenCentral()
     maven { url "https://repo.grails.org/grails/core" }
     maven { url "http://www.gridgainsystems.com/nexus/content/repositories/external" }
+    maven {
+        credentials {
+            username stainless.config.repo.username
+            password stainless.config.repo.password
+        }
+        url stainless.config.repo.url
+    }
 }
 
 configurations {

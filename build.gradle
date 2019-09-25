@@ -21,6 +21,7 @@ apply plugin:"org.grails.grails-plugin"
 apply plugin:"org.grails.grails-plugin-publish"
 apply plugin:"asset-pipeline"
 apply plugin:"org.grails.grails-gsp"
+apply plugin:"java"
 
 repositories {
     mavenLocal()
@@ -121,7 +122,19 @@ grailsPublish {
     developers = [johndoe:"John Doe"]
 }
 
+integrationTest {
+    failFast = true
+    reports {
+        junitXml.enabled = false
+        html.enabled = true
+    }
+    testLogging {
+        showStandardStreams = true
+    }
+}
+
 
 assets {
     packagePlugin = true
 }
+

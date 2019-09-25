@@ -37,6 +37,9 @@ repositories {
     }
 }
 
+//FIXME: javadoc task fails, preventing install/deploy
+tasks.withType(Javadoc).all { enabled = false }
+
 configurations {
     developmentOnly
     runtimeClasspath {

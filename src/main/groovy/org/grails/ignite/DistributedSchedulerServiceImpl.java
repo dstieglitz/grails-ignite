@@ -27,7 +27,7 @@ import static org.apache.ignite.cache.CacheMode.REPLICATED;
  * <p>Each job has a ScheduledRunnable record saved to the cluster in a REDUNDANT cluster-wide data structure. If the node
  * hosting this scheduler service goes down, another node can pick up the service and re-schedule the jobs for
  * execution.</p>
- * <p>The schedule uses a Set<ScheduledRunnable> object under the hood, so it's important to pay attention to naming
+ * <p>The schedule uses a Set&lt;ScheduledRunnable&gt; object under the hood, so it's important to pay attention to naming
  * since two ScheduledRunnable objects with the same name are considered to be the same object (to prevent over-scheduling
  * of the same task).</p>
  *

@@ -8,8 +8,8 @@ buildscript {
     }
 }
 
-version "4.0.0-SNAPSHOT"
-group "org.grails.ignite"
+version "2.0.0-SNAPSHOT"
+group "org.grails.plugins"
 
 def igniteVer = '2.8.0-SNAPSHOT'
 def igniteHibernateVer = '2.8.0-SNAPSHOT'

@@ -1,26 +1,32 @@
-#Grails Ignite Plugin
+# Grails Ignite Plugin
 
 A plugin that provides basic Grails integration with the Apache Ignite compute grid framework.
 
-#Supported Features
+# Branch structure 
+
+- `master` compatible with Grails 2.x
+- `grails3` compatible with Grails 3.x
+- `grails4` compatible with Grails 4.0.x
+
+# Supported Features
 
 * Grid creation via Spring DSL and injection into Grails artifacts
 * Web session clustering (http://apacheignite.readme.io/docs/web-session-clustering)
 * Distributed task management using a `DistributedSchedulerService`
 
-#Under Development
+# Under Development
 
 * Clustered Hibernate L2 Caching
 
 
-#Grid Bean
+# Grid Bean
 
 The plugin provides a configured instance of the Ingite grid as a bean called "grid", which you can access via injection in controllers and services:
 
 	def grid
 
 
-#Configuration
+# Configuration
 
 In order to support hibernate l2 caching, which requires the Ignite grid to be started prior to the sessionFactory and therefore the vast majority of Grails artifacts, Ignite must be configured from external configuration files. 
 
@@ -100,7 +106,7 @@ The configuration files follow the standard Ignite spring configuration conventi
 
 See the `ignite/conf` directory for sample configuration files. For basic configuration you can copy the directory to your project.
 
-#Startup
+# Startup
 
 In order to facilitate the correct startup order of the Ignite grid (to support hibernate L2 caching it must start before the SessionFactory, which in turn is started by Grails before the application), Ignite uses a special startup hook called `IgniteStartupHelper`. The `IgniteStartupHelper` class will load it's own application context specifically for the Ignite grid. This application context can be managed using the Spring DSL by specifying beans in *Resources.groovy files in the `ignite/conf` directory of your application, or by specifying external config directories for these files:
 
@@ -113,7 +119,7 @@ ignite {
     gridName="myGrid"
 ```
 
-#Discovery
+# Discovery
 
 Ignite can be configured to discover nodes via static, multicast or s3 discovery mechanisms. You need to include the correct ignite spring resources in your project and set the proper Grails configuration.
 
@@ -141,7 +147,7 @@ The example below shows how to configure discovery via the Grails configuration:
     }
  ```
 
-#Logging
+# Logging
 
 The project contains an implementation of `IgniteLogger` for use with Grails. This class allows you to use the Grails log4j DSL to configure logging for the embedded Ignite node. The logger can be configured from the Ignite spring bean:
 
@@ -154,7 +160,7 @@ The project contains an implementation of `IgniteLogger` for use with Grails. Th
 ```
 
 
-#Distributed Hibernate L2 Caching
+# Distributed Hibernate L2 Caching
 
 *Requires Hibernate 4*
 
@@ -191,7 +197,7 @@ See Also:
 http://apacheignite.gridgain.org/v1.1/docs/evictions
 
 	
-#Scheduled, Distributed Tasks
+# Scheduled, Distributed Tasks
 
 This plugin provides an Ignite service called `DistributedSchedulerService` that provides a partial implementation of the `ScheduledThreadPoolExectutor` interface but allows you to run the submitted jobs on the Ignite grid. 
 
@@ -199,7 +205,7 @@ The methods `scheduleAtFixedRate` and `scheduleWithFixedDelay` are currently imp
 
 A Grails service of the same name ("`DistributedSchedulerService`") is also provided to facilitiate easy injection into other Grails applications.
 
-##Example
+## Example
 ```
 distributedSchedulerService.scheduleAtFixedRate(new HelloWorldGroovyTask(), 0, 1000, TimeUnit.MILLISECONDS);
 ```
@@ -209,7 +215,7 @@ This example shows how to schedule the supplied task to execute once per second 
 The example above can be run out-of-the-box (the `HelloWorldGroovyTask` is included in the plugin). You can then try neat things like spinning up another instance on a different port, and watching the grid fail-over and recover by killing one instance and bringing it back up.
 	
 
-#Notes
+# Notes
 
 Requires h2 version 1.3.137 (or higher)? Make sure you do this:
 

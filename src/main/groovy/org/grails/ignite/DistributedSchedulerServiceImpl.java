@@ -9,7 +9,8 @@ import org.apache.ignite.lang.IgniteRunnable;
 import org.apache.ignite.resources.IgniteInstanceResource;
 import org.apache.ignite.services.Service;
 import org.apache.ignite.services.ServiceContext;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,7 +36,7 @@ import static org.apache.ignite.cache.CacheMode.REPLICATED;
  */
 public class DistributedSchedulerServiceImpl implements Service, SchedulerService {
 
-    private static final Logger log = Logger.getLogger(DistributedSchedulerServiceImpl.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(DistributedSchedulerServiceImpl.class.getName());
     private static final String JOB_SCHEDULE_DATA_SET_NAME = "jobSchedules";
     private static IgniteSet<ScheduledRunnable> schedule;
     @IgniteInstanceResource

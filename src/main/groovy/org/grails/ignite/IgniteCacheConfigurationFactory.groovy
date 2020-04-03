@@ -1,7 +1,7 @@
 package org.grails.ignite
 
 import grails.util.Holders
-import groovy.util.logging.Log4j
+import groovy.util.logging.Slf4j
 import org.apache.ignite.cache.CacheAtomicityMode
 import org.apache.ignite.cache.CacheMode
 import org.apache.ignite.cache.CacheWriteSynchronizationMode
@@ -15,7 +15,7 @@ import org.apache.ignite.configuration.CacheConfiguration
  *
  *
  */
-@Log4j
+@Slf4j
 class IgniteCacheConfigurationFactory {
 
     static CacheConfiguration getCacheConfiguration(String name) {

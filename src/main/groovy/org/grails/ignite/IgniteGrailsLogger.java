@@ -1,7 +1,9 @@
 package org.grails.ignite;
 
 import org.apache.ignite.IgniteLogger;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +38,7 @@ public class IgniteGrailsLogger implements IgniteLogger {
         }
 
         if (!igniteLoggerMap.containsKey(o)) {
-            igniteLoggerMap.put(o, new IgniteGrailsLogger(Logger.getLogger(className)));
+            igniteLoggerMap.put(o, new IgniteGrailsLogger(LoggerFactory.getLogger(className)));
         }
 
         return igniteLoggerMap.get(o);
@@ -110,7 +112,7 @@ public class IgniteGrailsLogger implements IgniteLogger {
     @Override
     public boolean isTraceEnabled() {
         if (underlyingLogger == null) {
-            return Logger.getRootLogger().isTraceEnabled();
+            return LogManager.getRootLogger().isTraceEnabled();
         } else {
             return underlyingLogger.isTraceEnabled();
         }
@@ -119,7 +121,7 @@ public class IgniteGrailsLogger implements IgniteLogger {
     @Override
     public boolean isDebugEnabled() {
         if (underlyingLogger == null) {
-            return Logger.getRootLogger().isDebugEnabled();
+            return LogManager.getRootLogger().isDebugEnabled();
         } else {
             return underlyingLogger.isDebugEnabled();
         }
@@ -128,7 +130,7 @@ public class IgniteGrailsLogger implements IgniteLogger {
     @Override
     public boolean isInfoEnabled() {
         if (underlyingLogger == null) {
-            return Logger.getRootLogger().isInfoEnabled();
+            return LogManager.getRootLogger().isInfoEnabled();
         } else {
             return underlyingLogger.isInfoEnabled();
         }

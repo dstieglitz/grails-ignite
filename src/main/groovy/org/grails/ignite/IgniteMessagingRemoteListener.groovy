@@ -2,14 +2,14 @@ package org.grails.ignite
 
 import grails.persistence.support.PersistenceContextInterceptor
 import grails.util.Holders
-import groovy.util.logging.Log4j
+import groovy.util.logging.Slf4j
 import org.apache.ignite.lang.IgniteBiPredicate
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 /**
  * Created by dstieglitz on 10/29/16.
  */
-@Log4j
+@Slf4j
 public class IgniteMessagingRemoteListener implements IgniteBiPredicate<UUID, Object>, Serializable {
     private Object destination;
     private MessageReceiver receiver;

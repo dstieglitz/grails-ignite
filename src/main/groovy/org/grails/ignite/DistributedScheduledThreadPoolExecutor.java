@@ -2,7 +2,8 @@ package org.grails.ignite;
 
 import it.sauronsoftware.cron4j.Scheduler;
 import org.apache.ignite.Ignite;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,7 @@ import java.util.concurrent.*;
  */
 public class DistributedScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
-    private static final Logger log = Logger.getLogger(DistributedScheduledThreadPoolExecutor.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(DistributedScheduledThreadPoolExecutor.class.getName());
     private Ignite ignite;
     private boolean running = true;
     private Scheduler cronScheduler;

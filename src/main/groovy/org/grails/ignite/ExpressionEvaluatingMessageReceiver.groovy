@@ -1,6 +1,6 @@
 package org.grails.ignite
 
-import groovy.util.logging.Log4j
+import groovy.util.logging.Slf4j
 
 /**
  * Created by dstieglitz on 10/26/16.
@@ -9,7 +9,7 @@ import groovy.util.logging.Log4j
  * A simple receiver that uses Groovy to evaluate the string expression supplied in the constructor as code. Useful
  * for adapting MDBs that call methods to using the Ignite MessagingService provided by the plugin
  */
-@Log4j
+@Slf4j
 class ExpressionEvaluatingMessageReceiver implements MessageReceiver {
     private String expression
 

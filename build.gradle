@@ -11,8 +11,8 @@ buildscript {
 version "2.0.0-SNAPSHOT"
 group "org.grails.plugins"
 
-def igniteVer = '2.8.0-SNAPSHOT'
-def igniteHibernateVer = '2.8.0-SNAPSHOT'
+def igniteVer = '2.8.0'
+def igniteHibernateVer = '2.8.0'
 def stainless = new ConfigSlurper().parse(new File("${System.properties['user.home']}/.stainless").toURL())
 
 apply plugin:"eclipse"
@@ -48,8 +48,6 @@ configurations {
 }
 
 dependencies {
-    compile "org.slf4j:log4j-over-slf4j:1.7.28"
-
     compile "org.apache.ignite:ignite-core:${igniteVer}"
     compile ("org.apache.ignite:ignite-spring:${igniteVer}")
     compile "org.apache.ignite:ignite-indexing:${igniteVer}"
@@ -57,9 +55,7 @@ dependencies {
         exclude group: 'org.hibernate', module: 'hibernate-core'
     }
     compile "org.apache.ignite:ignite-web:${igniteVer}"
-    compile("org.apache.ignite:ignite-log4j:${igniteVer}") {
-        exclude group: 'log4j', module: 'log4j'
-    }
+    compile("org.apache.ignite:ignite-slf4j:${igniteVer}")
     compile "org.apache.ignite:ignite-aws:${igniteVer}"
 
     compile 'org.bouncycastle:bcprov-jdk15on:1.52'

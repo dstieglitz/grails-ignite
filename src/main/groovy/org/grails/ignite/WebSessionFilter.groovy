@@ -1,7 +1,7 @@
 package org.grails.ignite
 
 import grails.util.Holders
-import groovy.util.logging.Log4j
+import groovy.util.logging.Slf4j
 import org.grails.web.util.GrailsApplicationAttributes
 import org.springframework.util.AntPathMatcher
 
@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest
 /**
  * Created by dstieglitz on 9/1/15.
  */
-@Log4j
+@Slf4j
 class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilter {
 
     def excludes

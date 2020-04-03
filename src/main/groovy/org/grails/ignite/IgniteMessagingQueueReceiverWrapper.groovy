@@ -2,7 +2,7 @@ package org.grails.ignite
 
 import grails.persistence.support.PersistenceContextInterceptor
 import grails.util.Holders
-import groovy.util.logging.Log4j
+import groovy.util.logging.Slf4j
 import org.apache.ignite.Ignite
 import org.apache.ignite.lang.IgniteCallable
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
@@ -10,7 +10,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException
 /**
  * Created by dstieglitz on 11/4/16.
  */
-@Log4j
+@Slf4j
 class IgniteMessagingQueueReceiverWrapper implements IgniteCallable<Object> {
 
     private Ignite grid;

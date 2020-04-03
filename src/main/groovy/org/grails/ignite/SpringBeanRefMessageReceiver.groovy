@@ -1,12 +1,12 @@
 package org.grails.ignite
 
 import grails.util.Holders
-import groovy.util.logging.Log4j
+import groovy.util.logging.Slf4j
 
 /**
  * Created by dstieglitz on 10/27/16.
  */
-@Log4j
+@Slf4j
 class SpringBeanRefMessageReceiver implements MessageReceiver, Serializable {
 
     def messageReceiverBeanName

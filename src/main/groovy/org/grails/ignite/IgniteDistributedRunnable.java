@@ -1,7 +1,8 @@
 package org.grails.ignite;
 
 import org.apache.ignite.lang.IgniteRunnable;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Future;
 
@@ -12,7 +13,7 @@ public class IgniteDistributedRunnable implements IgniteRunnable {
 
     protected Runnable underlyingRunnable;
     protected DistributedScheduledThreadPoolExecutor executor;
-    private final Logger log = Logger.getLogger(getClass().getName());
+    private final Logger log = LoggerFactory.getLogger(getClass().getName());
 
     public IgniteDistributedRunnable(DistributedScheduledThreadPoolExecutor executor, Runnable scheduledRunnable) {
         super();

@@ -47,12 +47,12 @@ A plugin for the Apache Ignite data grid framework.
     Closure doWithSpring() { {->
         def configuredGridName = Holders.config.getProperty("ignite.gridName", String, IgniteStartupHelper.DEFAULT_GRID_NAME)
 
-//        IgniteWebSessionsFilter(FilterRegistrationBean) {
-//            filter = bean(WebSessionFilter)
-//            initParameters = ['IgniteWebSessionsGridName':configuredGridName]
-//            urlPatterns = ['/*']
-//            order = Ordered.LOWEST_PRECEDENCE
-//        }
+        IgniteWebSessionsFilter(FilterRegistrationBean) {
+            filter = bean(WebSessionFilter)
+            initParameters = ['IgniteWebSessionsGridName':configuredGridName]
+            urlPatterns = ['/*']
+            order = Ordered.LOWEST_PRECEDENCE
+        }
 
         if (Holders.config.getProperty("ignite.enabled", Boolean, false)) {
             grid(IgniteContextBridge)

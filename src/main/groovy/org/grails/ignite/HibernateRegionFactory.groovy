@@ -28,8 +28,8 @@ class HibernateRegionFactory implements RegionFactory {
     private boolean igniteNodeInitialized
 
     HibernateRegionFactory() {
-        if (Holders.config.ignite.l2CacheEnabled == false) {
-            throw new RuntimeException("Can't initialize HibernateRegionFactory, l2Cache is disable in config.")
+        if (Holders.config.getProperty('ignite.l2CacheEnabled', Boolean, false)) {
+            throw new RuntimeException("Can't initialize HibernateRegionFactory, l2Cache is disabled in config.")
         }
         underlyingRegionFactory = new org.apache.ignite.cache.hibernate.HibernateRegionFactory()
     }

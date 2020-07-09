@@ -24,12 +24,9 @@ class IgniteCacheConfigurationFactory {
 
     static CacheConfiguration getCacheConfiguration(String prefix, String name) {
         log.debug "getCacheConfiguration ${prefix}, ${name}"
-        def flatConfig = Holders.config.flatten()
 
-        def cacheMode = getConfigValueOrNull("${prefix}.cacheMode", flatConfig.get("${prefix}.cacheMode".toString()))
-        if (cacheMode == null) {
-            cacheMode = getDefaultCacheConfiguration(name).cacheMode
-        }
+        def cacheModeStr = Holders.config.getProperty("${prefix}.cacheMode", String)
+        CacheMode cacheMode = cacheModeStr ? CacheMode.valueOf(cacheModeStr) : getDefaultCacheConfiguration(name).cacheMode
         log.debug "cacheMode=${cacheMode}"
 
 //        def memoryMode = getConfigValueOrNull("${prefix}.memoryMode", flatConfig.get("${prefix}.memoryMode".toString()))
@@ -38,16 +35,12 @@ class IgniteCacheConfigurationFactory {
 //        }
 //        log.debug "memoryMode=${memoryMode}"
 
-        def atomicityMode = getConfigValueOrNull("${prefix}.atomicityMode", flatConfig.get("${prefix}.atomicityMode".toString()))
-        if (atomicityMode == null) {
-            atomicityMode = getDefaultCacheConfiguration(name).atomicityMode
-        }
+        def atomicityModeStr = Holders.config.getProperty("${prefix}.atomicityMode", String)
+        CacheAtomicityMode atomicityMode = atomicityModeStr ? CacheAtomicityMode.valueOf(atomicityModeStr) : getDefaultCacheConfiguration(name).atomicityMode
         log.debug "atomicityMode=${atomicityMode}"
 
-        def writeSynchronizationMode = getConfigValueOrNull("${prefix}.writeSynchronizationMode", flatConfig.get("${prefix}.writeSynchronizationMode".toString()))
-        if (writeSynchronizationMode == null) {
-            writeSynchronizationMode = getDefaultCacheConfiguration(name).writeSynchronizationMode
-        }
+        def writeSynchronizationModeStr = Holders.config.getProperty("${prefix}.writeSynchronizationMode", String)
+        CacheWriteSynchronizationMode writeSynchronizationMode = writeSynchronizationModeStr ? CacheWriteSynchronizationMode.valueOf(writeSynchronizationModeStr) : getDefaultCacheConfiguration(name).writeSynchronizationMode
         log.debug "writeSynchronizationMode=${writeSynchronizationMode}"
 
 //        def offHeapMaxMemory = getConfigValueOrZero("${prefix}.offHeapMaxMemory", flatConfig.get("${prefix}.offHeapMaxMemory".toString()))
@@ -56,10 +49,7 @@ class IgniteCacheConfigurationFactory {
 //        }
 //        log.debug "offHeapMaxMemory=${offHeapMaxMemory}"
 
-        def maxElements = getConfigValueOrNull("${prefix}.maxElements", flatConfig.get("${prefix}.maxElements".toString()))
-        if (maxElements == null) {
-            maxElements = getConfigValueOrZero("ignite.defaultCache.maxElements", flatConfig.get("ignite.defaultCache.maxElements".toString()))
-        }
+        def maxElements = Holders.config.getProperty("${prefix}.maxElements", Integer, Holders.config.getProperty("ignite.defaultCache.maxElements", Integer, 0))
         log.debug "maxElements=${maxElements}"
 
 //        def swapEnabled = getConfigValueOrNull("${prefix}.swapEnabled", flatConfig.get("${prefix}.swapEnabled".toString()))
@@ -68,34 +58,22 @@ class IgniteCacheConfigurationFactory {
 //        }
 //        log.debug "swapEnabled=${swapEnabled}"
 
-        def evictionPolicy = getConfigValueOrNull("${prefix}.evictionPolicy", flatConfig.get("${prefix}.evictionPolicy".toString()))
+        def evictionPolicy = Holders.config.getProperty("${prefix}.evictionPolicy")
 //        if (evictionPolicy == null) {
 //            evictionPolicy = 'lru'
 //        }
         log.debug "evictionPolicy=${evictionPolicy}"
 
-        def statisticsEnabled = getConfigValueOrNull("${prefix}.statisticsEnabled", flatConfig.get("${prefix}.statisticsEnabled".toString()))
-        if (statisticsEnabled == null) {
-            statisticsEnabled = getDefaultCacheConfiguration(name).statisticsEnabled
-        }
+        def statisticsEnabled = Holders.config.getProperty("${prefix}.statisticsEnabled", Boolean, getDefaultCacheConfiguration(name).statisticsEnabled)
         log.debug "statisticsEnabled=${statisticsEnabled}"
 
-        def managementEnabled = getConfigValueOrNull("${prefix}.managementEnabled", flatConfig.get("${prefix}.managementEnabled".toString()))
-        if (managementEnabled == null) {
-            managementEnabled = getDefaultCacheConfiguration(name).managementEnabled
-        }
+        def managementEnabled = Holders.config.getProperty("${prefix}.managementEnabled", Boolean, getDefaultCacheConfiguration(name).managementEnabled)
         log.debug "managementEnabled=${managementEnabled}"
 
-        def backups = getConfigValueOrZero("${prefix}.backups", flatConfig.get("${prefix}.backups".toString()))
-        if (backups == null) {
-            backups = getDefaultCacheConfiguration(name).backups
-        }
+        def backups = Holders.config.getProperty("${prefix}.backups", Integer, getDefaultCacheConfiguration(name).backups)
         log.debug "backups=${backups}"
 
-        def copyOnReadEnabled = getConfigValueOrNull("${prefix}.copyOnRead", flatConfig.get("${prefix}.copyOnRead".toString()))
-        if (copyOnReadEnabled == null) {
-            copyOnReadEnabled = getDefaultCacheConfiguration(name).copyOnRead
-        }
+        def copyOnReadEnabled = Holders.config.getProperty("${prefix}.copyOnRead", Boolean, getDefaultCacheConfiguration(name).copyOnRead)
         log.debug "copyOnReadEnabled=${copyOnReadEnabled}"
 
 //        def evictSynchronizedEnabled = getConfigValueOrNull("${prefix}.evictSynchronized", flatConfig.get("${prefix}.evictSynchronized".toString()))
@@ -182,35 +160,5 @@ class IgniteCacheConfigurationFactory {
 //        config.setEvictSynchronized(evictSynchronized)
 
         return config
-    }
-
-    private static def getConfigValueOrThrowException(name, val) {
-        log.debug "getConfigValueOrThrowException ${val} for ${name}"
-
-        if (val instanceof ConfigObject) {
-            throw new IllegalArgumentException("Config parameter ${name} must be defined")
-        } else {
-            return val
-        }
-    }
-
-    private static def getConfigValueOrNull(name, val) {
-        log.debug "getConfigValueOrThrowException ${val} for ${name}"
-
-        if (val instanceof ConfigObject) {
-            return null
-        } else {
-            return val
-        }
-    }
-
-    private static def getConfigValueOrZero(name, val) {
-        log.debug "getConfigValueOrThrowException ${val} for ${name}"
-
-        if (val == null || val instanceof ConfigObject) {
-            return 0
-        } else {
-            return val
-        }
     }
 }

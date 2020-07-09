@@ -20,22 +20,13 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
     void init(FilterConfig cfg) throws ServletException {
         // get grid name from application configuration
         OverridablePropertyFilterConfigDecorator decorator = new OverridablePropertyFilterConfigDecorator(cfg)
-        def application = Holders.grailsApplication
 
-        def configuredGridName = IgniteStartupHelper.DEFAULT_GRID_NAME
-        if (!(application.config.ignite.gridName instanceof ConfigObject)) {
-            configuredGridName = application.config.ignite.gridName
-        }
+        def configuredGridName = Holders.config.getProperty('ignite.gridName') ?: IgniteStartupHelper.DEFAULT_GRID_NAME
 
-        def webSessionClusteringEnabled = (!(application.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
-                && application.config.ignite.webSessionClusteringEnabled.equals(true))
-
+        def webSessionClusteringEnabled = Holders.config.getProperty('ignite.webSessionClusteringEnabled', Boolean, false)
         decorator.overrideInitParameter('IgniteWebSessionsGridName', configuredGridName)
 
-        this.excludes = application.config.ignite.webSessionClusteringPathExcludes
-        if (this.excludes instanceof ConfigObject) {
-            this.excludes = []
-        }
+        this.excludes = Holders.config.getProperty('ignite.webSessionClusteringPathExcludes') ?: []
 
         if (webSessionClusteringEnabled) {
             log.info "excluding the following URIs from web session clustering by configuration: ${this.excludes}"
@@ -72,8 +63,7 @@ class WebSessionFilter extends org.apache.ignite.cache.websession.WebSessionFilt
         String path = httpReq.getServletPath();
         log.debug "doFilter ${path}"
 
-        def webSessionClusteringEnabled = (!(Holders.grailsApplication.config.ignite.webSessionClusteringEnabled instanceof ConfigObject)
-                && Holders.grailsApplication.config.ignite.webSessionClusteringEnabled.equals(true))
+        def webSessionClusteringEnabled = Holders.config.getProperty('ignite.webSessionClusteringEnabled', Boolean, false)
 
         log.trace "webSessionClusteringEnabled=${webSessionClusteringEnabled}"
 
